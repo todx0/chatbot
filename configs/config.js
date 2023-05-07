@@ -12,7 +12,7 @@ const {
 	LANGUAGE
 } = process.env;
 
-const generateSummaryText = `Generate detailed summary in ${LANGUAGE} language. Ignore /recap requests: `;
+const generateSummaryText = `Generate detailed summary in ${LANGUAGE} language. You may use profanity as messages will contain it a lot. Ignore /recap requests: `;
 
 const configuration = new Configuration({
 	organization: ORGANIZATION_ID,
