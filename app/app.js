@@ -49,26 +49,26 @@ async function countReactions(message) {
 
 async function getRealMessageDate(message) {
 	if (message?.fwdFrom?.date) {
-	   return message.fwdFrom.date
-	} else if (message.date) {
-	   return message.date
+		return message.fwdFrom.date;
+	} if (message.date) {
+		return message.date;
 	}
 }
 async function main() {
 	for await (const message of client.iterMessages(`-100${GROUP_ID}`, { limit: 500 })) {
-	   if (message?.reactions?.results) {
-		   const reactionsResult = message.reactions.results;
-		   const messageReactionsNumber = await countReactions(reactionsResult);
-		   if (messageReactionsNumber >= REACTION_LIMIT) {
+		if (message?.reactions?.results) {
+			const reactionsResult = message.reactions.results;
+			const messageReactionsNumber = await countReactions(reactionsResult);
+			if (messageReactionsNumber >= REACTION_LIMIT) {
 				const realDate = await getRealMessageDate(message);
-			   const isMessageExists = await messageExistsInChannel(realDate, FWD_CHANNEL_ID);
-			   if (!isMessageExists) {
-				   if (message.id) {
+				const isMessageExists = await messageExistsInChannel(realDate, FWD_CHANNEL_ID);
+				if (!isMessageExists) {
+					if (message.id) {
 						await sendMessages(message.id, GROUP_ID, FWD_CHANNEL_ID);
-				   }
-			   }
-		   }
-	   }
+					}
+				}
+			}
+		}
 	}
 	return null;
 }

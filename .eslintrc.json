@@ -4,6 +4,7 @@
         "ecmaVersion": 2022
     },
     "rules": {
+        "indent": "off",
         "func-names": "off",
         "no-unused-expressions": "off",
         "max-len": "off",
@@ -37,10 +38,6 @@
         "no-mixed-spaces-and-tabs": [
             "error",
             "smart-tabs"
-        ],
-        "indent": [
-            "error",
-            "tab"
         ],
         "no-bitwise": [
             "error",

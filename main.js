@@ -9,7 +9,8 @@ const {
 const { main, client } = require('./app/app');
 
 /* console.log(`Running on: ${NODE_ENV}`);
-console.log(`Reaction limit is: ${REACTION_LIMIT}`);
+
+(`Reaction limit is: ${REACTION_LIMIT}`);
 console.log(`Group id is: ${GROUP_ID}`);
 console.log(`FWD channel id is: ${FWD_CHANNEL_ID}`); */
 
