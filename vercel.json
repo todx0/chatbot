@@ -1,0 +1,16 @@
+{
+	"version": 2,
+	"name": "chat-bot",
+	"builds": [
+		{
+			"src": "main.js",
+			"use": "@vercel/node"
+		}
+	],
+	"routes": [
+		{
+			"src": "/(.*)",
+			"dest": "/main.js"
+		}
+	]
+}
