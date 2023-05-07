@@ -7,7 +7,7 @@ const {
 	GROUP_ID,
 	generateSummaryText,
 	openai
-} = require('./configs/config');
+} = require('../configs/config');
 
 const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH, {
 	connectionRetries: 5,
