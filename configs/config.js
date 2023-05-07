@@ -1,13 +1,6 @@
 /* eslint-disable global-require */
 const { Configuration, OpenAIApi } = require('openai');
-
-if (process.env.NODE_ENV !== 'heroku') {
-	require('dotenv').config({
-		path: `.env.${process.env.NODE_ENV}`,
-	});
-} else {
-	require('dotenv').config();
-}
+require('dotenv').config();
 
 const {
 	API_ID,
