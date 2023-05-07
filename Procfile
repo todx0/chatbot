@@ -1,1 +1,0 @@
-bot: yarn start:heroku

@@ -1,23 +1,67 @@
+const { TelegramClient, Api } = require('telegram');
+const { StringSession } = require('telegram/sessions');
 const {
+	API_ID,
+	API_HASH,
+	SESSION,
 	GROUP_ID,
-	FWD_CHANNEL_ID,
-	REACTION_LIMIT,
-	NODE_ENV,
-	INTERVAL,
+	generateSummaryText,
+	openai
 } = require('./configs/config');
 
-const { main, client } = require('./app/app');
+const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH, {
+	connectionRetries: 5,
+});
 
-/* console.log(`Running on: ${NODE_ENV}`);
+async function sendMessage(message) {
+	const send = await client.invoke(
+		new Api.messages.SendMessage({
+			peer: GROUP_ID,
+			message: `${message}`,
+		})
+	);
+	return send;
+}
 
-(`Reaction limit is: ${REACTION_LIMIT}`);
-console.log(`Group id is: ${GROUP_ID}`);
-console.log(`FWD channel id is: ${FWD_CHANNEL_ID}`); */
+async function getMessages(messagesLimit, messages = []) {
+	for await (const message of client.iterMessages(`-${GROUP_ID}`, { limit: messagesLimit })) {
+		messages.push(message.message);
+	}
+	return messages;
+}
+
+async function eventPrint(event) {
+	const { message } = event;
+	if (message?.message?.includes('/recap')) {
+		const msgLimit = parseInt(message.message.split(' ')[1]);
+		if (Number.isNaN(msgLimit)) await sendMessage('Enter limit: /recap 50');
+		else {
+			const messages = await getMessages(msgLimit);
+			if (msgLimit > 300) await sendMessage('Max recap limit 300: /recap 300');
+			else {
+				try {
+					const response = await openai.createChatCompletion(
+						{
+							model: 'gpt-3.5-turbo',
+							messages: [
+								{
+									role: 'user',
+									content: `${generateSummaryText} ${messages}`
+								}
+							]
+						}
+					);
+					const gptResponse = response.data.choices[0].message.content;
+					await sendMessage(`${gptResponse}`);
+				} catch (error) {
+					await sendMessage(`${error.response.data.error.message}`);
+				}
+			}
+		}
+	}
+}
 
 (async () => {
-	 await client.connect();
-
-	setInterval(() => {
-		main();
-	  }, INTERVAL);
+	await client.connect();
+	client.addEventHandler(eventPrint);
 })();
