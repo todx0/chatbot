@@ -64,7 +64,7 @@ async function eventPrint(event) {
 	await client.connect();
 	client.addEventHandler(eventPrint);
 } */
-(async () => {
+module.exports = (async () => {
 	await client.connect();
 	client.addEventHandler(eventPrint);
 })();
