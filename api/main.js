@@ -60,11 +60,12 @@ async function eventPrint(event) {
 		}
 	}
 }
-/* async function main() {
+async function main() {
 	await client.connect();
 	client.addEventHandler(eventPrint);
-} */
+}
 module.exports = (async () => {
 	await client.connect();
 	client.addEventHandler(eventPrint);
 })();
+module.exports = main;
