@@ -9,7 +9,7 @@
 		"telegram": "^2.8.12"
 	},
 	"scripts": {
-		"start": "node ./api/main.js"
+		"start": "node main.js"
 	},
 	"author": "mak$",
 	"license": "MIT"
