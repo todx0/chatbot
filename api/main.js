@@ -48,8 +48,7 @@ async function eventPrint(event) {
 									role: 'user',
 									content: `${generateSummaryText} ${messages}`
 								}
-							],
-							temperature: 1.5
+							]
 						}
 					);
 					const gptResponse = response.data.choices[0].message.content;
