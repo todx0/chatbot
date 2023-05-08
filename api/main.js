@@ -26,7 +26,7 @@ async function getMessages(messagesLimit, groupId, messages = []) {
 	for await (const message of client.iterMessages(`-${groupId}`, { limit: messagesLimit })) {
 		messages.push(message.message);
 	}
-	return messages;
+	return messages.reverse();
 }
 
 async function eventPrint(event) {
@@ -48,7 +48,8 @@ async function eventPrint(event) {
 									role: 'user',
 									content: `${generateSummaryText} ${messages}`
 								}
-							]
+							],
+							temperature: 1.5
 						}
 					);
 					const gptResponse = response.data.choices[0].message.content;
