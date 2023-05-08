@@ -4,7 +4,6 @@ const {
 	API_ID,
 	API_HASH,
 	SESSION,
-	GROUP_ID,
 	generateSummaryText,
 	openai
 } = require('../configs/config');
@@ -13,18 +12,18 @@ const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH,
 	connectionRetries: 5,
 });
 
-async function sendMessage(message) {
+async function sendMessage(message, groupId) {
 	const send = await client.invoke(
 		new Api.messages.SendMessage({
-			peer: GROUP_ID,
+			peer: groupId,
 			message: `${message}`,
 		})
 	);
 	return send;
 }
 
-async function getMessages(messagesLimit, messages = []) {
-	for await (const message of client.iterMessages(`-${GROUP_ID}`, { limit: messagesLimit })) {
+async function getMessages(messagesLimit, groupId, messages = []) {
+	for await (const message of client.iterMessages(`-${groupId}`, { limit: messagesLimit })) {
 		messages.push(message.message);
 	}
 	return messages;
@@ -33,11 +32,12 @@ async function getMessages(messagesLimit, messages = []) {
 async function eventPrint(event) {
 	const { message } = event;
 	if (message?.message?.includes('/recap')) {
+		const groupId = message._chatPeer.channelId;
 		const msgLimit = parseInt(message.message.split(' ')[1]);
-		if (Number.isNaN(msgLimit)) await sendMessage('Enter limit: /recap 50');
+		if (Number.isNaN(msgLimit)) await sendMessage('Enter limit: /recap 50', groupId);
 		else {
-			const messages = await getMessages(msgLimit);
-			if (msgLimit > 300) await sendMessage('Max recap limit 300: /recap 300');
+			const messages = await getMessages(msgLimit, groupId);
+			if (msgLimit > 300) await sendMessage('Max recap limit 300: /recap 300', groupId);
 			else {
 				try {
 					const response = await openai.createChatCompletion(
@@ -52,9 +52,9 @@ async function eventPrint(event) {
 						}
 					);
 					const gptResponse = response.data.choices[0].message.content;
-					await sendMessage(`${gptResponse}`);
+					await sendMessage(`${gptResponse}`, groupId);
 				} catch (error) {
-					await sendMessage(`${error.response.data.error.message}`);
+					await sendMessage(`${error.response.data.error.message}`, groupId);
 				}
 			}
 		}
