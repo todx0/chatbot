@@ -58,10 +58,11 @@ async function generateGptResponse(messages) {
 }
 
 async function processRecapCommand(event) {
+	let groupId;
 	try {
 		const { message } = event;
 		if (message?.message?.includes('/recap')) {
-			const groupId = message._chatPeer.channelId;
+			groupId = message._chatPeer.channelId;
 			const msgLimit = parseInt(message.message.split(' ')[1]);
 
 			if (Number.isNaN(msgLimit)) {
