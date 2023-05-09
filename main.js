@@ -12,58 +12,78 @@ const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH,
 	connectionRetries: 5,
 });
 
-async function sendMessage(message, groupId) {
-	const send = await client.invoke(
-		new Api.messages.SendMessage({
+async function sendGroupChatMessage(messageText, groupId) {
+	try {
+		const sendMessage = new Api.messages.SendMessage({
 			peer: groupId,
-			message: `${message}`,
-		})
-	);
-	return send;
+			message: messageText,
+		});
+
+		const result = await client.invoke(sendMessage);
+
+		return result;
+	} catch (error) {
+		console.error('Error sending group chat message:', error);
+	}
 }
 
-async function getMessages(messagesLimit, groupId, messages = []) {
-	for await (const message of client.iterMessages(`-${groupId}`, { limit: messagesLimit })) {
-		if (!message.message.includes('/recap')) {
-			messages.push(`${message._sender.firstName}: ${message.message}`);
-		}
+async function getMessages({ limit, groupId }) {
+	const messages = [];
+	for await (const message of client.iterMessages(`-${groupId}`, { limit: limit })) {
+		messages.push(`${message._sender.firstName}: ${message.message}`);
 	}
 	return messages.reverse();
 }
 
-async function eventPrint(event) {
-	const { message } = event;
-	if (message?.message?.includes('/recap')) {
-		const groupId = message._chatPeer.channelId;
-		const msgLimit = parseInt(message.message.split(' ')[1]);
+function filterMessages(messages) {
+	return messages.filter((message) => !message.includes('/recap') && message.length < 300);
+}
 
-		if (Number.isNaN(msgLimit)) await sendMessage('Enter limit: /recap 50', groupId);
-		if (msgLimit < 300) {
-			const messages = await getMessages(msgLimit, groupId);
-			try {
-				const response = await openai.createChatCompletion(
-					{
-						model: 'gpt-3.5-turbo',
-						messages: [
-							{
-								role: 'user',
-								content: `${openAiTextRequest} ${messages}`
-							}
-						]
-					}
-				);
-				const gptResponse = response.data.choices[0].message.content;
-				await sendMessage(`${gptResponse}`, groupId);
-			} catch (error) {
-				await sendMessage(`${error.response.data.error.message}`, groupId);
+async function generateGptResponse(messages) {
+	try {
+		const response = await openai.createChatCompletion({
+			model: 'gpt-3.5-turbo',
+			messages: [
+				{
+					role: 'user',
+					content: `${openAiTextRequest} ${messages}`
+				}
+			]
+		});
+
+		return response.data.choices[0].message.content;
+	} catch (error) {
+		throw new Error(error.response.data.error.message);
+	}
+}
+
+async function processRecapCommand(event) {
+	try {
+		const { message } = event;
+		if (message?.message?.includes('/recap')) {
+			const groupId = message._chatPeer.channelId;
+			const msgLimit = parseInt(message.message.split(' ')[1]);
+
+			if (Number.isNaN(msgLimit)) {
+				await sendGroupChatMessage('Enter limit: /recap 50', groupId);
+			} else if (msgLimit > 300) {
+				await sendGroupChatMessage('Max recap limit 300: /recap 300', groupId);
+			} else {
+				const messages = await getMessages({ limit: msgLimit, groupId: groupId });
+				const filteredMessages = filterMessages(messages);
+
+				const response = await generateGptResponse(filteredMessages);
+
+				await sendGroupChatMessage(response, groupId);
 			}
-		} else {
-			await sendMessage('Max recap limit 300: /recap 300', groupId);
 		}
+	} catch (error) {
+		console.error('Error processing recap command:', error);
+		await sendGroupChatMessage('An error occurred while processing the `/recap` command', groupId);
 	}
 }
 
 module.exports = (async () => {
 	await client.connect();
-	client.addEventHandler(eventPrint);
+	client.addEventHandler(processRecapCommand);
 })();
