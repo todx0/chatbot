@@ -80,7 +80,7 @@ async function processRecapCommand(event) {
 		}
 	} catch (error) {
 		console.error('Error processing recap command:', error);
-		await sendGroupChatMessage('An error occurred while processing the `/recap` command', groupId);
+		await sendGroupChatMessage(error, groupId);
 	}
 }
 
