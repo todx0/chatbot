@@ -53,7 +53,8 @@ async function generateGptResponse(messages) {
 
 		return response.data.choices[0].message.content;
 	} catch (error) {
-		throw new Error(error.response.data.error.message);
+		// throw new Error(error.response.data.error.message);
+		return error.response.data.error.message;
 	}
 }
 
