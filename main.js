@@ -59,28 +59,27 @@ async function generateGptResponse(messages) {
 
 async function processRecapCommand(event) {
 	let groupId;
-	try {
-		const { message } = event;
-		if (message?.message?.includes('/recap')) {
-			groupId = message._chatPeer.channelId;
-			const msgLimit = parseInt(message.message.split(' ')[1]);
+	const { message } = event;
+	if (message?.message?.includes('/recap')) {
+		groupId = message._chatPeer.channelId;
+		const msgLimit = parseInt(message.message.split(' ')[1]);
 
-			if (Number.isNaN(msgLimit)) {
-				await sendGroupChatMessage('Enter limit: /recap 50', groupId);
-			} else if (msgLimit > 300) {
-				await sendGroupChatMessage('Max recap limit 300: /recap 300', groupId);
-			} else {
-				const messages = await getMessages({ limit: msgLimit, groupId: groupId });
-				const filteredMessages = filterMessages(messages);
+		if (Number.isNaN(msgLimit)) {
+			await sendGroupChatMessage('Enter limit: /recap 50', groupId);
+		} else if (msgLimit > 300) {
+			await sendGroupChatMessage('Max recap limit 300: /recap 300', groupId);
+		} else {
+			const messages = await getMessages({ limit: msgLimit, groupId: groupId });
+			const filteredMessages = filterMessages(messages);
 
+			try {
 				const response = await generateGptResponse(filteredMessages);
-
 				await sendGroupChatMessage(response, groupId);
+			} catch (error) {
+				console.error('Error processing recap command:', error);
+				await sendGroupChatMessage(error, groupId);
 			}
 		}
-	} catch (error) {
-		console.error('Error processing recap command:', error);
-		await sendGroupChatMessage(error, groupId);
 	}
 }
 
