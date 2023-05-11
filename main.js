@@ -59,29 +59,67 @@ async function generateGptResponse(messages) {
 }
 
 async function processRecapCommand(event) {
-	let groupId;
 	const { message } = event;
-	if (message?.message?.includes('/recap')) {
-		groupId = message._chatPeer.channelId;
-		const msgLimit = parseInt(message.message.split(' ')[1]);
 
-		if (Number.isNaN(msgLimit)) {
-			await sendGroupChatMessage('Enter limit: /recap 50', groupId);
-		} else if (msgLimit > 300) {
-			await sendGroupChatMessage('Max recap limit 300: /recap 300', groupId);
-		} else {
-			const messages = await getMessages({ limit: msgLimit, groupId: groupId });
-			const filteredMessages = filterMessages(messages);
-
-			try {
-				const response = await generateGptResponse(filteredMessages);
-				await sendGroupChatMessage(response, groupId);
-			} catch (error) {
-				console.error('Error processing recap command:', error);
-				await sendGroupChatMessage(error, groupId);
-			}
-		}
+	if (!message || !message.message) {
+		return;
 	}
+
+	const groupId = message._chatPeer.channelId;
+	const command = getCommand(message.message);
+
+	if (command === '/recap') {
+		await handleRecapCommand(groupId, message.message);
+	} else if (command === '/q') {
+		await handleQCommand(groupId, message.message);
+	}
+}
+
+async function handleRecapCommand(groupId, messageText) {
+	const msgLimit = parseInt(messageText.split(' ')[1]);
+
+	if (Number.isNaN(msgLimit)) {
+		await sendGroupChatMessage('/recap command requires a limit: /recap 50', groupId);
+		return;
+	}
+
+	if (msgLimit > 300) {
+		await sendGroupChatMessage('Max recap limit is 300: /recap 300', groupId);
+		return;
+	}
+
+	const messages = await getMessages({ limit: msgLimit, groupId });
+	const filteredMessages = filterMessages(messages);
+
+	try {
+		const response = await generateGptResponse(filteredMessages);
+		await sendGroupChatMessage(response, groupId);
+	} catch (error) {
+		console.error('Error processing recap command:', error);
+		await sendGroupChatMessage(error, groupId);
+	}
+}
+
+async function handleQCommand(groupId, messageText) {
+	const requestText = messageText.split('/q ')[1];
+
+	try {
+		const response = await generateGptResponse(requestText);
+		await sendGroupChatMessage(response, groupId);
+	} catch (error) {
+		console.error('Error processing q command:', error);
+		await sendGroupChatMessage(error, groupId);
+	}
+}
+
+function getCommand(messageText) {
+	const parts = messageText.split(' ');
+
+	if (parts.length > 0 && parts[0] in { '/recap': true, '/q': true }) {
+		return parts[0];
+	}
+
+	return null;
 }
 
 module.exports = (async () => {
