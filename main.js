@@ -46,7 +46,7 @@ async function generateGptResponse(messages) {
 			messages: [
 				{
 					role: 'user',
-					content: `${openAiTextRequest} ${messages}`
+					content: `${messages}`
 				}
 			]
 		});
@@ -58,7 +58,7 @@ async function generateGptResponse(messages) {
 	}
 }
 
-async function processRecapCommand(event) {
+async function processCommand(event) {
 	const { message } = event;
 
 	if (!message || !message.message) {
@@ -92,7 +92,7 @@ async function handleRecapCommand(groupId, messageText) {
 	const filteredMessages = filterMessages(messages);
 
 	try {
-		const response = await generateGptResponse(filteredMessages);
+		const response = await generateGptResponse(`${openAiTextRequest} ${filteredMessages}`);
 		await sendGroupChatMessage(response, groupId);
 	} catch (error) {
 		console.error('Error processing recap command:', error);
@@ -124,5 +124,5 @@ function getCommand(messageText) {
 
 module.exports = (async () => {
 	await client.connect();
-	client.addEventHandler(processRecapCommand);
+	client.addEventHandler(processCommand);
 })();
