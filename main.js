@@ -117,16 +117,14 @@ async function generateGptResponse(messages) {
 
 async function processCommand(event) {
 	const { message } = event;
-
+	console.log(message);
 	if (!message || !message.message) {
 		return;
 	}
 
 	const groupId = message._chatPeer.channelId;
 	const command = getCommand(message.message);
-	if (message) {
-		console.log('->', message);
-	}
+
 	if (command === '/recap') {
 		await handleRecapCommand(groupId, message.message);
 	} else if (command === '/q') {
