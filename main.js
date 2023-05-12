@@ -8,7 +8,7 @@ const {
 	openAiTextRequest,
 	openai
 } = require('./config');
-const history = 'history.txt';
+const history = './history.txt';
 
 const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH, {
 	connectionRetries: 5,
