@@ -9,11 +9,9 @@ const {
 	openai
 } = require('./config');
 const history = './history.txt';
-
 const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH, {
 	connectionRetries: 5,
 });
-
 async function writeToHistoryFile(line) {
 	const fileName = history;
 	const maxLines = 10;
@@ -25,7 +23,6 @@ async function writeToHistoryFile(line) {
 		console.error(`Error while writing to file: ${error.message}`);
 	}
 }
-
 async function readHistoryFile(fileName) {
 	try {
 		const content = fs.readFileSync(fileName, { encoding: 'utf-8' });
@@ -35,17 +32,14 @@ async function readHistoryFile(fileName) {
 		return null;
 	}
 }
-
 async function clearHistory() {
 	fs.truncate(history, 0, () => { console.log('History cleared'); });
 }
-
 async function getHistory() {
 	const fileContent = await readHistoryFile(history);
 	if (fileContent) return `Your previous answers are: ${fileContent}`;
 	return '';
 }
-
 async function sendMessage(peer, messageText, replyToMsgId) {
 	const sendMsg = new Api.messages.SendMessage({
 		peer,
@@ -59,17 +53,14 @@ async function sendMessage(peer, messageText, replyToMsgId) {
 		console.error(`Error sending message: ${error}`);
 	}
 }
-
 async function sendGroupChatMessage(messageText, groupId) {
 	const message = await sendMessage(groupId, messageText, null);
 	return message;
 }
-
 async function replyToMessage(messageText, replyToMsgId, groupId) {
 	const message = await sendMessage(groupId, messageText, replyToMsgId);
 	return message;
 }
-
 async function transcribeAudioMessage(msgId, groupId) {
 	try {
 		const transcribeAudio = new Api.messages.TranscribeAudio({
@@ -83,7 +74,6 @@ async function transcribeAudioMessage(msgId, groupId) {
 		return null;
 	}
 }
-
 async function getMessages({ limit, groupId }) {
 	const messages = [];
 	for await (const message of client.iterMessages(`-${groupId}`, { limit: limit })) {
@@ -91,11 +81,9 @@ async function getMessages({ limit, groupId }) {
 	}
 	return messages.reverse();
 }
-
 function filterMessages(messages) {
 	return messages.filter((message) => !message.includes('/recap') && message.length < 300);
 }
-
 async function generateGptResponse(messages) {
 	try {
 		const response = await openai.createChatCompletion({
@@ -114,31 +102,10 @@ async function generateGptResponse(messages) {
 		return error.response.data.error.message;
 	}
 }
-
-async function processCommand(event) {
-	const { message } = event;
-	console.log(message);
-	if (!message || !message.message) {
-		return;
-	}
-
-	const groupId = message._chatPeer.channelId;
-	const command = getCommand(message.message);
-
-	if (command === '/recap') {
-		await handleRecapCommand(groupId, message.message);
-	} else if (command === '/q') {
-		await handleQCommand(groupId, message.message);
-	} else if (command === '/clear') {
-		await handleClearCommand(groupId);
-	}
-}
-
 async function handleClearCommand(groupId) {
 	await clearHistory();
 	await sendGroupChatMessage('History cleared', groupId);
 }
-
 async function handleRecapCommand(groupId, messageText) {
 	const msgLimit = parseInt(messageText.split(' ')[1]);
 
@@ -163,7 +130,6 @@ async function handleRecapCommand(groupId, messageText) {
 		await sendGroupChatMessage(error, groupId);
 	}
 }
-
 async function handleQCommand(groupId, messageText) {
 	const requestText = messageText.split('/q ')[1];
 
@@ -177,7 +143,6 @@ async function handleQCommand(groupId, messageText) {
 		await sendGroupChatMessage(error, groupId);
 	}
 }
-
 function getCommand(messageText) {
 	const parts = messageText.split(' ');
 
@@ -187,7 +152,24 @@ function getCommand(messageText) {
 
 	return null;
 }
+async function processCommand(event) {
+	const { message } = event;
+	console.log(message);
+	if (!message || !message.message) {
+		return;
+	}
 
+	const groupId = message._chatPeer.channelId;
+	const command = getCommand(message.message);
+
+	if (command === '/recap') {
+		await handleRecapCommand(groupId, message.message);
+	} else if (command === '/q') {
+		await handleQCommand(groupId, message.message);
+	} else if (command === '/clear') {
+		await handleClearCommand(groupId);
+	}
+}
 module.exports = (async () => {
 	await client.connect();
 	client.addEventHandler(processCommand);
