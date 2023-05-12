@@ -130,7 +130,7 @@ async function handleQCommand(groupId, messageText) {
 	try {
 		const currentHistory = await readHistoryFile(history);
 		console.log('history before ->', currentHistory);
-		const response = await generateGptResponse(`${requestText} ${currentHistory}`);
+		const response = await generateGptResponse(`${requestText} Your previous responses: ${currentHistory}`);
 		await sendGroupChatMessage(response, groupId);
 		await writeToHistoryFile(response);
 		const afterHistory = await readHistoryFile(history);
