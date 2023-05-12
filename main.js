@@ -37,7 +37,7 @@ async function readHistoryFile(fileName) {
 }
 
 async function getHistory() {
-	const fileContent = readHistoryFile(history);
+	const fileContent = await readHistoryFile(history);
 	if (fileContent) return `Your previous answers are: ${fileContent}`;
 	return '';
 }
