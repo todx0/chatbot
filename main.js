@@ -112,7 +112,7 @@ async function processCommand(event) {
 
 async function handleClearCommand(groupId) {
 	await clearHistory();
-	const hist = getHistory();
+	const hist = await getHistory();
 	await sendGroupChatMessage(`History cleared. History: ${hist}`, groupId);
 }
 async function handleRecapCommand(groupId, messageText) {
