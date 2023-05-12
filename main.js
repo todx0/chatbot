@@ -1,5 +1,6 @@
 const { TelegramClient, Api } = require('telegram');
 const { StringSession } = require('telegram/sessions');
+const fs = require('fs');
 const {
 	API_ID,
 	API_HASH,
@@ -7,27 +8,34 @@ const {
 	openAiTextRequest,
 	openai
 } = require('./config');
+const history = 'history.txt';
 
 const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH, {
 	connectionRetries: 5,
 });
 
-const history = [];
-function getHistory() {
-	if (history.length) return `History of your responses:\n${history.join('\n')}`;
-	return '';
-}
-
-function updateHistory(array, newElement) {
-	const updatedHistory = [...array];
-
-	if (updatedHistory.length < 30) {
-		updatedHistory.push(newElement);
-	} else {
-		updatedHistory.splice(-1, 1, newElement);
+function writeToHistoryFile(line) {
+	const fileName = history;
+	const maxLines = 10;
+	try {
+		const oldContent = fs.readFileSync(fileName, { encoding: 'utf-8' }).split('\n');
+		const newContent = [...oldContent.slice(-(maxLines - 1)), line];
+		fs.writeFileSync(fileName, newContent.join('\n'));
+	} catch (error) {
+		console.error(`Error while writing to file: ${error.message}`);
 	}
-	return updatedHistory;
 }
+
+function readHistoryFile(fileName) {
+	try {
+		const content = fs.readFileSync(fileName, { encoding: 'utf-8' });
+		return content;
+	} catch (error) {
+		console.error(`Error while reading file "${fileName}": ${error.message}`);
+		return null;
+	}
+}
+
 async function sendGroupChatMessage(messageText, groupId) {
 	try {
 		const sendMessage = new Api.messages.SendMessage({
@@ -120,12 +128,13 @@ async function handleQCommand(groupId, messageText) {
 	const requestText = messageText.split('/q ')[1];
 
 	try {
-		const currentHistory = getHistory();
-		console.log('current history ->', currentHistory);
+		const currentHistory = readHistoryFile(history);
+		console.log('history before ->', currentHistory);
 		const response = await generateGptResponse(`${requestText} ${currentHistory}`);
 		await sendGroupChatMessage(response, groupId);
-		updateHistory(history, response);
-		console.log('history after update ->', history);
+		writeToHistoryFile(response);
+		const afterHistory = readHistoryFile(history);
+		console.log('history after ->', afterHistory);
 	} catch (error) {
 		console.error('Error processing q command:', error);
 		await sendGroupChatMessage(error, groupId);
