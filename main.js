@@ -14,7 +14,7 @@ const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH,
 	connectionRetries: 5,
 });
 
-function writeToHistoryFile(line) {
+async function writeToHistoryFile(line) {
 	const fileName = history;
 	const maxLines = 10;
 	try {
@@ -26,7 +26,7 @@ function writeToHistoryFile(line) {
 	}
 }
 
-function readHistoryFile(fileName) {
+async function readHistoryFile(fileName) {
 	try {
 		const content = fs.readFileSync(fileName, { encoding: 'utf-8' });
 		return content;
@@ -128,12 +128,12 @@ async function handleQCommand(groupId, messageText) {
 	const requestText = messageText.split('/q ')[1];
 
 	try {
-		const currentHistory = readHistoryFile(history);
+		const currentHistory = await readHistoryFile(history);
 		console.log('history before ->', currentHistory);
 		const response = await generateGptResponse(`${requestText} ${currentHistory}`);
 		await sendGroupChatMessage(response, groupId);
-		writeToHistoryFile(response);
-		const afterHistory = readHistoryFile(history);
+		await writeToHistoryFile(response);
+		const afterHistory = await readHistoryFile(history);
 		console.log('history after ->', afterHistory);
 	} catch (error) {
 		console.error('Error processing q command:', error);
