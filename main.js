@@ -36,6 +36,10 @@ async function readHistoryFile(fileName) {
 	}
 }
 
+async function clearHistory() {
+	fs.truncate(history, 0, () => { console.log('History cleared'); });
+}
+
 async function getHistory() {
 	const fileContent = await readHistoryFile(history);
 	if (fileContent) return `Your previous answers are: ${fileContent}`;
@@ -101,6 +105,8 @@ async function processCommand(event) {
 		await handleRecapCommand(groupId, message.message);
 	} else if (command === '/q') {
 		await handleQCommand(groupId, message.message);
+	} else if (command === '/clear') {
+		await clearHistory();
 	}
 }
 
