@@ -46,18 +46,41 @@ async function getHistory() {
 	return '';
 }
 
-async function sendGroupChatMessage(messageText, groupId) {
+async function sendMessage(peer, messageText, replyToMsgId) {
+	const sendMsg = new Api.messages.SendMessage({
+		peer,
+		message: messageText,
+		replyToMsgId
+	});
 	try {
-		const sendMessage = new Api.messages.SendMessage({
-			peer: groupId,
-			message: messageText,
-		});
-
-		const result = await client.invoke(sendMessage);
-
+		const result = await client.invoke(sendMsg);
 		return result;
 	} catch (error) {
-		console.error('Error sending group chat message:', error);
+		console.error(`Error sending message: ${error}`);
+	}
+}
+
+async function sendGroupChatMessage(messageText, groupId) {
+	const message = await sendMessage(groupId, messageText, null);
+	return message;
+}
+
+async function replyToMessage(messageText, replyToMsgId, groupId) {
+	const message = await sendMessage(groupId, messageText, replyToMsgId);
+	return message;
+}
+
+async function transcribeAudioMessage(msgId, groupId) {
+	try {
+		const transcribeAudio = new Api.messages.TranscribeAudio({
+			peer: groupId,
+			msgId: msgId,
+		});
+		const result = await client.invoke(transcribeAudio);
+		return result;
+	} catch (error) {
+		console.error(`Error while transcribing message: ${error.message}`);
+		return null;
 	}
 }
 
@@ -101,7 +124,9 @@ async function processCommand(event) {
 
 	const groupId = message._chatPeer.channelId;
 	const command = getCommand(message.message);
-
+	if (message) {
+		console.log('->', message);
+	}
 	if (command === '/recap') {
 		await handleRecapCommand(groupId, message.message);
 	} else if (command === '/q') {
