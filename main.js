@@ -106,10 +106,15 @@ async function processCommand(event) {
 	} else if (command === '/q') {
 		await handleQCommand(groupId, message.message);
 	} else if (command === '/clear') {
-		await clearHistory();
+		await handleClearCommand(groupId);
 	}
 }
 
+async function handleClearCommand(groupId) {
+	await clearHistory();
+	const hist = getHistory();
+	await sendGroupChatMessage(`History cleared. History: ${hist}`, groupId);
+}
 async function handleRecapCommand(groupId, messageText) {
 	const msgLimit = parseInt(messageText.split(' ')[1]);
 
@@ -155,7 +160,7 @@ async function handleQCommand(groupId, messageText) {
 function getCommand(messageText) {
 	const parts = messageText.split(' ');
 
-	if (parts.length > 0 && parts[0] in { '/recap': true, '/q': true }) {
+	if (parts.length > 0 && parts[0] in { '/recap': true, '/q': true, '/clear': true }) {
 		return parts[0];
 	}
 
