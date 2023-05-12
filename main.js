@@ -71,7 +71,7 @@ async function transcribeAudioMessage(msgId, groupId) {
 		return result;
 	} catch (error) {
 		console.error(`Error while transcribing message: ${error.message}`);
-		return null;
+		return error.message;
 	}
 }
 async function getMessages({ limit, groupId }) {
@@ -159,8 +159,8 @@ async function waitForTranscription(messageId, groupId) {
 		}
 		return response.text;
 	} catch (error) {
-		console.log(`Error: ${error.message}`);
-		return error.message;
+		// console.log(`Error: ${error.message}`);
+		return null;
 	}
 }
 function sleep(ms) {
@@ -169,10 +169,10 @@ function sleep(ms) {
 async function processCommand(event) {
 	const { message } = event;
 	if (!message) return;
-	const groupId = message?._chatPeer.channelId;
-	if (message?.media?.document?.mimeType === 'audio/ogg') {
+	const groupId = message._chatPeer.channelId;
+	if (message.media?.document?.mimeType === 'audio/ogg') {
 		const transcribedAudio = await waitForTranscription(message.id, groupId);
-		await replyToMessage(transcribedAudio, message.id, groupId);
+		if (transcribedAudio) await replyToMessage(transcribedAudio, message.id, groupId);
 		return;
 	}
 	if (message?.message) {
