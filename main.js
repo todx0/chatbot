@@ -170,7 +170,7 @@ async function processCommand(event) {
 		await handleClearCommand(groupId);
 	}
 }
-module.exports = (async () => {
+(async () => {
 	await client.connect();
 	client.addEventHandler(processCommand);
 })();
