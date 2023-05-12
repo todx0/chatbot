@@ -15,6 +15,7 @@ const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH,
 const history = [];
 function getHistory() {
 	if (history.length) return `History of your responses:\n${history.join('\n')}`;
+	return '';
 }
 
 function updateHistory(array, newElement) {
@@ -120,9 +121,11 @@ async function handleQCommand(groupId, messageText) {
 
 	try {
 		const currentHistory = getHistory();
+		console.log('current history ->', currentHistory);
 		const response = await generateGptResponse(`${requestText} ${currentHistory}`);
 		await sendGroupChatMessage(response, groupId);
 		updateHistory(history, response);
+		console.log('history after update ->', history);
 	} catch (error) {
 		console.error('Error processing q command:', error);
 		await sendGroupChatMessage(error, groupId);
