@@ -151,12 +151,17 @@ function getCommand(messageText) {
 	return null;
 }
 async function waitForTranscription(messageId, groupId) {
-	let response = await transcribeAudioMessage(messageId, groupId);
-	while (response.pending === true) {
-		await sleep(5000);
-		response = await transcribeAudioMessage(messageId, groupId);
+	try {
+		let response = await transcribeAudioMessage(messageId, groupId);
+		while (response.pending === true) {
+			await sleep(5000);
+			response = await transcribeAudioMessage(messageId, groupId);
+		}
+		return response.text;
+	} catch (error) {
+		console.log(`Error: ${error.message}`);
+		return error.message;
 	}
-	return response.text;
 }
 function sleep(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -169,7 +174,9 @@ async function processCommand(event) {
 	if (message?.media?.document?.mimeType === 'audio/ogg') {
 		const transcribedAudio = await waitForTranscription(message.id, groupId);// transcribeAudioMessage(message.id, groupId);
 		await replyToMessage(transcribedAudio, message.id, groupId);
-	} else if (message?.message) {
+		return;
+	}
+	if (message?.message) {
 		const command = getCommand(message.message);
 		if (command === '/recap') {
 			await handleRecapCommand(groupId, message.message);
