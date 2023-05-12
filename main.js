@@ -121,7 +121,6 @@ async function handleRecapCommand(groupId, messageText) {
 
 	const messages = await getMessages({ limit: msgLimit, groupId });
 	const filteredMessages = filterMessages(messages);
-
 	try {
 		const response = await generateGptResponse(`${openAiTextRequest} ${filteredMessages}`);
 		await sendGroupChatMessage(response, groupId);
@@ -132,7 +131,6 @@ async function handleRecapCommand(groupId, messageText) {
 }
 async function handleQCommand(groupId, messageText) {
 	const requestText = messageText.split('/q ')[1];
-
 	try {
 		const currentHistory = await getHistory();
 		const response = await generateGptResponse(`${requestText} ${currentHistory}`);
@@ -152,22 +150,34 @@ function getCommand(messageText) {
 
 	return null;
 }
+async function waitForTranscription(messageId, groupId) {
+	let response = await transcribeAudioMessage(messageId, groupId);
+	while (response.pending === true) {
+		await sleep(5000);
+		response = await transcribeAudioMessage(messageId, groupId);
+	}
+	return response.text;
+}
+function sleep(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
 async function processCommand(event) {
 	const { message } = event;
-	console.log(message);
-	if (!message || !message.message) {
-		return;
-	}
-
-	const groupId = message._chatPeer.channelId;
-	const command = getCommand(message.message);
-
-	if (command === '/recap') {
-		await handleRecapCommand(groupId, message.message);
-	} else if (command === '/q') {
-		await handleQCommand(groupId, message.message);
-	} else if (command === '/clear') {
-		await handleClearCommand(groupId);
+	// console.log(message);
+	if (!message) return;
+	const groupId = message?._chatPeer.channelId;
+	if (message?.media?.document?.mimeType === 'audio/ogg') {
+		const transcribedAudio = await waitForTranscription(message.id, groupId);// transcribeAudioMessage(message.id, groupId);
+		await replyToMessage(transcribedAudio, message.id, groupId);
+	} else if (message?.message) {
+		const command = getCommand(message.message);
+		if (command === '/recap') {
+			await handleRecapCommand(groupId, message.message);
+		} else if (command === '/q') {
+			await handleQCommand(groupId, message.message);
+		} else if (command === '/clear') {
+			await handleClearCommand(groupId);
+		}
 	}
 }
 (async () => {
