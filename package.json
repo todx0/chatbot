@@ -6,7 +6,7 @@
 		"eslint-plugin-import": "^2.26.0",
 		"input": "^1.0.1",
 		"openai": "^3.2.1",
-		"telegram": "^2.8.12"
+		"telegram": "^2.16.4"
 	},
 	"scripts": {
 		"start": "node ./main.js"

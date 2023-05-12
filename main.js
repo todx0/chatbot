@@ -118,20 +118,22 @@ async function generateGptResponse(messages) {
 async function processCommand(event) {
 	const { message } = event;
 	console.log(message);
-	if (!message || !message.message) {
-		return;
-	}
-
-	const groupId = message._chatPeer.channelId;
-	const command = getCommand(message.message);
-
-	if (command === '/recap') {
-		await handleRecapCommand(groupId, message.message);
-	} else if (command === '/q') {
-		await handleQCommand(groupId, message.message);
-	} else if (command === '/clear') {
-		await handleClearCommand(groupId);
-	}
+	// if (!message) return;
+	/* 	const groupId = message._chatPeer.channelId;
+		if (message?.media?.document?.mimeType === 'audio/ogg') {
+			console.log('msgid=>>', message.id);
+			const transcribedAudioText = await transcribeAudioMessage(message.id, groupId);
+			await replyToMessage(transcribedAudioText, message.id, groupId);
+		} else if (message?.message) {
+			const command = getCommand(message.message);
+			if (command === '/recap') {
+				await handleRecapCommand(groupId, message.message);
+			} else if (command === '/q') {
+				await handleQCommand(groupId, message.message);
+			} else if (command === '/clear') {
+				await handleClearCommand(groupId);
+			}
+		} */
 }
 
 async function handleClearCommand(groupId) {
