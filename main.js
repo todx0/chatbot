@@ -12,6 +12,21 @@ const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH,
 	connectionRetries: 5,
 });
 
+const history = [];
+function getHistory() {
+	if (history.length) return `History of your responses:\n${history.join('\n')}`;
+}
+
+function updateHistory(array, newElement) {
+	const updatedHistory = [...array];
+
+	if (updatedHistory.length < 30) {
+		updatedHistory.push(newElement);
+	} else {
+		updatedHistory.splice(-1, 1, newElement);
+	}
+	return updatedHistory;
+}
 async function sendGroupChatMessage(messageText, groupId) {
 	try {
 		const sendMessage = new Api.messages.SendMessage({
@@ -104,8 +119,10 @@ async function handleQCommand(groupId, messageText) {
 	const requestText = messageText.split('/q ')[1];
 
 	try {
-		const response = await generateGptResponse(requestText);
+		const currentHistory = getHistory();
+		const response = await generateGptResponse(`${requestText} ${currentHistory}`);
 		await sendGroupChatMessage(response, groupId);
+		updateHistory(history, response);
 	} catch (error) {
 		console.error('Error processing q command:', error);
 		await sendGroupChatMessage(error, groupId);
