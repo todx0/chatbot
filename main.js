@@ -168,11 +168,10 @@ function sleep(ms) {
 }
 async function processCommand(event) {
 	const { message } = event;
-	// console.log(message);
 	if (!message) return;
 	const groupId = message?._chatPeer.channelId;
 	if (message?.media?.document?.mimeType === 'audio/ogg') {
-		const transcribedAudio = await waitForTranscription(message.id, groupId);// transcribeAudioMessage(message.id, groupId);
+		const transcribedAudio = await waitForTranscription(message.id, groupId);
 		await replyToMessage(transcribedAudio, message.id, groupId);
 		return;
 	}
