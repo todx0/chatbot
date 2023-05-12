@@ -190,7 +190,7 @@ function getCommand(messageText) {
 	return null;
 }
 
-module.exports = (async () => {
+(async () => {
 	await client.connect();
 	client.addEventHandler(processCommand);
 })();
