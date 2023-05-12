@@ -113,8 +113,7 @@ async function processCommand(event) {
 
 async function handleClearCommand(groupId) {
 	await clearHistory();
-	const hist = await getHistory();
-	await sendGroupChatMessage(`History cleared. History: ${hist}`, groupId);
+	await sendGroupChatMessage('History cleared', groupId);
 }
 
 async function handleRecapCommand(groupId, messageText) {
@@ -147,12 +146,9 @@ async function handleQCommand(groupId, messageText) {
 
 	try {
 		const currentHistory = await getHistory();
-		console.log('history before ->', currentHistory);
 		const response = await generateGptResponse(`${requestText} ${currentHistory}`);
 		await sendGroupChatMessage(response, groupId);
 		await writeToHistoryFile(response);
-		const afterHistory = await getHistory();
-		console.log('history after ->', afterHistory);
 	} catch (error) {
 		console.error('Error processing q command:', error);
 		await sendGroupChatMessage(error, groupId);
