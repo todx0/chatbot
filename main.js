@@ -36,6 +36,11 @@ async function readHistoryFile(fileName) {
 	}
 }
 
+async function getHistory() {
+	const fileContent = readHistoryFile(history);
+	if (fileContent) return `Your previous answers are: ${fileContent}`;
+	return '';
+}
 async function sendGroupChatMessage(messageText, groupId) {
 	try {
 		const sendMessage = new Api.messages.SendMessage({
@@ -128,12 +133,12 @@ async function handleQCommand(groupId, messageText) {
 	const requestText = messageText.split('/q ')[1];
 
 	try {
-		const currentHistory = await readHistoryFile(history);
+		const currentHistory = await getHistory();
 		console.log('history before ->', currentHistory);
-		const response = await generateGptResponse(`${requestText} Your previous responses: ${currentHistory}`);
+		const response = await generateGptResponse(`${requestText} ${currentHistory}`);
 		await sendGroupChatMessage(response, groupId);
 		await writeToHistoryFile(response);
-		const afterHistory = await readHistoryFile(history);
+		const afterHistory = await getHistory();
 		console.log('history after ->', afterHistory);
 	} catch (error) {
 		console.error('Error processing q command:', error);
