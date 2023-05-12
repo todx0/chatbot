@@ -45,6 +45,7 @@ async function getHistory() {
 	if (fileContent) return `Your previous answers are: ${fileContent}`;
 	return '';
 }
+
 async function sendGroupChatMessage(messageText, groupId) {
 	try {
 		const sendMessage = new Api.messages.SendMessage({
@@ -115,6 +116,7 @@ async function handleClearCommand(groupId) {
 	const hist = await getHistory();
 	await sendGroupChatMessage(`History cleared. History: ${hist}`, groupId);
 }
+
 async function handleRecapCommand(groupId, messageText) {
 	const msgLimit = parseInt(messageText.split(' ')[1]);
 

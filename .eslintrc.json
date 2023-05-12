@@ -1,75 +1,75 @@
 {
-    "extends": "airbnb",
-    "parserOptions": {
-        "ecmaVersion": 2022
-    },
-    "rules": {
-        "indent": "off",
-        "func-names": "off",
-        "no-unused-expressions": "off",
-        "max-len": "off",
-        "no-await-in-loop": "off",
-        "no-restricted-syntax": [
-            "off",
-            "ForStatement"
-        ],
-        "no-underscore-dangle": "off",
-        "no-use-before-define": "off",
-        "no-prototype-builtins": "off",
-        "import/newline-after-import": "off",
-        "one-var": "off",
-        "one-var-declaration-per-line": "off",
-        "no-tabs": "off",
-        "no-console": "off",
-        "object-shorthand": "off",
-        "comma-dangle": "off",
-        "no-loop-func": "warn",
-        "prefer-const": "warn",
-        "default-case": "warn",
-        "consistent-return": "warn",
-        "eqeqeq": "warn",
-        "prefer-destructuring": [
-            "warn",
-            {
-                "object": true,
-                "array": false
-            }
-        ],
-        "no-mixed-spaces-and-tabs": [
-            "error",
-            "smart-tabs"
-        ],
-        "no-bitwise": [
-            "error",
-            {
-                "allow": [
-                    "~",
-                    "^"
-                ]
-            }
-        ],
-        "no-plusplus": [
-            "error",
-            {
-                "allowForLoopAfterthoughts": true
-            }
-        ],
-        "radix": [
-            "error",
-            "as-needed"
-        ]
-    },
-    "overrides": [
-        {
-            "files": "*.test.js",
-            "rules": {
-                "prefer-arrow-callback": "off"
-            }
-        }
-    ],
-    "env": {
-        "commonjs": true,
-        "node": true,
-        "mocha": true
-    }
+	"extends": "airbnb",
+	"parserOptions": {
+		"ecmaVersion": 2022
+	},
+	"rules": {
+		"indent": "off",
+		"func-names": "off",
+		"no-unused-expressions": "off",
+		"max-len": "off",
+		"no-await-in-loop": "off",
+		"no-restricted-syntax": [
+			"off",
+			"ForStatement"
+		],
+		"no-underscore-dangle": "off",
+		"no-use-before-define": "off",
+		"no-prototype-builtins": "off",
+		"import/newline-after-import": "off",
+		"one-var": "off",
+		"one-var-declaration-per-line": "off",
+		"no-tabs": "off",
+		"no-console": "off",
+		"object-shorthand": "off",
+		"comma-dangle": "off",
+		"no-loop-func": "warn",
+		"prefer-const": "warn",
+		"default-case": "warn",
+		"consistent-return": "off",
+		"eqeqeq": "warn",
+		"prefer-destructuring": [
+			"warn",
+			{
+				"object": true,
+				"array": false
+			}
+		],
+		"no-mixed-spaces-and-tabs": [
+			"error",
+			"smart-tabs"
+		],
+		"no-bitwise": [
+			"error",
+			{
+				"allow": [
+					"~",
+					"^"
+				]
+			}
+		],
+		"no-plusplus": [
+			"error",
+			{
+				"allowForLoopAfterthoughts": true
+			}
+		],
+		"radix": [
+			"error",
+			"as-needed"
+		]
+	},
+	"overrides": [
+		{
+			"files": "*.test.js",
+			"rules": {
+				"prefer-arrow-callback": "off"
+			}
+		}
+	],
+	"env": {
+		"commonjs": true,
+		"node": true,
+		"mocha": true
+	}
 }
