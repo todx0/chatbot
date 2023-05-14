@@ -54,10 +54,10 @@ async function transcribeAudioMessage(msgId, groupId) {
 }
 async function getMessages({ limit, groupId }) {
 	const messages = [];
-	for await (const message of client.iterMessages(`-${groupId}`, { limit: limit })) {
+	for await (const message of client.iterMessages(`-${groupId}`, { limit: limit, reverse: true })) {
 		messages.push(`${message._sender.firstName}: ${message.message}`);
 	}
-	return messages.reverse();
+	return messages;
 }
 function filterMessages(messages) {
 	return messages.filter((message) => !message.includes('/recap') && message.length < 300);
