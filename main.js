@@ -18,11 +18,15 @@ const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH,
 	connectionRetries: 5,
 });
 
-async function sendMessage(peer, messageText, replyToMsgId) {
+async function sendMessage(obj) {
+	const {
+		peer, message, replyToMsgId, silent
+	} = obj;
 	const sendMsg = new Api.messages.SendMessage({
-		peer,
-		message: messageText,
-		replyToMsgId
+		peer: peer,
+		message: message,
+		replyToMsgId: replyToMsgId,
+		silent: silent
 	});
 	try {
 		const result = await client.invoke(sendMsg);
@@ -32,11 +36,20 @@ async function sendMessage(peer, messageText, replyToMsgId) {
 	}
 }
 async function sendGroupChatMessage(messageText, groupId) {
-	const message = await sendMessage(groupId, messageText, null);
+	const message = await sendMessage({
+		peer: groupId,
+		message: messageText,
+		silent: false
+	});
 	return message;
 }
 async function replyToMessage(messageText, replyToMsgId, groupId) {
-	const message = await sendMessage(groupId, messageText, replyToMsgId);
+	const message = await sendMessage({
+		peer: groupId,
+		message: messageText,
+		replyToMsgId: replyToMsgId,
+		silent: true
+	});
 	return message;
 }
 async function transcribeAudioMessage(msgId, groupId) {
@@ -54,10 +67,10 @@ async function transcribeAudioMessage(msgId, groupId) {
 }
 async function getMessages({ limit, groupId }) {
 	const messages = [];
-	for await (const message of client.iterMessages(`-${groupId}`, { limit: limit, reverse: true })) {
+	for await (const message of client.iterMessages(`-${groupId}`, { limit: limit })) {
 		messages.push(`${message._sender.firstName}: ${message.message}`);
 	}
-	return messages;
+	return messages.reverse();
 }
 function filterMessages(messages) {
 	return messages.filter((message) => !message.includes('/recap') && message.length < 300);
@@ -124,8 +137,9 @@ async function waitForTranscription(messageId, groupId) {
 async function processCommand(event) {
 	const { message } = event;
 	if (!message) return;
+	// if (message.media?.document) console.log('->>', message.media?.document);
 	const groupId = message._chatPeer.channelId;
-	if (message.media?.document?.mimeType === 'audio/ogg') {
+	if (message.media?.document?.mimeType === 'audio/ogg' || message.media?.document?.mimeType === 'video/mp4') {
 		const transcribedAudio = await waitForTranscription(message.id, groupId);
 		if (transcribedAudio) await replyToMessage(transcribedAudio, message.id, groupId);
 		return;
