@@ -27,5 +27,5 @@ module.exports = {
 	OPENAI_API_KEY,
 	ORGANIZATION_ID,
 	openAiTextRequest,
-	openai
+	openai,
 };

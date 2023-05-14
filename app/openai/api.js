@@ -1,0 +1,23 @@
+const { openai } = require('../../config');
+
+async function generateGptResponse(messages) {
+	try {
+		const response = await openai.createChatCompletion({
+			model: 'gpt-3.5-turbo',
+			messages: [
+				{
+					role: 'user',
+					content: `${messages}`
+				}
+			]
+		});
+		return response.data.choices[0].message.content;
+	} catch (error) {
+		// throw new Error(error.response.data.error.message);
+		return error.response.data.error.message;
+	}
+}
+
+module.exports = {
+	generateGptResponse
+};
