@@ -86,16 +86,14 @@ async function handleRecapCommand(groupId, messageText) {
 		await sendGroupChatMessage('/recap command requires a limit: /recap 50', groupId);
 		return;
 	}
-
 	if (msgLimit > 300) {
 		await sendGroupChatMessage('Max recap limit is 300: /recap 300', groupId);
 		return;
 	}
-
 	const messages = await getMessages({ limit: msgLimit, groupId });
 	const filteredMessages = filterMessages(messages);
 	try {
-		const response = await generateGptResponse(`${openAiTextRequest} ${filteredMessages}`);
+		const response = await generateGptResponse(filteredMessages);
 		await sendGroupChatMessage(response, groupId);
 	} catch (error) {
 		console.error('Error processing recap command:', error);
@@ -137,7 +135,6 @@ async function waitForTranscription(messageId, groupId) {
 async function processCommand(event) {
 	const { message } = event;
 	if (!message) return;
-	// if (message.media?.document) console.log('->>', message.media?.document);
 	const groupId = message._chatPeer.channelId;
 	if (message.media?.document?.mimeType === 'audio/ogg' || message.media?.document?.mimeType === 'video/mp4') {
 		const transcribedAudio = await waitForTranscription(message.id, groupId);
