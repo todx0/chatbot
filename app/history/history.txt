@@ -1,0 +1,3 @@
+
+That model is currently overloaded with other requests. You can retry your request, or contact us through our help center at help.openai.com if the error persists. (Please include the request ID eb467a342c421b71e12bff794d988904 in your message.)
+Thank you for letting me know. I will retry my request and contact you through your help center if the error persists. I will make sure to include the request ID eb467a342c421b71e12bff794d988904 in my message.

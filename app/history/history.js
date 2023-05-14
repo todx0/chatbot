@@ -1,4 +1,4 @@
-const history = './history.txt';
+const history = 'app/history/history.txt';
 const fs = require('fs');
 
 async function writeToHistoryFile(line) {
