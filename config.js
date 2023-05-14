@@ -11,6 +11,8 @@ const {
 	LANGUAGE
 } = process.env;
 
+const recapTextRequest = `Parse conversation. Generate detailed summary in ${LANGUAGE} language. Ignore profanity but keep context: `;
+
 const configuration = new Configuration({
 	organization: ORGANIZATION_ID,
 	apiKey: OPENAI_API_KEY,
@@ -24,6 +26,6 @@ module.exports = {
 	SESSION,
 	OPENAI_API_KEY,
 	ORGANIZATION_ID,
-	LANGUAGE,
+	recapTextRequest,
 	openai,
 };

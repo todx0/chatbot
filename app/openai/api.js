@@ -1,5 +1,4 @@
-const { openai, LANGUAGE } = require('../../config');
-const openAiTextRequest = `Parse conversation. Generate detailed summary in ${LANGUAGE} language. Ignore profanity but keep context: `;
+const { openai } = require('../../config');
 
 async function generateGptResponse(messages) {
 	try {
@@ -8,7 +7,7 @@ async function generateGptResponse(messages) {
 			messages: [
 				{
 					role: 'user',
-					content: `${openAiTextRequest} ${messages}`
+					content: messages
 				}
 			]
 		});

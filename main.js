@@ -4,7 +4,7 @@ const {
 	API_ID,
 	API_HASH,
 	SESSION,
-	openAiTextRequest,
+	recapTextRequest,
 } = require('./config');
 const {
 	writeToHistoryFile,
@@ -93,7 +93,7 @@ async function handleRecapCommand(groupId, messageText) {
 	const messages = await getMessages({ limit: msgLimit, groupId });
 	const filteredMessages = filterMessages(messages);
 	try {
-		const response = await generateGptResponse(filteredMessages);
+		const response = await generateGptResponse(`${recapTextRequest} ${filteredMessages});
 		await sendGroupChatMessage(response, groupId);
 	} catch (error) {
 		console.error('Error processing recap command:', error);
@@ -104,7 +104,7 @@ async function handleQCommand(groupId, messageText) {
 	const requestText = messageText.split('/q ')[1];
 	try {
 		const currentHistory = await getHistory();
-		const response = await generateGptResponse(`${requestText} ${currentHistory}`);
+		const response = await generateGptResponse(`${ requestText } ${ currentHistory }`);
 		await sendGroupChatMessage(response, groupId);
 		await writeToHistoryFile(response);
 	} catch (error) {
@@ -128,7 +128,7 @@ async function waitForTranscription(messageId, groupId) {
 		}
 		return response.text;
 	} catch (error) {
-		// console.log(`Error: ${error.message}`);
+		// console.log(`Error: ${ error.message }`);
 		return null;
 	}
 }
