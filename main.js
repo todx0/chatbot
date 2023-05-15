@@ -132,14 +132,20 @@ async function waitForTranscription(messageId, groupId) {
 		return null;
 	}
 }
-async function processCommand(event) {
+const processCommand = async (event) => {
 	const { message } = event;
 	if (!message) return;
+
 	const groupId = message._chatPeer.channelId;
-	if (message.media?.document?.mimeType === 'audio/ogg' || message.media?.document?.mimeType === 'video/mp4') {
-		const transcribedAudio = await waitForTranscription(message.id, groupId);
-		if (transcribedAudio) await replyToMessage(transcribedAudio, message.id, groupId);
-		return;
+	if (message?.mediaUnread) {
+		const { media } = message;
+		if (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4') {
+			const transcribedAudio = await waitForTranscription(message.id, groupId);
+			if (transcribedAudio) {
+				await replyToMessage(transcribedAudio, message.id, groupId);
+				return;
+			}
+		}
 	}
 	if (message?.message) {
 		const command = getCommand(message.message);
@@ -151,7 +157,8 @@ async function processCommand(event) {
 			await handleClearCommand(groupId);
 		}
 	}
-}
+};
+
 (async () => {
 	await client.connect();
 	client.addEventHandler(processCommand);
