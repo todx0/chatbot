@@ -5,6 +5,7 @@ const {
 	API_HASH,
 	SESSION,
 	recapTextRequest,
+	BOT_ID
 } = require('./config');
 const {
 	writeToHistoryFile,
@@ -195,7 +196,7 @@ function getCommand(messageText) {
 }
 async function checkIfOwnAndReturn(messageId, groupId) {
 	const message = await client.getMessages(groupId, { ids: messageId });
-	if (+message[0]._senderId === +5654044841) {
+	if (+message[0]._senderId === +BOT_ID) {
 		return message[0].message;
 	}
 	return null;
