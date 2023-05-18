@@ -18,6 +18,21 @@ async function generateGptResponse(messages) {
 	}
 }
 
+async function createImageFromPrompt(text) {
+	try {
+		const response = await openai.createImage({
+			prompt: text,
+			n: 1,
+			size: '1024x1024',
+			// responseFormat: 'url'
+		});
+		return response.data.data[0].url;
+	} catch (error) {
+		return error.response.data.error.message;
+	}
+}
+
 module.exports = {
-	generateGptResponse
+	generateGptResponse,
+	createImageFromPrompt
 };

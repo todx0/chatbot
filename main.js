@@ -11,8 +11,15 @@ const {
 	clearHistory,
 	getHistory
 } = require('./app/history/history');
-const { sleep } = require('./app/helper');
-const { generateGptResponse } = require('./app/openai/api');
+const {
+	sleep,
+	convertToImage,
+	downloadFile
+} = require('./app/helper');
+const {
+	generateGptResponse,
+	createImageFromPrompt
+} = require('./app/openai/api');
 
 const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH, {
 	connectionRetries: 5,
@@ -112,9 +119,62 @@ async function handleQCommand(groupId, messageText) {
 		await sendGroupChatMessage(error, groupId);
 	}
 }
+async function handleImgCommand(groupId, messageText) {
+	const requestText = messageText.split('/img ')[1];
+	try {
+		const url = await createImageFromPrompt(requestText);
+		await downloadConvertAndSend(url, groupId);
+	} catch (error) {
+		console.error('Error processing /img command:', error);
+		await sendGroupChatMessage(error, groupId);
+	}
+}
+async function sendImage(groupId, imagePath) {
+	try {
+		await client.sendMessage(groupId, { file: imagePath });
+	} catch (err) {
+		console.error(err);
+	}
+}
+async function handleImagineCommand(groupId, messageText) {
+	const msgLimit = parseInt(messageText.split(' ')[1]);
+	try {
+		if (Number.isNaN(msgLimit)) {
+			await sendGroupChatMessage('/imagine command requires a limit: /imagine 50', groupId);
+			return;
+		}
+		if (msgLimit > 300) {
+			await sendGroupChatMessage('Max imagine limit is 300: /imagine 300', groupId);
+			return;
+		}
+		const messages = await getMessages({ limit: msgLimit, groupId });
+		const filteredMessages = filterMessages(messages);
+		const recapText = await generateGptResponse(`${recapTextRequest} ${filteredMessages}`);
+		const url = await createImageFromPrompt(recapText);
+		await downloadConvertAndSend(url, groupId);
+	} catch (error) {
+		console.error('Error processing /imagine command:', error);
+		await sendGroupChatMessage(error, groupId);
+	}
+}
+async function downloadConvertAndSend(url, groupId) {
+	try {
+		const buffer = await downloadFile(url);
+		const imagePath = await convertToImage(buffer);
+		await sendImage(groupId, imagePath);
+	} catch (err) {
+		console.error(err);
+	}
+}
 function getCommand(messageText) {
 	const parts = messageText.split(' ');
-	if (parts.length > 0 && parts[0] in { '/recap': true, '/q': true, '/clear': true }) {
+	if (parts.length > 0 && parts[0] in {
+		'/recap': true,
+		'/q': true,
+		'/clear': true,
+		'/img': true,
+		'/imagine': true
+	}) {
 		return parts[0];
 	}
 	return null;
@@ -147,15 +207,18 @@ const processCommand = async (event) => {
 			}
 		}
 	}
-	if (message?.message) {
-		const command = getCommand(message.message);
-		if (command === '/recap') {
-			await handleRecapCommand(groupId, message.message);
-		} else if (command === '/q') {
-			await handleQCommand(groupId, message.message);
-		} else if (command === '/clear') {
-			await handleClearCommand(groupId);
-		}
+	const commandHandlers = {
+		'/recap': handleRecapCommand,
+		'/q': handleQCommand,
+		'/clear': handleClearCommand,
+		'/img': handleImgCommand,
+		'/imagine': handleImagineCommand
+	};
+	const messageText = message?.message;
+	const command = getCommand(messageText);
+	const handler = commandHandlers[command];
+	if (handler) {
+		await handler(groupId, messageText);
 	}
 };
 
