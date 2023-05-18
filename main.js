@@ -201,15 +201,14 @@ async function checkIfOwnAndReturn(messageId, groupId) {
 	}
 	return null;
 }
-
 const processCommand = async (event) => {
 	const { message } = event;
 	if (!message) return;
 	const groupId = message._chatPeer.channelId;
+
 	if (message?.originalArgs.mentioned) {
 		const msgId = event.message.replyTo.replyToMsgId;
 		const messageResponse = await checkIfOwnAndReturn(msgId, groupId);
-
 		if (messageResponse) {
 			const replyTo = message.originalArgs.message;
 			const gptRequest = `This message is yours: ${messageResponse}. \n This was a person's reply to it: ${replyTo}. \n Reply to person's message in his language in a little of sarcastic way and sound that you are annoyed`;
