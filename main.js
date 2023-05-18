@@ -168,11 +168,13 @@ async function transcribeAudioMessage(msgId, groupId) {
 async function waitForTranscription(messageId, groupId) {
 	try {
 		let response = await transcribeAudioMessage(messageId, groupId);
-		while (response.pending === true) {
+		while (response.pending) {
 			await sleep(5000);
 			response = await transcribeAudioMessage(messageId, groupId);
 		}
-		return response.text;
+		if (response.text !== 'Error during transcription.') {
+			return response.text;
+		}
 	} catch (error) {
 		// console.log(`Error: ${ error.message }`);
 		return null;
