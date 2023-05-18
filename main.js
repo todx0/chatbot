@@ -14,7 +14,8 @@ const {
 const {
 	sleep,
 	convertToImage,
-	downloadFile
+	downloadFile,
+	filterMessages
 } = require('./app/helper');
 const {
 	generateGptResponse,
@@ -59,17 +60,11 @@ async function replyToMessage(messageText, replyToMsgId, groupId) {
 	});
 	return message;
 }
-async function transcribeAudioMessage(msgId, groupId) {
+async function sendImage(groupId, imagePath) {
 	try {
-		const transcribeAudio = new Api.messages.TranscribeAudio({
-			peer: groupId,
-			msgId: msgId,
-		});
-		const result = await client.invoke(transcribeAudio);
-		return result;
-	} catch (error) {
-		console.error(`Error while transcribing message: ${error.message}`);
-		return error.message;
+		await client.sendMessage(groupId, { file: imagePath });
+	} catch (err) {
+		console.error(err);
 	}
 }
 async function getMessages({ limit, groupId }) {
@@ -78,9 +73,6 @@ async function getMessages({ limit, groupId }) {
 		messages.push(`${message._sender.firstName}: ${message.message}`);
 	}
 	return messages.reverse();
-}
-function filterMessages(messages) {
-	return messages.filter((message) => !message.includes('/recap') && message.length < 300);
 }
 async function handleClearCommand(groupId) {
 	await clearHistory();
@@ -129,13 +121,6 @@ async function handleImgCommand(groupId, messageText) {
 		await sendGroupChatMessage(error, groupId);
 	}
 }
-async function sendImage(groupId, imagePath) {
-	try {
-		await client.sendMessage(groupId, { file: imagePath });
-	} catch (err) {
-		console.error(err);
-	}
-}
 async function handleImagineCommand(groupId, messageText) {
 	const msgLimit = parseInt(messageText.split(' ')[1]);
 	try {
@@ -166,18 +151,18 @@ async function downloadConvertAndSend(url, groupId) {
 		console.error(err);
 	}
 }
-function getCommand(messageText) {
-	const parts = messageText.split(' ');
-	if (parts.length > 0 && parts[0] in {
-		'/recap': true,
-		'/q': true,
-		'/clear': true,
-		'/img': true,
-		'/imagine': true
-	}) {
-		return parts[0];
+async function transcribeAudioMessage(msgId, groupId) {
+	try {
+		const transcribeAudio = new Api.messages.TranscribeAudio({
+			peer: groupId,
+			msgId: msgId,
+		});
+		const result = await client.invoke(transcribeAudio);
+		return result;
+	} catch (error) {
+		console.error(`Error while transcribing message: ${error.message}`);
+		return error.message;
 	}
-	return null;
 }
 async function waitForTranscription(messageId, groupId) {
 	try {
@@ -192,19 +177,51 @@ async function waitForTranscription(messageId, groupId) {
 		return null;
 	}
 }
+function isMediaTranscribable(media) {
+	return (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
+}
+function getCommand(messageText) {
+	const parts = messageText.split(' ');
+	if (parts.length > 0 && parts[0] in {
+		'/recap': true,
+		'/q': true,
+		'/clear': true,
+		'/img': true,
+		'/imagine': true
+	}) {
+		return parts[0];
+	}
+	return null;
+}
+async function checkIfOwnAndReturn(messageId, groupId) {
+	const message = await client.getMessages(groupId, { ids: messageId });
+	if (+message[0]._senderId === +5654044841) {
+		return message[0].message;
+	}
+	return null;
+}
+
 const processCommand = async (event) => {
 	const { message } = event;
 	if (!message) return;
-
 	const groupId = message._chatPeer.channelId;
-	if (message?.mediaUnread) {
-		const { media } = message;
-		if (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4') {
-			const transcribedAudio = await waitForTranscription(message.id, groupId);
-			if (transcribedAudio) {
-				await replyToMessage(transcribedAudio, message.id, groupId);
-				return;
-			}
+	if (message?.originalArgs.mentioned) {
+		const msgId = event.message.replyTo.replyToMsgId;
+		const messageResponse = await checkIfOwnAndReturn(msgId, groupId);
+
+		if (messageResponse) {
+			const replyTo = message.originalArgs.message;
+			const gptRequest = `This message is yours: ${messageResponse}. \n This was a person's reply to it: ${replyTo}. \n Reply to person's message in his language in a little of sarcastic way and sound that you are annoyed`;
+			const gptReply = await generateGptResponse(gptRequest);
+			await replyToMessage(gptReply, message.id, groupId);
+			return;
+		}
+	}
+	if (message?.mediaUnread && isMediaTranscribable(message.media)) {
+		const transcribedAudio = await waitForTranscription(message.id, groupId);
+		if (transcribedAudio) {
+			await replyToMessage(transcribedAudio, message.id, groupId);
+			return;
 		}
 	}
 	const commandHandlers = {

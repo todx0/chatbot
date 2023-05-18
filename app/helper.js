@@ -16,9 +16,12 @@ async function convertToImage(buffer) {
 	}
 	throw new Error('Not a buffer');
 }
-
+function filterMessages(messages) {
+	return messages.filter((message) => !message.includes('/recap') && message.length < 300);
+}
 module.exports = {
 	sleep,
 	downloadFile,
-	convertToImage
+	convertToImage,
+	filterMessages
 };
