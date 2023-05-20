@@ -5,7 +5,8 @@ const {
 	API_HASH,
 	SESSION,
 	recapTextRequest,
-	BOT_ID
+	BOT_ID,
+	LANGUAGE
 } = require('./config');
 const {
 	writeToHistoryFile,
@@ -16,7 +17,8 @@ const {
 	sleep,
 	convertToImage,
 	downloadFile,
-	filterMessages
+	filterMessages,
+	truncatePrompt
 } = require('./app/helper');
 const {
 	generateGptResponse,
@@ -79,6 +81,15 @@ async function handleClearCommand(groupId) {
 	await clearHistory();
 	await sendGroupChatMessage('History cleared', groupId);
 }
+async function combineAnswers(answer1, answer2) {
+	// tune text and get rid of translate function
+	const combinedAnswer = await generateGptResponse(`Combine two answers into one. Reply in ${LANGUAGE}: \n ${answer1} \n ${answer2} \n`);
+	return combinedAnswer;
+}
+/* async function translateMessage(message) {
+	const translatedMessage = await generateGptResponse(`Translate to ${LANGUAGE}: \n ${message}`);
+	return translatedMessage;
+} */
 async function handleRecapCommand(groupId, messageText) {
 	const msgLimit = parseInt(messageText.split(' ')[1]);
 
@@ -93,7 +104,16 @@ async function handleRecapCommand(groupId, messageText) {
 	const messages = await getMessages({ limit: msgLimit, groupId });
 	const filteredMessages = filterMessages(messages);
 	try {
-		const response = await generateGptResponse(`${recapTextRequest} ${filteredMessages}`);
+		let response;
+		if (filteredMessages.length > 4096) {
+			const [firstArray, secondArray] = await truncatePrompt(filteredMessages);
+			const response1Promise = generateGptResponse(`${recapTextRequest} ${firstArray}`);
+			const response2Promise = generateGptResponse(`${recapTextRequest} ${secondArray}`);
+			const [response1, response2] = await Promise.all([response1Promise, response2Promise]);
+			response = await combineAnswers(response1, response2);
+		} else {
+			response = await generateGptResponse(`${recapTextRequest} ${filteredMessages}`);
+		}
 		await sendGroupChatMessage(response, groupId);
 	} catch (error) {
 		console.error('Error processing recap command:', error);

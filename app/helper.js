@@ -17,11 +17,18 @@ async function convertToImage(buffer) {
 	throw new Error('Not a buffer');
 }
 function filterMessages(messages) {
-	return messages.filter((message) => !message.includes('/recap') && message.length < 300);
+	return messages.filter((message) => !message.includes('/recap') && message.length < 300 && message.length);
+}
+async function truncatePrompt(array) {
+	const mid = Math.ceil(array.length / 2);
+	const firstHalf = array.slice(0, mid);
+	const secondHalf = array.slice(mid);
+	return [firstHalf, secondHalf];
 }
 module.exports = {
 	sleep,
 	downloadFile,
 	convertToImage,
-	filterMessages
+	filterMessages,
+	truncatePrompt
 };

@@ -30,4 +30,5 @@ module.exports = {
 	ORGANIZATION_ID,
 	recapTextRequest,
 	openai,
+	LANGUAGE
 };
