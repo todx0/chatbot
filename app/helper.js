@@ -16,7 +16,7 @@ async function convertToImage(buffer) {
 	}
 	throw new Error('Not a buffer');
 }
-function filterMessages(messages) {
+async function filterMessages(messages) {
 	return messages.filter((message) => !message.includes('/recap') && message.length < 300 && message.length);
 }
 async function truncatePrompt(array) {
@@ -25,10 +25,38 @@ async function truncatePrompt(array) {
 	const secondHalf = array.slice(mid);
 	return [firstHalf, secondHalf];
 }
+async function trimToMaxLength(arr) {
+	const maxLength = 2000;
+	let currentLength = 0;
+	let tempArr = [];
+	const result = [];
+
+	for (let i = 0; i < arr.length; i++) {
+		const lengthToAdd = Math.round((arr[i].length / arr.join('').length) * maxLength);
+
+		if (currentLength + lengthToAdd > maxLength) {
+			result.push(tempArr);
+			tempArr = [];
+			currentLength = 0;
+		}
+		tempArr.push(arr[i]);
+		currentLength += lengthToAdd;
+	}
+	if (tempArr.length > 0) {
+		result.push(tempArr);
+	}
+	return result;
+}
+async function approximateTokenLength(array) {
+	const totalLength = array.map((str) => str.length).reduce((accumulator, currentValue) => accumulator + currentValue);
+	return totalLength;
+}
 module.exports = {
 	sleep,
 	downloadFile,
 	convertToImage,
 	filterMessages,
-	truncatePrompt
+	truncatePrompt,
+	approximateTokenLength,
+	trimToMaxLength
 };

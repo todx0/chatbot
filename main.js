@@ -18,7 +18,8 @@ const {
 	convertToImage,
 	downloadFile,
 	filterMessages,
-	truncatePrompt
+	trimToMaxLength,
+	approximateTokenLength
 } = require('./app/helper');
 const {
 	generateGptResponse,
@@ -81,18 +82,14 @@ async function handleClearCommand(groupId) {
 	await clearHistory();
 	await sendGroupChatMessage('History cleared', groupId);
 }
-async function combineAnswers(answer1, answer2) {
-	// tune text and get rid of translate function
-	const combinedAnswer = await generateGptResponse(`Combine two answers into one. Reply in ${LANGUAGE}: \n ${answer1} \n ${answer2} \n`);
+async function combineAnswers(answers) {
+	console.log(answers);
+	const combinedAnswer = await generateGptResponse(`Combine array of answers to one. Reply in ${LANGUAGE}: \n ${answers}`);
 	return combinedAnswer;
 }
-/* async function translateMessage(message) {
-	const translatedMessage = await generateGptResponse(`Translate to ${LANGUAGE}: \n ${message}`);
-	return translatedMessage;
-} */
-function aproximateTokenLength(array) {
-	const totalLength = array.map((str) => str.length).reduce((accumulator, currentValue) => accumulator + currentValue);
-	return totalLength;
+function generateGptResponses(requestText, arr) {
+	const promises = arr.map((innerArr) => generateGptResponse(`${requestText} ${innerArr}`));
+	return Promise.all(promises);
 }
 async function handleRecapCommand(groupId, messageText) {
 	const msgLimit = parseInt(messageText.split(' ')[1]);
@@ -101,23 +98,31 @@ async function handleRecapCommand(groupId, messageText) {
 		await sendGroupChatMessage('/recap command requires a limit: /recap 50', groupId);
 		return;
 	}
-	if (msgLimit > 400) {
-		await sendGroupChatMessage('Max recap limit is 400: /recap 400', groupId);
+	if (msgLimit > 500) {
+		await sendGroupChatMessage('Max recap limit is 500: /recap 500', groupId);
 		return;
 	}
 	const messages = await getMessages({ limit: msgLimit, groupId });
-	const filteredMessages = filterMessages(messages);
+	const filteredMessages = await filterMessages(messages);
 	try {
 		let response;
-		const messagesLength = aproximateTokenLength(filteredMessages);
-		if (messagesLength > 4096) {
-			const [firstArray, secondArray] = await truncatePrompt(filteredMessages);
-			const response1Promise = generateGptResponse(`${recapTextRequest} ${firstArray}`);
-			const response2Promise = generateGptResponse(`${recapTextRequest} ${secondArray}`);
-			const [response1, response2] = await Promise.all([response1Promise, response2Promise]);
-			response = await combineAnswers(response1, response2);
+		const messagesLength = await approximateTokenLength(filteredMessages);
+		const maxLength = 4096;
+
+		if (messagesLength <= maxLength) {
+			const messageString = Array.isArray(filteredMessages)
+				? filteredMessages.join(' ')
+				: filteredMessages;
+			response = await generateGptResponse(`${recapTextRequest} ${messageString}`);
 		} else {
-			response = await generateGptResponse(`${recapTextRequest} ${filteredMessages}`);
+			const trimmedArrays = await trimToMaxLength(filteredMessages);
+			if (trimmedArrays.length > 1) {
+				const responses = await generateGptResponses(recapTextRequest, trimmedArrays);
+				const responsesCombined = await combineAnswers(responses);
+				response = await generateGptResponse(`${recapTextRequest} ${responsesCombined}`);
+			} else {
+				response = await generateGptResponse(`${recapTextRequest} ${trimmedArrays[0]}`);
+			}
 		}
 		await sendGroupChatMessage(response, groupId);
 	} catch (error) {
