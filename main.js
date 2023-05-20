@@ -18,7 +18,9 @@ const {
 	convertToImage,
 	downloadFile,
 	filterMessages,
-	approximateTokenLength
+	approximateTokenLength,
+	convertFilteredMessagesToString,
+	splitMessageInChunks
 } = require('./app/helper');
 const {
 	generateGptResponse,
@@ -88,24 +90,6 @@ async function combineAnswers(answers) {
 async function generateGptResponses(requestText, arr) {
 	const promises = arr.map((innerArr) => generateGptResponse(`${requestText} ${innerArr}`));
 	return Promise.all(promises);
-}
-async function convertFilteredMessagesToString(array) {
-	return array.toString();
-}
-async function splitMessageInChunks(message) {
-	const maxChunkSize = 3000;
-	const messageLength = message.length;
-	const chunkCount = Math.ceil(messageLength / maxChunkSize);
-	const chunks = [];
-
-	for (let i = 0; i < chunkCount; i++) {
-		const start = i * maxChunkSize;
-		const end = start + maxChunkSize;
-		const chunk = message.substring(start, end);
-
-		chunks.push(chunk);
-	}
-	return chunks;
 }
 async function handleRecapCommand(groupId, messageText) {
 	const msgLimit = parseInt(messageText.split(' ')[1]);

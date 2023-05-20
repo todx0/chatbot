@@ -2,6 +2,7 @@ const axios = require('axios');
 const fs = require('fs');
 
 function sleep(ms) {
+	// eslint-disable-next-line no-promise-executor-return
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 async function downloadFile(url) {
@@ -19,31 +20,27 @@ async function convertToImage(buffer) {
 async function filterMessages(messages) {
 	return messages.filter((message) => !message.includes('/recap') && message.length < 300 && message.length);
 }
-async function trimToMaxLength(arr) {
-	const maxLength = 2000;
-	let currentLength = 0;
-	let tempArr = [];
-	const result = [];
-
-	for (let i = 0; i < arr.length; i++) {
-		const lengthToAdd = Math.round((arr[i].length / arr.join('').length) * maxLength);
-
-		if (currentLength + lengthToAdd > maxLength) {
-			result.push(tempArr);
-			tempArr = [];
-			currentLength = 0;
-		}
-		tempArr.push(arr[i]);
-		currentLength += lengthToAdd;
-	}
-	if (tempArr.length > 0) {
-		result.push(tempArr);
-	}
-	return result;
-}
 async function approximateTokenLength(array) {
 	const totalLength = array.map((str) => str.length).reduce((accumulator, currentValue) => accumulator + currentValue);
 	return totalLength;
+}
+async function convertFilteredMessagesToString(array) {
+	return array.toString();
+}
+async function splitMessageInChunks(message) {
+	const maxChunkSize = 3000;
+	const messageLength = message.length;
+	const chunkCount = Math.ceil(messageLength / maxChunkSize);
+	const chunks = [];
+
+	for (let i = 0; i < chunkCount; i++) {
+		const start = i * maxChunkSize;
+		const end = start + maxChunkSize;
+		const chunk = message.substring(start, end);
+
+		chunks.push(chunk);
+	}
+	return chunks;
 }
 module.exports = {
 	sleep,
@@ -51,5 +48,6 @@ module.exports = {
 	convertToImage,
 	filterMessages,
 	approximateTokenLength,
-	trimToMaxLength
+	convertFilteredMessagesToString,
+	splitMessageInChunks
 };
