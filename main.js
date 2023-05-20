@@ -18,7 +18,6 @@ const {
 	convertToImage,
 	downloadFile,
 	filterMessages,
-	trimToMaxLength,
 	approximateTokenLength
 } = require('./app/helper');
 const {
@@ -83,13 +82,30 @@ async function handleClearCommand(groupId) {
 	await sendGroupChatMessage('History cleared', groupId);
 }
 async function combineAnswers(answers) {
-	console.log(answers);
-	const combinedAnswer = await generateGptResponse(`Combine array of answers to one. Reply in ${LANGUAGE}: \n ${answers}`);
+	const combinedAnswer = await generateGptResponse(`Combine array of answers to one. Reply in ${LANGUAGE}. \n ${answers}`);
 	return combinedAnswer;
 }
-function generateGptResponses(requestText, arr) {
+async function generateGptResponses(requestText, arr) {
 	const promises = arr.map((innerArr) => generateGptResponse(`${requestText} ${innerArr}`));
 	return Promise.all(promises);
+}
+async function convertFilteredMessagesToString(array) {
+	return array.toString();
+}
+async function splitMessageInChunks(message) {
+	const maxChunkSize = 3000;
+	const messageLength = message.length;
+	const chunkCount = Math.ceil(messageLength / maxChunkSize);
+	const chunks = [];
+
+	for (let i = 0; i < chunkCount; i++) {
+		const start = i * maxChunkSize;
+		const end = start + maxChunkSize;
+		const chunk = message.substring(start, end);
+
+		chunks.push(chunk);
+	}
+	return chunks;
 }
 async function handleRecapCommand(groupId, messageText) {
 	const msgLimit = parseInt(messageText.split(' ')[1]);
@@ -114,17 +130,23 @@ async function handleRecapCommand(groupId, messageText) {
 				? filteredMessages.join(' ')
 				: filteredMessages;
 			response = await generateGptResponse(`${recapTextRequest} ${messageString}`);
-		} else {
-			const trimmedArrays = await trimToMaxLength(filteredMessages);
-			if (trimmedArrays.length > 1) {
-				const responses = await generateGptResponses(recapTextRequest, trimmedArrays);
-				const responsesCombined = await combineAnswers(responses);
-				response = await generateGptResponse(`${recapTextRequest} ${responsesCombined}`);
-			} else {
-				response = await generateGptResponse(`${recapTextRequest} ${trimmedArrays[0]}`);
-			}
+			await sendGroupChatMessage(response, groupId);
+			return response;
 		}
+
+		const filteredMessagesString = await convertFilteredMessagesToString(filteredMessages);
+		const chunks = await splitMessageInChunks(filteredMessagesString);
+		if (chunks.length === 1) {
+			response = await generateGptResponse(`${recapTextRequest} ${chunks[0]}`);
+			await sendGroupChatMessage(response, groupId);
+			return response;
+		}
+
+		const responses = await generateGptResponses(recapTextRequest, chunks);
+		const responsesCombined = await combineAnswers(responses);
+		response = await generateGptResponse(`There are few recaps of the conversation. Combine them and do a detailed recap in russian language in a little of sarcastic way and sound that you are annoyed: ${responsesCombined}`);
 		await sendGroupChatMessage(response, groupId);
+		return response;
 	} catch (error) {
 		console.error('Error processing recap command:', error);
 		await sendGroupChatMessage(error, groupId);
