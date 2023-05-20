@@ -19,12 +19,6 @@ async function convertToImage(buffer) {
 async function filterMessages(messages) {
 	return messages.filter((message) => !message.includes('/recap') && message.length < 300 && message.length);
 }
-async function truncatePrompt(array) {
-	const mid = Math.ceil(array.length / 2);
-	const firstHalf = array.slice(0, mid);
-	const secondHalf = array.slice(mid);
-	return [firstHalf, secondHalf];
-}
 async function trimToMaxLength(arr) {
 	const maxLength = 2000;
 	let currentLength = 0;
@@ -56,7 +50,6 @@ module.exports = {
 	downloadFile,
 	convertToImage,
 	filterMessages,
-	truncatePrompt,
 	approximateTokenLength,
 	trimToMaxLength
 };
