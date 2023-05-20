@@ -90,6 +90,10 @@ async function combineAnswers(answer1, answer2) {
 	const translatedMessage = await generateGptResponse(`Translate to ${LANGUAGE}: \n ${message}`);
 	return translatedMessage;
 } */
+function aproximateTokenLength(array) {
+	const totalLength = array.map((str) => str.length).reduce((accumulator, currentValue) => accumulator + currentValue);
+	return totalLength;
+}
 async function handleRecapCommand(groupId, messageText) {
 	const msgLimit = parseInt(messageText.split(' ')[1]);
 
@@ -97,15 +101,16 @@ async function handleRecapCommand(groupId, messageText) {
 		await sendGroupChatMessage('/recap command requires a limit: /recap 50', groupId);
 		return;
 	}
-	if (msgLimit > 300) {
-		await sendGroupChatMessage('Max recap limit is 300: /recap 300', groupId);
+	if (msgLimit > 400) {
+		await sendGroupChatMessage('Max recap limit is 400: /recap 400', groupId);
 		return;
 	}
 	const messages = await getMessages({ limit: msgLimit, groupId });
 	const filteredMessages = filterMessages(messages);
 	try {
 		let response;
-		if (filteredMessages.length > 4096) {
+		const messagesLength = aproximateTokenLength(filteredMessages);
+		if (messagesLength > 4096) {
 			const [firstArray, secondArray] = await truncatePrompt(filteredMessages);
 			const response1Promise = generateGptResponse(`${recapTextRequest} ${firstArray}`);
 			const response2Promise = generateGptResponse(`${recapTextRequest} ${secondArray}`);
