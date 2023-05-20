@@ -5,8 +5,7 @@ const {
 	API_HASH,
 	SESSION,
 	recapTextRequest,
-	BOT_ID,
-	LANGUAGE
+	BOT_ID
 } = require('./config');
 const {
 	writeToHistoryFile,
@@ -24,7 +23,9 @@ const {
 } = require('./app/helper');
 const {
 	generateGptResponse,
-	createImageFromPrompt
+	createImageFromPrompt,
+	generateGptResponses,
+	combineAnswers
 } = require('./app/openai/api');
 
 const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH, {
@@ -82,14 +83,6 @@ async function getMessages({ limit, groupId }) {
 async function handleClearCommand(groupId) {
 	await clearHistory();
 	await sendGroupChatMessage('History cleared', groupId);
-}
-async function combineAnswers(answers) {
-	const combinedAnswer = await generateGptResponse(`Combine array of answers to one. Reply in ${LANGUAGE}. \n ${answers}`);
-	return combinedAnswer;
-}
-async function generateGptResponses(requestText, arr) {
-	const promises = arr.map((innerArr) => generateGptResponse(`${requestText} ${innerArr}`));
-	return Promise.all(promises);
 }
 async function handleRecapCommand(groupId, messageText) {
 	const msgLimit = parseInt(messageText.split(' ')[1]);

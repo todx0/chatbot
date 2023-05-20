@@ -12,7 +12,7 @@ async function downloadFile(url) {
 async function convertToImage(buffer) {
 	if (buffer instanceof Buffer) {
 		const path = './images/image.jpg';
-		fs.writeFileSync(path, buffer);
+		fs.writeFileSync(path, buffer, { flag: 'w' });
 		return path;
 	}
 	throw new Error('Not a buffer');

@@ -1,4 +1,4 @@
-const { openai } = require('../../config');
+const { openai, LANGUAGE } = require('../../config');
 
 async function generateGptResponse(messages) {
 	try {
@@ -17,7 +17,10 @@ async function generateGptResponse(messages) {
 		return error.response.data.error.message;
 	}
 }
-
+async function generateGptResponses(requestText, arr) {
+	const promises = arr.map((innerArr) => generateGptResponse(`${requestText} ${innerArr}`));
+	return Promise.all(promises);
+}
 async function createImageFromPrompt(text) {
 	try {
 		const response = await openai.createImage({
@@ -31,8 +34,13 @@ async function createImageFromPrompt(text) {
 		return error.response.data.error.message;
 	}
 }
-
+async function combineAnswers(answers) {
+	const combinedAnswer = await generateGptResponse(`Combine array of answers to one. Reply in ${LANGUAGE}. \n ${answers}`);
+	return combinedAnswer;
+}
 module.exports = {
 	generateGptResponse,
-	createImageFromPrompt
+	createImageFromPrompt,
+	generateGptResponses,
+	combineAnswers
 };
