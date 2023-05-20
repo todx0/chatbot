@@ -5,7 +5,8 @@ const {
 	API_HASH,
 	SESSION,
 	recapTextRequest,
-	BOT_ID
+	toxicRecapRequest,
+	BOT_ID,
 } = require('./config');
 const {
 	writeToHistoryFile,
@@ -121,7 +122,7 @@ async function handleRecapCommand(groupId, messageText) {
 
 		const responses = await generateGptResponses(recapTextRequest, chunks);
 		const responsesCombined = await combineAnswers(responses);
-		response = await generateGptResponse(`There are few recaps of the conversation. Combine them and do a detailed recap in russian language in a little of sarcastic way and sound that you are annoyed: ${responsesCombined}`);
+		response = await generateGptResponse(`${toxicRecapRequest} ${responsesCombined}`);
 		await sendGroupChatMessage(response, groupId);
 		return response;
 	} catch (error) {

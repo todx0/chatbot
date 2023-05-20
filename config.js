@@ -13,6 +13,7 @@ const {
 } = process.env;
 
 const recapTextRequest = `Parse conversation. Generate detailed summary in ${LANGUAGE} language. Ignore profanity but keep context: `;
+const toxicRecapRequest = `There are few recaps of the conversation. Combine them and do a detailed recap in ${LANGUAGE} language in a little of sarcastic way and sound that you are annoyed:`;
 
 const configuration = new Configuration({
 	organization: ORGANIZATION_ID,
@@ -30,5 +31,6 @@ module.exports = {
 	ORGANIZATION_ID,
 	recapTextRequest,
 	openai,
-	LANGUAGE
+	LANGUAGE,
+	toxicRecapRequest
 };
