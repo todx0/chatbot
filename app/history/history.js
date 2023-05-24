@@ -1,9 +1,9 @@
-const history = 'app/history/history.txt';
+const qHistory = 'app/history/qhistory.txt';
+const replHistory = 'app/history/replhistory.txt';
 const fs = require('fs');
 
-async function writeToHistoryFile(line) {
-	const fileName = history;
-	const maxLines = 10;
+async function writeToHistoryFile(line, fileName) {
+	const maxLines = 15;
 	try {
 		const oldContent = fs.readFileSync(fileName, { encoding: 'utf-8' }).split('\n');
 		const newContent = [...oldContent.slice(-(maxLines - 1)), line];
@@ -21,11 +21,11 @@ async function readHistoryFile(fileName) {
 		return null;
 	}
 }
-async function clearHistory() {
-	fs.truncate(history, 0, () => { console.log('History cleared'); });
+async function clearHistory(fileName) {
+	fs.truncate(fileName, 0, () => { console.log('History cleared'); });
 }
-async function getHistory() {
-	const fileContent = await readHistoryFile(history);
+async function getHistory(fileName) {
+	const fileContent = await readHistoryFile(fileName);
 	if (fileContent) return `Your previous answers are: ${fileContent}`;
 	return '';
 }
@@ -34,5 +34,7 @@ module.exports = {
 	writeToHistoryFile,
 	readHistoryFile,
 	clearHistory,
-	getHistory
+	getHistory,
+	qHistory,
+	replHistory
 };
