@@ -15,6 +15,7 @@
 		"typescript": "^5.0.4"
 	},
 	"scripts": {
+		"tsc": "./node_modules/typescript/bin/tsc",
 		"build": "tsc",
 		"start": "node --experimental-modules ./dist/main.js"
 	},
