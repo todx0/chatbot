@@ -1,4 +1,4 @@
-import { openai, LANGUAGE } from '../../config';
+import { openai, LANGUAGE } from '../../config.js';
 
 export async function generateGptResponse(messages: string): Promise<string> {
 	try {

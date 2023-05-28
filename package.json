@@ -1,4 +1,6 @@
 {
+	"author": "mak$",
+	"license": "MIT",
 	"type": "module",
 	"dependencies": {
 		"axios": "^1.4.0",
@@ -9,15 +11,13 @@
 		"input": "^1.0.1",
 		"openai": "^3.2.1",
 		"telegram": "2.10.10",
-		"telegram-typings": "^5.0.0",
 		"ts-node": "^10.9.1",
 		"typescript": "^5.0.4"
 	},
 	"scripts": {
+		"build": "tsc",
 		"start": "node --experimental-modules ./dist/main.js"
 	},
-	"author": "mak$",
-	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^20.2.5"
 	}

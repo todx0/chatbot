@@ -1,5 +1,5 @@
 import { TelegramClient, Api } from 'telegram';
-import { StringSession } from 'telegram/sessions';
+import { StringSession } from 'telegram/sessions/index.js';
 import {
 	API_ID,
 	API_HASH,
@@ -7,14 +7,14 @@ import {
 	recapTextRequest,
 	toxicRecapRequest,
 	BOT_ID,
-} from './config';
+} from './config.js';
 import {
 	writeToHistoryFile,
 	clearHistory,
 	getHistory,
 	qHistory,
 	replHistory
-} from './app/history/history';
+} from './app/history/history.js';
 import {
 	sleep,
 	convertToImage,
@@ -23,13 +23,13 @@ import {
 	approximateTokenLength,
 	convertFilteredMessagesToString,
 	splitMessageInChunks
-} from './app/helper';
+} from './app/helper.js';
 import {
 	generateGptResponse,
 	createImageFromPrompt,
 	generateGptResponses,
 	combineAnswers
-} from './app/openai/api';
+} from './app/openai/api.js';
 
 
 const client = new TelegramClient(new StringSession(SESSION), +API_ID!, API_HASH!, {
