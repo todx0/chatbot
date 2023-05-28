@@ -1,40 +1,33 @@
-const qHistory = 'app/history/qhistory.txt';
-const replHistory = 'app/history/replhistory.txt';
-const fs = require('fs');
+import fs from 'fs';
 
-async function writeToHistoryFile(line, fileName) {
+export const qHistory = 'app/history/qhistory.txt';
+export const replHistory = 'app/history/replhistory.txt';
+
+export async function writeToHistoryFile(line: string, fileName: string): Promise<void> {
 	const maxLines = 15;
 	try {
 		const oldContent = fs.readFileSync(fileName, { encoding: 'utf-8' }).split('\n');
 		const newContent = [...oldContent.slice(-(maxLines - 1)), line];
 		fs.writeFileSync(fileName, newContent.join('\n'));
-	} catch (error) {
+	} catch (error: any) {
 		console.error(`Error while writing to file: ${error.message}`);
 	}
 }
-async function readHistoryFile(fileName) {
+export async function readHistoryFile(fileName: string): Promise<string | null> {
 	try {
 		const content = fs.readFileSync(fileName, { encoding: 'utf-8' });
 		return content;
-	} catch (error) {
+	} catch (error: any) {
 		console.error(`Error while reading file "${fileName}": ${error.message}`);
 		return null;
 	}
 }
-async function clearHistory(fileName) {
+export async function clearHistory(fileName: string): Promise<void> {
 	fs.truncate(fileName, 0, () => { console.log('History cleared'); });
 }
-async function getHistory(fileName) {
+export async function getHistory(fileName: string): Promise<string> {
 	const fileContent = await readHistoryFile(fileName);
 	if (fileContent) return `Your previous answers are: ${fileContent}`;
 	return '';
 }
 
-module.exports = {
-	writeToHistoryFile,
-	readHistoryFile,
-	clearHistory,
-	getHistory,
-	qHistory,
-	replHistory
-};

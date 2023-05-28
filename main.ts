@@ -1,21 +1,21 @@
-const { TelegramClient, Api } = require('telegram');
-const { StringSession } = require('telegram/sessions');
-const {
+import { TelegramClient, Api } from 'telegram';
+import { StringSession } from 'telegram/sessions';
+import {
 	API_ID,
 	API_HASH,
 	SESSION,
 	recapTextRequest,
 	toxicRecapRequest,
 	BOT_ID,
-} = require('./config');
-const {
+} from './config';
+import {
 	writeToHistoryFile,
 	clearHistory,
 	getHistory,
 	qHistory,
 	replHistory
-} = require('./app/history/history');
-const {
+} from './app/history/history';
+import {
 	sleep,
 	convertToImage,
 	downloadFile,
@@ -23,19 +23,25 @@ const {
 	approximateTokenLength,
 	convertFilteredMessagesToString,
 	splitMessageInChunks
-} = require('./app/helper');
-const {
+} from './app/helper';
+import {
 	generateGptResponse,
 	createImageFromPrompt,
 	generateGptResponses,
 	combineAnswers
-} = require('./app/openai/api');
+} from './app/openai/api';
 
-const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH, {
+
+const client = new TelegramClient(new StringSession(SESSION), +API_ID!, API_HASH!, {
 	connectionRetries: 5,
 });
-
-async function sendMessage(obj) {
+interface SendMessageParams {
+	peer: string,
+	message: string,
+	replyToMsgId?: any,
+	silent?: boolean,
+}
+async function sendMessage(obj: SendMessageParams) {
 	const {
 		peer, message, replyToMsgId, silent
 	} = obj;
@@ -52,7 +58,8 @@ async function sendMessage(obj) {
 		console.error(`Error sending message: ${error}`);
 	}
 }
-async function sendGroupChatMessage(messageText, groupId) {
+//!!
+async function sendGroupChatMessage(messageText: string, groupId: string) {
 	const message = await sendMessage({
 		peer: groupId,
 		message: messageText,
@@ -60,7 +67,7 @@ async function sendGroupChatMessage(messageText, groupId) {
 	});
 	return message;
 }
-async function replyToMessage(messageText, replyToMsgId, groupId) {
+async function replyToMessage(messageText: string, replyToMsgId: string, groupId: string) {
 	const message = await sendMessage({
 		peer: groupId,
 		message: messageText,
@@ -69,28 +76,32 @@ async function replyToMessage(messageText, replyToMsgId, groupId) {
 	});
 	return message;
 }
-async function sendImage(groupId, imagePath) {
+async function sendImage(groupId: string, imagePath: string): Promise<void> {
 	try {
 		await client.sendMessage(groupId, { file: imagePath });
 	} catch (err) {
 		console.error(err);
 	}
 }
-async function getMessages({ limit, groupId }) {
-	const messages = [];
+interface GetMessagesParams {
+	limit: number;
+	groupId: string;
+}
+async function getMessages({ limit, groupId }: GetMessagesParams): Promise<string[]> {
+	const messages: string[] = [];
 	for await (const message of client.iterMessages(`-${groupId}`, { limit: limit })) {
 		messages.push(`${message._sender.firstName}: ${message.message}`);
 	}
 	return messages.reverse();
 }
-async function handleClearCommand(groupId) {
+async function handleClearCommand(groupId: string): Promise<void> {
 	await Promise.all([
 		clearHistory(qHistory),
 		clearHistory(replHistory)
 	]);
 	await sendGroupChatMessage('History cleared', groupId);
 }
-async function handleRecapCommand(groupId, messageText) {
+async function handleRecapCommand(groupId: string, messageText: string): Promise<void | string> {
 	const msgLimit = parseInt(messageText.split(' ')[1]);
 
 	if (Number.isNaN(msgLimit)) {
@@ -130,12 +141,12 @@ async function handleRecapCommand(groupId, messageText) {
 		response = await generateGptResponse(`${toxicRecapRequest} ${responsesCombined}`);
 		await sendGroupChatMessage(response, groupId);
 		return response;
-	} catch (error) {
+	} catch (error: any) {
 		console.error('Error processing recap command:', error);
 		await sendGroupChatMessage(error, groupId);
 	}
 }
-async function handleQCommand(groupId, messageText) {
+async function handleQCommand(groupId: string, messageText: string): Promise<void> {
 	const requestText = messageText.split('/q ')[1];
 	try {
 		const currentHistory = await getHistory(qHistory);
@@ -143,22 +154,22 @@ async function handleQCommand(groupId, messageText) {
 		await sendGroupChatMessage(response, groupId);
 		await writeToHistoryFile(`Q: ${requestText}`, qHistory);
 		await writeToHistoryFile(`A: ${response}`, qHistory);
-	} catch (error) {
+	} catch (error: any) {
 		console.error('Error processing q command:', error);
 		await sendGroupChatMessage(error, groupId);
 	}
 }
-async function handleImgCommand(groupId, messageText) {
+async function handleImgCommand(groupId: string, messageText: string): Promise<void> {
 	const requestText = messageText.split('/img ')[1];
 	try {
 		const url = await createImageFromPrompt(requestText);
 		await downloadConvertAndSend(url, groupId);
-	} catch (error) {
+	} catch (error: any) {
 		console.error('Error processing /img command:', error);
 		await sendGroupChatMessage(error, groupId);
 	}
 }
-async function handleImagineCommand(groupId, messageText) {
+async function handleImagineCommand(groupId: string, messageText: string): Promise<void> {
 	const msgLimit = parseInt(messageText.split(' ')[1]);
 	try {
 		if (Number.isNaN(msgLimit)) {
@@ -174,12 +185,12 @@ async function handleImagineCommand(groupId, messageText) {
 		const recapText = await generateGptResponse(`${recapTextRequest} ${filteredMessages}`);
 		const url = await createImageFromPrompt(recapText);
 		await downloadConvertAndSend(url, groupId);
-	} catch (error) {
+	} catch (error: any) {
 		console.error('Error processing /imagine command:', error);
 		await sendGroupChatMessage(error, groupId);
 	}
 }
-async function downloadConvertAndSend(url, groupId) {
+async function downloadConvertAndSend(url: string, groupId: string): Promise<void> {
 	try {
 		const buffer = await downloadFile(url);
 		const imagePath = await convertToImage(buffer);
@@ -188,7 +199,8 @@ async function downloadConvertAndSend(url, groupId) {
 		console.error(err);
 	}
 }
-async function transcribeAudioMessage(msgId, groupId) {
+// !! any
+async function transcribeAudioMessage(msgId: number, groupId: string): Promise<any> {
 	try {
 		const transcribeAudio = new Api.messages.TranscribeAudio({
 			peer: groupId,
@@ -196,12 +208,12 @@ async function transcribeAudioMessage(msgId, groupId) {
 		});
 		const result = await client.invoke(transcribeAudio);
 		return result;
-	} catch (error) {
+	} catch (error: any) {
 		console.error(`Error while transcribing message: ${error.message}`);
 		return error.message;
 	}
 }
-async function waitForTranscription(messageId, groupId) {
+async function waitForTranscription(messageId: number, groupId: string) {
 	try {
 		let response = await transcribeAudioMessage(messageId, groupId);
 		while (response.pending) {
@@ -216,10 +228,15 @@ async function waitForTranscription(messageId, groupId) {
 		return null;
 	}
 }
-function isMediaTranscribable(media) {
+interface mediaObject {
+	document: {
+		mimeType: string
+	}
+}
+function isMediaTranscribable(media: mediaObject) {
 	return (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
 }
-function getCommand(messageText) {
+function getCommand(messageText: string): string {
 	const parts = messageText.split(' ');
 	if (parts.length > 0 && parts[0] in {
 		'/recap': true,
@@ -230,16 +247,17 @@ function getCommand(messageText) {
 	}) {
 		return parts[0];
 	}
-	return null;
+	return "";
 }
-async function checkIfOwnAndReturn(messageId, groupId) {
-	const message = await client.getMessages(groupId, { ids: messageId });
-	if (+message[0]._senderId === +BOT_ID) {
+async function checkIfOwnAndReturn(messageId: number, groupId: string) {
+	const message: any[] = await client.getMessages(groupId, { ids: messageId });
+	console.log('->', typeof message)
+	if (+message[0]._senderId === +BOT_ID!) {
 		return message[0].message;
 	}
-	return null;
+	return "";
 }
-const processCommand = async (event) => {
+const processCommand = async (event: any) => {
 	const { message } = event;
 	if (!message) return;
 	const groupId = message._chatPeer.channelId;
@@ -265,12 +283,16 @@ const processCommand = async (event) => {
 			return;
 		}
 	}
-	const commandHandlers = {
+	interface CommandHandlers {
+		[command: string]: (groupId: string, messageText: string) => Promise<void | string>;
+	}
+
+	const commandHandlers: CommandHandlers = {
 		'/recap': handleRecapCommand,
 		'/q': handleQCommand,
 		'/clear': handleClearCommand,
 		'/img': handleImgCommand,
-		'/imagine': handleImagineCommand
+		'/imagine': handleImagineCommand,
 	};
 	const messageText = message?.message;
 	const command = getCommand(messageText);

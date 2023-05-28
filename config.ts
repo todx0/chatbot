@@ -1,6 +1,7 @@
-/* eslint-disable global-require */
-const { Configuration, OpenAIApi } = require('openai');
-require('dotenv').config();
+import { Configuration, OpenAIApi } from 'openai';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const {
 	API_ID,
@@ -9,7 +10,7 @@ const {
 	OPENAI_API_KEY,
 	ORGANIZATION_ID,
 	LANGUAGE,
-	BOT_ID
+	BOT_ID,
 } = process.env;
 
 const recapTextRequest = `Parse conversation. Generate detailed summary in ${LANGUAGE} language. Ignore profanity but keep context: `;
@@ -17,12 +18,12 @@ const toxicRecapRequest = `There are few recaps of the conversation. Combine the
 
 const configuration = new Configuration({
 	organization: ORGANIZATION_ID,
-	apiKey: OPENAI_API_KEY,
+	apiKey: OPENAI_API_KEY!,
 });
 
 const openai = new OpenAIApi(configuration);
 
-module.exports = {
+export {
 	BOT_ID,
 	API_ID,
 	API_HASH,
@@ -32,5 +33,5 @@ module.exports = {
 	recapTextRequest,
 	openai,
 	LANGUAGE,
-	toxicRecapRequest
+	toxicRecapRequest,
 };
