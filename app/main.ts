@@ -1,7 +1,14 @@
 import { TelegramClient, Api } from 'telegram';
 import { MessageIDLike } from 'telegram/define';
 import { StringSession } from 'telegram/sessions/index.js';
-import { config } from './config.js';
+import {
+	config,
+	replHistory,
+	qHistory,
+	recapTextRequest,
+	toxicRecapRequest,
+	qTextRequest
+} from './config.js';
 import {
 	writeToHistoryFile,
 	clearHistory,
@@ -24,15 +31,10 @@ import {
 } from './openai/api.js';
 
 const {
-	replHistory,
-	qHistory,
 	SESSION,
 	API_ID,
 	API_HASH,
 	BOT_ID,
-	recapTextRequest,
-	toxicRecapRequest,
-	qTextRequest
 } = config;
 
 const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH, {
