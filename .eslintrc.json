@@ -11,7 +11,7 @@
 		"plugin:@typescript-eslint/recommended"
 	],
 	"rules": {
-		"no-explicit-any": "off",
+		"@typescript-eslint/no-explicit-any": "off",
 		"import/no-unresolved": "off",
 		"import/extensions": "off",
 		"indent": "off",
