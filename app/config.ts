@@ -21,7 +21,7 @@ export const replHistory = 'app/history/replHistory.txt';
 
 export const recapTextRequest = `Parse conversation. Generate detailed summary in ${config.LANGUAGE} language. Ignore profanity but keep context: `;
 export const toxicRecapRequest = `There are few recaps of the conversation. Combine them and do a detailed recap in ${config.LANGUAGE} language in a little of sarcastic way and sound that you are annoyed:`;
-export const qTextRequest = `Answer the question in ${config.LANGUAGE}. Analyse previous questions and answers (Ignore if none provided, ignore "Q:" and "A:"):`;
+export const qTextRequest = `Answer the question in ${config.LANGUAGE}. Previous conversation for context (IGNORE THIS IF NONE PROVIDED, ignore "Q:" and "A:"):`;
 
 export const configuration = new Configuration({
 	organization: config.ORGANIZATION_ID,
