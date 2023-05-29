@@ -30,4 +30,3 @@ export async function getHistory(fileName: string): Promise<string> {
 	if (fileContent) return `Your previous answers are: ${fileContent}`;
 	return '';
 }
-

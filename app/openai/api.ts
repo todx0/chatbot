@@ -1,4 +1,4 @@
-import { openai, LANGUAGE } from '../../config.js';
+import { config, openai } from '../config.js';
 
 export async function generateGptResponse(messages: string): Promise<string> {
 	try {
@@ -35,6 +35,6 @@ export async function createImageFromPrompt(text: string): Promise<string> {
 	}
 }
 export async function combineAnswers(answers: string[]): Promise<string> {
-	const combinedAnswer = await generateGptResponse(`Combine array of answers to one. Reply in ${LANGUAGE}. \n ${answers}`);
+	const combinedAnswer = await generateGptResponse(`Combine array of answers to one. Reply in ${config.LANGUAGE}. \n ${answers}`);
 	return combinedAnswer;
 }

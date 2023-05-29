@@ -11,6 +11,9 @@
 		"plugin:@typescript-eslint/recommended"
 	],
 	"rules": {
+		"no-explicit-any": "off",
+		"import/no-unresolved": "off",
+		"import/extensions": "off",
 		"indent": "off",
 		"func-names": "off",
 		"no-unused-expressions": "off",
