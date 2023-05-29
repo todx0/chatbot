@@ -27,6 +27,6 @@ export async function clearHistory(fileName: string): Promise<void> {
 }
 export async function getHistory(fileName: string): Promise<string> {
 	const fileContent = await readHistoryFile(fileName);
-	if (fileContent) return `Your previous answers are: ${fileContent}`;
+	if (fileContent) return `${fileContent}`;
 	return '';
 }

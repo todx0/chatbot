@@ -18,6 +18,8 @@ export const config = {
 
 export const recapTextRequest = `Parse conversation. Generate detailed summary in ${config.LANGUAGE} language. Ignore profanity but keep context: `;
 export const toxicRecapRequest = `There are few recaps of the conversation. Combine them and do a detailed recap in ${config.LANGUAGE} language in a little of sarcastic way and sound that you are annoyed:`;
+export const qTextRequest = `Analyse previous questions and answers (Ignore if none, ignore "Q:" and "A:"). Then answer the question in ${config.LANGUAGE}:`;
+// Анализируй предыдущие ответы и вопросы (игнорируй если ничего нет): ${currentHistory} \n отвечай без Q: и A:`
 export const configuration = new Configuration({
 	organization: config.ORGANIZATION_ID,
 	apiKey: config.OPENAI_API_KEY,
