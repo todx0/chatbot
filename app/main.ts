@@ -34,7 +34,7 @@ interface SendMessageParams {
 	replyToMsgId?: MessageIDLike,
 	silent?: boolean,
 }
-async function sendMessage(obj: SendMessageParams) {
+async function sendMessage(obj: SendMessageParams): Promise<Api.TypeUpdates | undefined> {
 	const {
 		peer, message, replyToMsgId, silent
 	} = obj;
@@ -51,7 +51,7 @@ async function sendMessage(obj: SendMessageParams) {
 		console.error(`Error sending message: ${error}`);
 	}
 }
-async function sendGroupChatMessage(messageText: string, groupId: string) {
+async function sendGroupChatMessage(messageText: string, groupId: string): Promise<Api.TypeUpdates | undefined> {
 	const message = await sendMessage({
 		peer: groupId,
 		message: messageText,
