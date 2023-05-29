@@ -59,7 +59,7 @@ async function sendGroupChatMessage(messageText: string, groupId: string) {
 	});
 	return message;
 }
-async function replyToMessage(messageText: string, replyToMsgId: MessageIDLike, groupId: string) {
+async function replyToMessage(messageText: string, replyToMsgId: MessageIDLike, groupId: string): Promise<Api.TypeUpdates | undefined> {
 	const message = await sendMessage({
 		peer: groupId,
 		message: messageText,
