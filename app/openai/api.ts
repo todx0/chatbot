@@ -13,7 +13,6 @@ export async function generateGptResponse(messages: string): Promise<string> {
 		});
 		return response.data.choices[0].message.content;
 	} catch (error: any) {
-		// throw new Error(error.response.data.error.message);
 		return error.response.data.error.message;
 	}
 }
@@ -27,7 +26,6 @@ export async function createImageFromPrompt(text: string): Promise<string> {
 			prompt: text,
 			n: 1,
 			size: '1024x1024',
-			// responseFormat: 'url'
 		});
 		return response.data.data[0].url;
 	} catch (error: any) {
