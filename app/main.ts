@@ -6,8 +6,6 @@ import {
 	writeToHistoryFile,
 	clearHistory,
 	getHistory,
-	qHistory,
-	replHistory
 } from './history/history.js';
 import {
 	sleep,
@@ -25,7 +23,19 @@ import {
 	combineAnswers
 } from './openai/api.js';
 
-const client = new TelegramClient(new StringSession(config.SESSION), +config.API_ID, config.API_HASH, {
+const {
+	replHistory,
+	qHistory,
+	SESSION,
+	API_ID,
+	API_HASH,
+	BOT_ID,
+	recapTextRequest,
+	toxicRecapRequest,
+	qTextRequest
+} = config;
+
+const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH, {
 	connectionRetries: 5,
 });
 interface SendMessageParams {
@@ -115,7 +125,7 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 			const messageString = Array.isArray(filteredMessages)
 				? filteredMessages.join(' ')
 				: filteredMessages;
-			response = await generateGptResponse(`${config.recapTextRequest} ${messageString}`);
+			response = await generateGptResponse(`${recapTextRequest} ${messageString}`);
 			await sendGroupChatMessage(response, groupId);
 			return response;
 		}
@@ -123,14 +133,14 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 		const filteredMessagesString = await convertFilteredMessagesToString(filteredMessages);
 		const chunks = await splitMessageInChunks(filteredMessagesString);
 		if (chunks.length === 1) {
-			response = await generateGptResponse(`${config.recapTextRequest} ${chunks[0]}`);
+			response = await generateGptResponse(`${recapTextRequest} ${chunks[0]}`);
 			await sendGroupChatMessage(response, groupId);
 			return response;
 		}
 
-		const responses = await generateGptResponses(config.recapTextRequest, chunks);
+		const responses = await generateGptResponses(recapTextRequest, chunks);
 		const responsesCombined = await combineAnswers(responses);
-		response = await generateGptResponse(`${config.toxicRecapRequest} ${responsesCombined}`);
+		response = await generateGptResponse(`${toxicRecapRequest} ${responsesCombined}`);
 		await sendGroupChatMessage(response, groupId);
 		return response;
 	} catch (error: any) {
@@ -142,7 +152,7 @@ async function handleQCommand(groupId: string, messageText: string): Promise<voi
 	const [, requestText] = messageText.split('/q ');
 	try {
 		const currentHistory = await getHistory(qHistory);
-		const response = await generateGptResponse(`${currentHistory} \n ${config.qTextRequest} \n ${requestText}`);
+		const response = await generateGptResponse(`${currentHistory} \n ${qTextRequest} \n ${requestText}`);
 		await sendGroupChatMessage(response, groupId);
 		await writeToHistoryFile(`Q: ${requestText}`, qHistory);
 		await writeToHistoryFile(`A: ${response}`, qHistory);
@@ -174,7 +184,7 @@ async function handleImagineCommand(groupId: string, messageText: string): Promi
 		}
 		const messages = await getMessages({ limit: msgLimit, groupId });
 		const filteredMessages = filterMessages(messages);
-		const recapText = await generateGptResponse(`${config.recapTextRequest} ${filteredMessages}`);
+		const recapText = await generateGptResponse(`${recapTextRequest} ${filteredMessages}`);
 		const url = await createImageFromPrompt(recapText);
 		await downloadConvertAndSend(url, groupId);
 	} catch (error: any) {
@@ -242,7 +252,7 @@ function getCommand(messageText: string): string {
 async function checkIfOwnAndReturn(messageId: number, groupId: string): Promise<string> {
 	const messages = await client.getMessages(groupId, { ids: messageId });
 	const senderId = String(messages[0]._senderId);
-	if (senderId === String(config.BOT_ID)) {
+	if (senderId === String(BOT_ID)) {
 		return senderId;
 	}
 	return '';

@@ -3,6 +3,9 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+export const qHistory = '../app/history/qhistory.txt';
+export const replHistory = '../app/history/replhistory.txt';
+
 interface ProcessEnv {
 	[key: string]: string;
 }

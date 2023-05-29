@@ -1,8 +1,5 @@
 import fs from 'fs';
 
-export const qHistory = 'app/history/qhistory.txt';
-export const replHistory = 'app/history/replhistory.txt';
-
 export async function writeToHistoryFile(line: string, fileName: string): Promise<void> {
 	const maxLines = 15;
 	try {
