@@ -31,10 +31,9 @@ import {
 	combineAnswers
 } from './app/openai/api.js';
 
-
 const client = new TelegramClient(new StringSession(SESSION), +API_ID!, API_HASH!, {
 	connectionRetries: 5,
-});
+})
 interface SendMessageParams {
 	peer: string,
 	message: string,
@@ -58,7 +57,6 @@ async function sendMessage(obj: SendMessageParams) {
 		console.error(`Error sending message: ${error}`);
 	}
 }
-//!!
 async function sendGroupChatMessage(messageText: string, groupId: string) {
 	const message = await sendMessage({
 		peer: groupId,
@@ -286,7 +284,6 @@ const processCommand = async (event: any) => {
 	interface CommandHandlers {
 		[command: string]: (groupId: string, messageText: string) => Promise<void | string>;
 	}
-
 	const commandHandlers: CommandHandlers = {
 		'/recap': handleRecapCommand,
 		'/q': handleQCommand,
