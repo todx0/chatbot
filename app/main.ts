@@ -2,7 +2,6 @@ import { TelegramClient, Api } from 'telegram';
 import { MessageIDLike } from 'telegram/define';
 import { StringSession } from 'telegram/sessions/index.js';
 import { config } from './config.js';
-
 import {
 	writeToHistoryFile,
 	clearHistory,
@@ -40,10 +39,10 @@ async function sendMessage(obj: SendMessageParams) {
 		peer, message, replyToMsgId, silent
 	} = obj;
 	const sendMsg = new Api.messages.SendMessage({
-		peer: peer,
-		message: message,
-		replyToMsgId: replyToMsgId,
-		silent: silent
+		peer,
+		message,
+		replyToMsgId,
+		silent
 	});
 	try {
 		const result = await client.invoke(sendMsg);
@@ -64,7 +63,7 @@ async function replyToMessage(messageText: string, replyToMsgId: MessageIDLike, 
 	const message = await sendMessage({
 		peer: groupId,
 		message: messageText,
-		replyToMsgId: replyToMsgId,
+		replyToMsgId,
 		silent: true
 	});
 	return message;
@@ -82,7 +81,7 @@ interface GetMessagesParams {
 }
 async function getMessages({ limit, groupId }: GetMessagesParams): Promise<string[]> {
 	const messages: string[] = [];
-	for await (const message of client.iterMessages(`-${groupId}`, { limit: limit })) {
+	for await (const message of client.iterMessages(`-${groupId}`, { limit })) {
 		messages.push(`${message._sender.firstName}: ${message.message}`);
 	}
 	return messages.reverse();
@@ -140,7 +139,7 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 	}
 }
 async function handleQCommand(groupId: string, messageText: string): Promise<void> {
-	const requestText = messageText.split('/q ')[1];
+	const [, requestText] = messageText.split('/q ');
 	try {
 		const currentHistory = await getHistory(qHistory);
 		const response = await generateGptResponse(`${requestText}. \n Анализируй предыдущие ответы и вопросы (игнорируй если ничего нет): ${currentHistory} \n отвечай без Q: и A:`);
@@ -153,7 +152,7 @@ async function handleQCommand(groupId: string, messageText: string): Promise<voi
 	}
 }
 async function handleImgCommand(groupId: string, messageText: string): Promise<void> {
-	const requestText = messageText.split('/img ')[1];
+	const [, requestText] = messageText.split('/img ');
 	try {
 		const url = await createImageFromPrompt(requestText);
 		await downloadConvertAndSend(url, groupId);
@@ -196,7 +195,7 @@ async function transcribeAudioMessage(msgId: number, groupId: string): Promise<A
 	try {
 		const transcribeAudio = new Api.messages.TranscribeAudio({
 			peer: groupId,
-			msgId: msgId,
+			msgId,
 		});
 		const result = await client.invoke(transcribeAudio);
 		return result;
@@ -242,9 +241,9 @@ function getCommand(messageText: string): string {
 }
 async function checkIfOwnAndReturn(messageId: number, groupId: string): Promise<string> {
 	const messages = await client.getMessages(groupId, { ids: messageId });
-	const message = String(messages[0]._senderId);
-	if (message === String(config.BOT_ID)) {
-		return message;
+	const senderId = String(messages[0]._senderId);
+	if (senderId === String(config.BOT_ID)) {
+		return senderId;
 	}
 	return '';
 }
