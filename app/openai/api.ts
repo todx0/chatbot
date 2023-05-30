@@ -7,7 +7,7 @@ export async function generateGptResponse(messages: string): Promise<string> {
 			messages: [
 				{
 					role: 'system',
-					content: 'You are a chatbot. Sometimes, you are provided with conversation history where "Q:" is a question, "A:" is your answer or "User:" is user message and "You" is your answer to it.'
+					content: 'You are a chatbot. Sometimes, you are provided with conversation history where "Q:" is a question, "A:" is your answer or "User:" is user message and "You" is your answer to it. Never reply with "A:, Q:, User:, Person:"'
 				},
 				{
 					role: 'user',
