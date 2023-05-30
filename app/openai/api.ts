@@ -6,6 +6,10 @@ export async function generateGptResponse(messages: string): Promise<string> {
 			model: 'gpt-3.5-turbo',
 			messages: [
 				{
+					role: 'system',
+					content: 'You are a chatbot. Sometimes, you are provided with conversation history where "Q:" is a question, "A:" is your answer or "User:" is user message and "You" is your answer to it.'
+				},
+				{
 					role: 'user',
 					content: messages
 				}
