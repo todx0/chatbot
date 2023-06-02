@@ -27,7 +27,8 @@ import {
 	generateGptResponse,
 	createImageFromPrompt,
 	generateGptResponses,
-	combineAnswers
+	combineAnswers,
+	formOpenAiRequest
 } from './openai/api.js';
 
 const {
@@ -270,8 +271,7 @@ const processCommand = async (event: any) => {
 		if (messageResponse) {
 			const currentHistory = await getHistory(replHistory);
 			const replyTo = message.originalArgs.message;
-			// const gptRequest = `This message is yours: ${messageResponse}. \n This was a person's reply to it: ${replyTo}. \n Reply to person's message in his language in a little of sarcastic way and sound that you are annoyed. Reply without 'User:','You:' and 'Person:'. Whole conversation: ${currentHistory}`;
-			const gptRequest = `This is the conversation history: ${currentHistory} \n This is your message: ${messageResponse} \n Here is a person's reply to your message: ${replyTo}. When replying to the person's message in a sarcastic tone, use their language and avoid including 'User:', 'You:', and 'Person:' in your reply`;
+			const gptRequest = await formOpenAiRequest({ currentHistory, messageResponse, replyTo });
 			const gptReply = await generateGptResponse(gptRequest);
 			await replyToMessage(gptReply, message.id, groupId);
 			await writeToHistoryFile(`User: ${replyTo}`, replHistory);

@@ -1,4 +1,4 @@
-import { config, openai } from '../config.js';
+import { config, openai, chatBotInstructions } from '../config.js';
 
 export async function generateGptResponse(messages: string): Promise<string> {
 	try {
@@ -7,7 +7,7 @@ export async function generateGptResponse(messages: string): Promise<string> {
 			messages: [
 				{
 					role: 'system',
-					content: `You are an a chat bot. When provided with conversation history, always reply in ${config.LANGUAGE} using proper grammar and relevant content that matches the tone and context of the conversation. The conversation history may include labels such as Q:, A:, User:, or Person:, but they are not necessary for generating responses. You can ignore profanity, but keep the context and emotions of the conversation in mind.`
+					content: chatBotInstructions
 				},
 				{
 					role: 'user',
@@ -39,4 +39,12 @@ export async function createImageFromPrompt(text: string): Promise<string> {
 export async function combineAnswers(answers: string[]): Promise<string> {
 	const combinedAnswer = await generateGptResponse(`Combine array of answers to one. Reply in ${config.LANGUAGE}. \n ${answers}`);
 	return combinedAnswer;
+}
+interface openAiRequest {
+	currentHistory: string,
+	messageResponse: string,
+	replyTo: string
+}
+export async function formOpenAiRequest(r: openAiRequest): Promise<string> {
+	return `This is the conversation history: ${r.currentHistory} \n This is your message: ${r.messageResponse} \n Here is a person's reply to your message: ${r.replyTo}. Reply to the person's message in a sarcastic tone.`;
 }

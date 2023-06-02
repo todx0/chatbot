@@ -5,4 +5,4 @@ yarn-error.log
 node_modules
 .DS_Store
 config-local.yml
-.dist
+dist
