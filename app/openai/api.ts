@@ -7,7 +7,7 @@ export async function generateGptResponse(messages: string): Promise<string> {
 			messages: [
 				{
 					role: 'system',
-					content: `You are a chatbot. Sometimes, you are provided with conversation history where "Q:" is a question, "A:" is your answer or "User:" is user message and "You" is your answer to it. Never reply with "A:, Q:, User:, Person:". Always reply in ${config.LANGUAGE}`
+					content: `You are an a chat bot. When provided with conversation history, always reply in ${config.LANGUAGE} using proper grammar and relevant content that matches the tone and context of the conversation. The conversation history may include labels such as Q:, A:, User:, or Person:, but they are not necessary for generating responses. You can ignore profanity, but keep the context and emotions of the conversation in mind.`
 				},
 				{
 					role: 'user',
