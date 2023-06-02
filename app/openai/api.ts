@@ -1,24 +1,35 @@
 import { config, openai, chatBotInstructions } from '../config.js';
 
 export async function generateGptResponse(messages: string): Promise<string> {
-	try {
-		const response: any = await openai.createChatCompletion({
-			model: 'gpt-3.5-turbo',
-			messages: [
-				{
-					role: 'system',
-					content: chatBotInstructions
-				},
-				{
-					role: 'user',
-					content: messages
-				}
-			]
-		});
-		return response.data.choices[0].message.content;
-	} catch (error: any) {
-		return error.response.data.error.message;
+	const maxRetries = 3;
+
+	for (let attempt = 1; attempt <= maxRetries; attempt++) {
+		try {
+			const response: any = await openai.createChatCompletion({
+				model: 'gpt-3.5-turbo',
+				messages: [
+					{
+						role: 'system',
+						content: chatBotInstructions
+					},
+					{
+						role: 'user',
+						content: messages
+					}
+				]
+			});
+
+			return response.data.choices[0].text;
+		} catch (error: any) {
+			console.error(`Error: ${error.response?.data?.error?.message}. Retrying...`);
+
+			if (attempt === maxRetries) {
+				throw new Error(error.response?.data?.error?.message || 'Unknown error occurred');
+			}
+		}
 	}
+
+	throw new Error('Something went wrong and we never got a response from OpenAI.');
 }
 export async function generateGptResponses(requestText: string, messages: string[]): Promise<string[]> {
 	const promises = messages.map((innerArr) => generateGptResponse(`${requestText} ${innerArr}`));
