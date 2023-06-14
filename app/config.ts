@@ -14,7 +14,7 @@ export const config = {
 	BOT_ID: process.env.BOT_ID,
 } as ProcessEnv;
 
-export const model = 'gpt-4';
+export const model = 'gpt-4-0613';
 export const historyFile = 'app/history/historyFile.json';
 export const systemContent = {
 	role: 'system',
