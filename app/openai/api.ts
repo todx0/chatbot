@@ -1,4 +1,4 @@
-import { openai, systemContent } from '../config.js';
+import { openai, systemContent, model } from '../config.js';
 
 interface gptRequest {
 	conversationHistory: any[],
@@ -12,7 +12,7 @@ export async function generateGptResponseWithHistory(request: gptRequest): Promi
 		conversationHistory.push(userRequestObject);
 
 		const response: any = await openai.createChatCompletion({
-			model: 'gpt-3.5-turbo',
+			model,
 			messages: conversationHistory
 
 		});
@@ -24,7 +24,7 @@ export async function generateGptResponseWithHistory(request: gptRequest): Promi
 export async function generateGptResponse(message: string): Promise<string> {
 	try {
 		const response: any = await openai.createChatCompletion({
-			model: 'gpt-3.5-turbo',
+			model,
 			messages: [{ role: 'user', content: message }]
 
 		});
