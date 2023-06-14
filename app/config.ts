@@ -16,12 +16,13 @@ export const config = {
 	BOT_ID: process.env.BOT_ID,
 } as ProcessEnv;
 
-export const qHistory = 'app/history/qHistory.txt';
-export const replHistory = 'app/history/replHistory.txt';
-
+export const historyFile = 'app/history/historyFile.json';
+export const systemContent = {
+	role: 'system',
+	content: `You are a chatbot. Always reply in ${config.LANGUAGE}. Always reply in annoyed sarcastic manner.`
+};
 export const recapTextRequest = `Parse conversation. Generate detailed summary in ${config.LANGUAGE} language. Ignore profanity but keep context: `;
 export const toxicRecapRequest = `There are few recaps of the conversation. Combine them and do a detailed recap in ${config.LANGUAGE} language in a little of sarcastic way and sound that you are annoyed:`;
-export const qTextRequest = `Answer the question in ${config.LANGUAGE}. Reply without 'Q:' and 'A:'. Previous conversation for context (IGNORE THIS IF NONE PROVIDED):`;
 
 export const configuration = new Configuration({
 	organization: config.ORGANIZATION_ID,

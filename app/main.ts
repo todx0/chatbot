@@ -3,11 +3,9 @@ import { MessageIDLike } from 'telegram/define';
 import { StringSession } from 'telegram/sessions/index.js';
 import {
 	config,
-	replHistory,
-	qHistory,
+	historyFile,
 	recapTextRequest,
 	toxicRecapRequest,
-	qTextRequest
 } from './config.js';
 import {
 	writeToHistoryFile,
@@ -26,6 +24,7 @@ import {
 import {
 	generateGptResponse,
 	createImageFromPrompt,
+	generateGptResponseWithHistory,
 	generateGptResponses,
 	combineAnswers
 } from './openai/api.js';
@@ -100,8 +99,7 @@ async function getMessages({ limit, groupId }: GetMessagesParams): Promise<strin
 }
 async function handleClearCommand(groupId: string): Promise<void> {
 	await Promise.all([
-		clearHistory(qHistory),
-		clearHistory(replHistory)
+		clearHistory(historyFile),
 	]);
 	await sendGroupChatMessage('History cleared', groupId);
 }
@@ -129,6 +127,8 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 				: filteredMessages;
 			response = await generateGptResponse(`${recapTextRequest} ${messageString}`);
 			await sendGroupChatMessage(response, groupId);
+			await writeToHistoryFile({ role: 'assistant', content: response }, historyFile);
+
 			return response;
 		}
 
@@ -137,6 +137,7 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 		if (chunks.length === 1) {
 			response = await generateGptResponse(`${recapTextRequest} ${chunks[0]}`);
 			await sendGroupChatMessage(response, groupId);
+			await writeToHistoryFile({ role: 'assistant', content: response }, historyFile);
 			return response;
 		}
 
@@ -144,6 +145,7 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 		const responsesCombined = await combineAnswers(responses);
 		response = await generateGptResponse(`${toxicRecapRequest} ${responsesCombined}`);
 		await sendGroupChatMessage(response, groupId);
+		await writeToHistoryFile({ role: 'assistant', content: response }, historyFile);
 		return response;
 	} catch (error: any) {
 		console.error('Error processing recap command:', error);
@@ -153,11 +155,11 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 async function handleQCommand(groupId: string, messageText: string): Promise<void> {
 	const [, requestText] = messageText.split('/q ');
 	try {
-		const currentHistory = await getHistory(qHistory);
-		const response = await generateGptResponse(`${currentHistory} \n ${qTextRequest} \n ${requestText}`);
+		const currentHistory = await getHistory(historyFile);
+		const response = await generateGptResponseWithHistory({ conversationHistory: currentHistory, userRequest: requestText }); // `${currentHistory} \n ${qTextRequest} \n ${requestText}`
 		await sendGroupChatMessage(response, groupId);
-		await writeToHistoryFile(`Q: ${requestText}`, qHistory);
-		await writeToHistoryFile(`A: ${response}`, qHistory);
+		await writeToHistoryFile({ role: 'user', content: requestText }, historyFile);
+		await writeToHistoryFile({ role: 'assistant', content: response }, historyFile);
 	} catch (error: any) {
 		console.error('Error processing q command:', error);
 		await sendGroupChatMessage(error, groupId);
@@ -268,14 +270,14 @@ const processCommand = async (event: any) => {
 		const msgId = event.message.replyTo.replyToMsgId;
 		const messageResponse = await checkIfOwnAndReturn(msgId, groupId);
 		if (messageResponse) {
-			const currentHistory = await getHistory(replHistory);
+			await writeToHistoryFile({ role: 'assistant', content: messageResponse }, historyFile);
+			const currentHistory = await getHistory(historyFile);
 			const replyTo = message.originalArgs.message;
-			// const gptRequest = `This message is yours: ${messageResponse}. \n This was a person's reply to it: ${replyTo}. \n Reply to person's message in his language in a little of sarcastic way and sound that you are annoyed. Reply without 'User:','You:' and 'Person:'. Whole conversation: ${currentHistory}`;
-			const gptRequest = `This is the conversation history: ${currentHistory} \n This is your message: ${messageResponse} \n Here is a person's reply to your message: ${replyTo}. When replying to the person's message in a sarcastic tone, use their language and avoid including 'User:', 'You:', and 'Person:' in your reply`;
-			const gptReply = await generateGptResponse(gptRequest);
+			const gptReply = await generateGptResponseWithHistory({ conversationHistory: currentHistory, userRequest: replyTo });
 			await replyToMessage(gptReply, message.id, groupId);
-			await writeToHistoryFile(`User: ${replyTo}`, replHistory);
-			await writeToHistoryFile(`You: ${gptReply}`, replHistory);
+
+			await writeToHistoryFile({ role: 'user', content: replyTo }, historyFile);
+			await writeToHistoryFile({ role: 'assistant', content: gptReply }, historyFile);
 			return;
 		}
 	}
