@@ -1,9 +1,6 @@
 import fs from 'fs';
+import { roleContent } from '../types.js';
 
-interface roleContent {
-	role: 'user' | 'assistant' | 'system';
-	content: any;
-}
 export async function writeToHistoryFile(line: roleContent, fileName: string): Promise<void> {
 	const maxLines = 15;
 	try {

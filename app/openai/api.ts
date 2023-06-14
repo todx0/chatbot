@@ -1,9 +1,6 @@
 import { openai, systemContent, model } from '../config.js';
+import { gptRequest } from '../types.js';
 
-interface gptRequest {
-	conversationHistory: any[],
-	userRequest: string
-}
 export async function generateGptResponseWithHistory(request: gptRequest): Promise<string> {
 	try {
 		const { conversationHistory, userRequest } = request;

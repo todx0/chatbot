@@ -1,11 +1,9 @@
 import { Configuration, OpenAIApi } from 'openai';
 import dotenv from 'dotenv';
+import { ProcessEnv } from './types.js';
 
 dotenv.config();
 
-interface ProcessEnv {
-	[key: string]: string;
-}
 export const config = {
 	API_ID: process.env.API_ID,
 	API_HASH: process.env.API_HASH,

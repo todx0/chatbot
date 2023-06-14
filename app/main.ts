@@ -1,6 +1,12 @@
 import { TelegramClient, Api } from 'telegram';
-import { MessageIDLike } from 'telegram/define';
 import { StringSession } from 'telegram/sessions/index.js';
+import { MessageIDLike } from 'telegram/define';
+import {
+	SendMessageParams,
+	GetMessagesParams,
+	mediaObject,
+	CommandHandlers
+} from './types.js';
 import {
 	config,
 	historyFile,
@@ -39,12 +45,6 @@ const {
 const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH, {
 	connectionRetries: 5,
 });
-interface SendMessageParams {
-	peer: string,
-	message: string,
-	replyToMsgId?: MessageIDLike,
-	silent?: boolean,
-}
 async function sendMessage(obj: SendMessageParams): Promise<Api.TypeUpdates | undefined> {
 	const {
 		peer, message, replyToMsgId, silent
@@ -85,10 +85,6 @@ async function sendImage(groupId: string, imagePath: string): Promise<void> {
 	} catch (err) {
 		console.error(err);
 	}
-}
-interface GetMessagesParams {
-	limit: number;
-	groupId: string;
 }
 async function getMessages({ limit, groupId }: GetMessagesParams): Promise<string[]> {
 	const messages: string[] = [];
@@ -232,11 +228,7 @@ async function waitForTranscription(messageId: number, groupId: string): Promise
 		return null;
 	}
 }
-interface mediaObject {
-	document: {
-		mimeType: string
-	}
-}
+
 function isMediaTranscribable(media: mediaObject): boolean {
 	return (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
 }
@@ -287,9 +279,6 @@ const processCommand = async (event: any) => {
 			await replyToMessage(transcribedAudio, message.id, groupId);
 			return;
 		}
-	}
-	interface CommandHandlers {
-		[command: string]: (id: string, msg: string) => Promise<void | string>;
 	}
 	const commandHandlers: CommandHandlers = {
 		'/recap': handleRecapCommand,
