@@ -15,7 +15,7 @@ export const config = {
 
 export const language = 'russian';
 export const maxHistoryLength = 30;
-export const maxTokenLength = 10000;
+export const maxTokenLength = 4096;
 export const messageLimit = 700;
 export const model = 'gpt-3.5-turbo-16k-0613';
 export const historyFile = 'app/history/historyFile.json';
