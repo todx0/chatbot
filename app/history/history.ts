@@ -1,8 +1,8 @@
 import fs from 'fs';
 import { roleContent } from '../types.js';
+import { maxHistoryLength } from '../config.js';
 
 export async function writeToHistoryFile(line: roleContent, fileName: string): Promise<void> {
-	const maxLines = 30;
 	try {
 		const oldContent = fs.readFileSync(fileName, { encoding: 'utf-8' }).trim();
 		let newContent: string;
@@ -14,7 +14,7 @@ export async function writeToHistoryFile(line: roleContent, fileName: string): P
 			if (!Array.isArray(lines)) {
 				throw new Error('File content is not a valid JSON array');
 			}
-			if (lines.length >= maxLines) {
+			if (lines.length >= maxHistoryLength) {
 				lines.shift();
 			}
 			lines.push(line);

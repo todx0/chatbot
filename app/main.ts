@@ -12,6 +12,8 @@ import {
 	historyFile,
 	recapTextRequest,
 	toxicRecapRequest,
+	messageLimit,
+	maxTokenLength
 } from './config.js';
 import {
 	writeToHistoryFile,
@@ -106,7 +108,7 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 		await sendGroupChatMessage('/recap command requires a limit: /recap 50', groupId);
 		return;
 	}
-	if (msgLimit > 700) {
+	if (msgLimit > messageLimit) {
 		await sendGroupChatMessage('Max recap limit is 500: /recap 500', groupId);
 		return;
 	}
@@ -115,9 +117,8 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 	try {
 		let response;
 		const messagesLength = await approximateTokenLength(filteredMessages);
-		const maxLength = 4096;
 
-		if (messagesLength <= maxLength) {
+		if (messagesLength <= maxTokenLength) {
 			const messageString = Array.isArray(filteredMessages)
 				? filteredMessages.join(' ')
 				: filteredMessages;
