@@ -106,7 +106,7 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 		await sendGroupChatMessage('/recap command requires a limit: /recap 50', groupId);
 		return;
 	}
-	if (msgLimit > 500) {
+	if (msgLimit > 700) {
 		await sendGroupChatMessage('Max recap limit is 500: /recap 500', groupId);
 		return;
 	}

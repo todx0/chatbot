@@ -2,7 +2,7 @@ import fs from 'fs';
 import { roleContent } from '../types.js';
 
 export async function writeToHistoryFile(line: roleContent, fileName: string): Promise<void> {
-	const maxLines = 15;
+	const maxLines = 30;
 	try {
 		const oldContent = fs.readFileSync(fileName, { encoding: 'utf-8' }).trim();
 		let newContent: string;
