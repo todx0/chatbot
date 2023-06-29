@@ -16,7 +16,8 @@ import {
 	maxTokenLength,
 	randomReply,
 	randomReplyPercent,
-	repliableWords
+	repliableWords,
+	chatCommands
 } from './config.js';
 import {
 	writeToHistoryFile,
@@ -239,18 +240,12 @@ function isMediaTranscribable(media: mediaObject): boolean {
 }
 function getCommand(messageText: string): string {
 	const parts = messageText.split(' ');
-	if (parts.length > 0 && parts[0] in {
-		'/recap': true,
-		'/q': true,
-		'/clear': true,
-		'/img': true,
-		'/imagine': true
-	}) {
+	if (parts.length > 0 && parts[0] in chatCommands) {
 		return parts[0];
 	}
 	return '';
 }
-async function checkIfBotMentioned(messageId: number, groupId: string): Promise<boolean> {
+async function checkReplyIdIsBotId(messageId: number, groupId: string): Promise<boolean> {
 	const messages = await client.getMessages(groupId, { ids: messageId });
 	const senderId = String(messages[0]._senderId);
 	if (senderId === String(BOT_ID)) {
@@ -259,12 +254,13 @@ async function checkIfBotMentioned(messageId: number, groupId: string): Promise<
 	return false;
 }
 const shouldSendRandomReply = (message: any): boolean => randomReply && checkMatch(message.message, repliableWords) && Math.random() < randomReplyPercent;
-
-const shouldTranscribeMedia = (message: any): boolean => message?.mediaUnread && isMediaTranscribable(message.media);
+const shouldTranscribeMedia = (message: any): boolean => message.mediaUnread && isMediaTranscribable(message.media);
+const somebodyMentioned = (message: any): boolean => message.originalArgs.mentioned;
 
 const processCommand = async (event: any) => {
 	const { message } = event;
 	if (!message) return;
+
 	const groupId = message._chatPeer.channelId;
 
 	if (shouldSendRandomReply(message)) {
@@ -276,10 +272,10 @@ const processCommand = async (event: any) => {
 		return;
 	}
 
-	if (message?.originalArgs.mentioned) {
-		const msgId = event.message.replyTo.replyToMsgId;
-		const botMentioned = await checkIfBotMentioned(msgId, groupId);
-		if (botMentioned) {
+	if (somebodyMentioned(message)) {
+		const { replyToMsgId } = event.message.replyTo;
+		const botIsMentioned = await checkReplyIdIsBotId(replyToMsgId, groupId);
+		if (botIsMentioned) {
 			const currentHistory = await getHistory(historyFile);
 			const replyTo = message.originalArgs.message;
 			const gptReply = await generateGptResponseWithHistory({ conversationHistory: currentHistory, userRequest: replyTo });

@@ -26,7 +26,14 @@ export const messageLimit = 700;
 export const historyFile = 'app/history/historyFile.json';
 export const randomReply = true;
 export const randomReplyPercent = 0.3;
-export const repliableWords = ['скам', 'крипт', 'тикток', 'инста'];
+export const repliableWords = ['скам', 'крипт', 'тикток', 'инста', 'польша', 'грузия', 'польский', 'ведьмак', 'магазин', 'пиво', 'деньги'];
+export const chatCommands = {
+	'/recap': true,
+	'/q': true,
+	'/clear': true,
+	'/img': true,
+	'/imagine': true
+};
 
 // gpt
 export const model = 'gpt-3.5-turbo-16k-0613';
