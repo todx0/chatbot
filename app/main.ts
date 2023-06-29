@@ -13,7 +13,10 @@ import {
 	recapTextRequest,
 	toxicRecapRequest,
 	messageLimit,
-	maxTokenLength
+	maxTokenLength,
+	randomReply,
+	randomReplyPercent,
+	repliableWords
 } from './config.js';
 import {
 	writeToHistoryFile,
@@ -27,7 +30,8 @@ import {
 	filterMessages,
 	approximateTokenLength,
 	convertFilteredMessagesToString,
-	splitMessageInChunks
+	splitMessageInChunks,
+	checkMatch
 } from './helper.js';
 import {
 	generateGptResponse,
@@ -246,41 +250,54 @@ function getCommand(messageText: string): string {
 	}
 	return '';
 }
-async function checkIfOwnAndReturn(messageId: number, groupId: string): Promise<string> {
+async function checkIfBotMentioned(messageId: number, groupId: string): Promise<boolean> {
 	const messages = await client.getMessages(groupId, { ids: messageId });
 	const senderId = String(messages[0]._senderId);
 	if (senderId === String(BOT_ID)) {
-		return senderId;
+		return true;
 	}
-	return '';
+	return false;
 }
+const shouldSendRandomReply = (message: any): boolean => randomReply && checkMatch(message.message, repliableWords) && Math.random() < randomReplyPercent;
+
+const shouldTranscribeMedia = (message: any): boolean => message?.mediaUnread && isMediaTranscribable(message.media);
+
 const processCommand = async (event: any) => {
 	const { message } = event;
 	if (!message) return;
 	const groupId = message._chatPeer.channelId;
 
+	if (shouldSendRandomReply(message)) {
+		const replyTo = message.message;
+		const gptReply = await generateGptResponse(replyTo);
+		await replyToMessage(gptReply, message.id, groupId);
+		await writeToHistoryFile({ role: 'user', content: replyTo }, historyFile);
+		await writeToHistoryFile({ role: 'assistant', content: gptReply }, historyFile);
+		return;
+	}
+
 	if (message?.originalArgs.mentioned) {
 		const msgId = event.message.replyTo.replyToMsgId;
-		const messageResponse = await checkIfOwnAndReturn(msgId, groupId);
-		if (messageResponse) {
-			await writeToHistoryFile({ role: 'assistant', content: messageResponse }, historyFile);
+		const botMentioned = await checkIfBotMentioned(msgId, groupId);
+		if (botMentioned) {
 			const currentHistory = await getHistory(historyFile);
 			const replyTo = message.originalArgs.message;
 			const gptReply = await generateGptResponseWithHistory({ conversationHistory: currentHistory, userRequest: replyTo });
 			await replyToMessage(gptReply, message.id, groupId);
-
 			await writeToHistoryFile({ role: 'user', content: replyTo }, historyFile);
 			await writeToHistoryFile({ role: 'assistant', content: gptReply }, historyFile);
 			return;
 		}
 	}
-	if (message?.mediaUnread && isMediaTranscribable(message.media)) {
+
+	if (shouldTranscribeMedia(message)) {
 		const transcribedAudio = await waitForTranscription(message.id, groupId);
 		if (transcribedAudio) {
 			await replyToMessage(transcribedAudio, message.id, groupId);
 			return;
 		}
 	}
+
 	const commandHandlers: CommandHandlers = {
 		'/recap': handleRecapCommand,
 		'/q': handleQCommand,
@@ -288,6 +305,7 @@ const processCommand = async (event: any) => {
 		'/img': handleImgCommand,
 		'/imagine': handleImagineCommand,
 	};
+
 	const messageText = message?.message;
 	const command = getCommand(messageText);
 	const handler = commandHandlers[command];

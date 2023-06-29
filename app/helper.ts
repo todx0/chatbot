@@ -42,3 +42,9 @@ export async function splitMessageInChunks(message: string): Promise<string[]> {
 	}
 	return chunks;
 }
+export function checkMatch(message: string, matchArray: string[]) {
+	for (let i = 0; i < matchArray.length; i++) {
+		if (message.includes(matchArray[i])) { return true; }
+	}
+	return false;
+}
