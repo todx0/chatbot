@@ -26,7 +26,7 @@ export const messageLimit = 700;
 export const historyFile = 'app/history/historyFile.json';
 export const randomReply = true;
 export const randomReplyPercent = 0.3;
-export const repliableWords = ['скам', 'крипт', 'тикток', 'инста', 'грузи', 'поль', 'ведьмак', 'магазин', 'пиво', 'деньги', 'бот'];
+export const repliableWords = ['скам', 'крипт', 'тикток', 'инста', 'грузи', 'поль', 'ведьмак', 'магаз', 'пиво', 'деньг', 'бот'];
 export const chatCommands = {
 	'/recap': true,
 	'/q': true,
