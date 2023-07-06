@@ -17,7 +17,8 @@ import {
 	randomReply,
 	randomReplyPercent,
 	repliableWords,
-	chatCommands
+	chatCommands,
+	isTelegramPremium
 } from './config.js';
 import {
 	writeToHistoryFile,
@@ -254,7 +255,7 @@ async function checkReplyIdIsBotId(messageId: number, groupId: string): Promise<
 	return false;
 }
 const shouldSendRandomReply = (message: any): boolean => randomReply && checkMatch(message.message, repliableWords) && Math.random() < randomReplyPercent && !message.reactions;
-const shouldTranscribeMedia = (message: any): boolean => message.mediaUnread && isMediaTranscribable(message.media);
+const shouldTranscribeMedia = (message: any): boolean => isTelegramPremium && message.mediaUnread && isMediaTranscribable(message.media);
 const somebodyMentioned = (message: any): boolean => message.originalArgs.mentioned;
 
 const processCommand = async (event: any) => {

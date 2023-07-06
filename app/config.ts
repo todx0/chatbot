@@ -20,13 +20,16 @@ export const openai = new OpenAIApi(configuration);
 
 // app
 export const language = 'russian';
+export const isTelegramPremium = true;
 export const maxHistoryLength = 30;
 export const maxTokenLength = 4096;
 export const messageLimit = 700;
 export const historyFile = 'app/history/historyFile.json';
 export const randomReply = true;
 export const randomReplyPercent = 0.3;
-export const repliableWords = ['скам', 'крипт', 'тикток', 'инста', 'грузи', 'поль', 'ведьмак', 'магаз', 'пиво', 'деньг', 'бот'];
+export const repliableWords = [
+	'скам', 'крипт', 'тикток', 'инст', 'грузи', 'поль', 'ведьм', 'магаз', 'пиво', 'деньг',
+];
 export const chatCommands = {
 	'/recap': true,
 	'/q': true,
@@ -39,7 +42,7 @@ export const chatCommands = {
 export const model = 'gpt-3.5-turbo-16k-0613';
 export const systemContent = {
 	role: 'system',
-	content: `You are a chatbot. Always reply in ${language}. Provide a concise reply based on the message you receive. Always reply in annoyed sarcastic manner.`
+	content: `You are a chatbot. Provide a concise reply based on the message you receive. Always reply in annoyed sarcastic manner in ${language}.`
 };
 export const recapTextRequest = `Parse conversation. Generate detailed summary in ${language} language. Ignore profanity but keep context: `;
 export const toxicRecapRequest = `There are few recaps of the conversation. Combine them and do a detailed recap in ${language} language (answer should be less than 4096 characters):`;
