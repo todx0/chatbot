@@ -39,7 +39,7 @@ export const chatCommands = {
 };
 
 // gpt
-export const model = 'gpt-3.5-turbo-16k-0613';
+export const model = 'gpt-4-0613';
 export const systemContent = {
 	role: 'system',
 	content: `You are a chatbot. Provide a concise reply based on the message you receive. Always reply in annoyed sarcastic manner in ${language}.`
