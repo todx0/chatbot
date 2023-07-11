@@ -10,12 +10,16 @@ export async function downloadFile(url: string): Promise<Buffer> {
 	return Buffer.from(response.data, 'binary');
 }
 export async function convertToImage(buffer: Buffer): Promise<string> {
-	if (buffer instanceof Buffer) {
-		const path = './images/image.jpg';
-		fs.writeFileSync(path, buffer, { flag: 'w' });
-		return path;
+	if (!(buffer instanceof Buffer)) {
+		throw new Error('Not a buffer');
 	}
-	throw new Error('Not a buffer');
+	const folderPath = './images';
+	const filepath = `${folderPath}/image.jpg`;
+	if (!fs.existsSync(folderPath)) {
+		fs.mkdirSync(folderPath);
+	}
+	fs.writeFileSync(filepath, buffer, { flag: 'w' });
+	return filepath;
 }
 export async function filterMessages(messages: string[]): Promise<string[]> {
 	return messages.filter((message) => !message.includes('/recap') && message.length < 300 && message.length);

@@ -159,7 +159,7 @@ async function handleQCommand(groupId: string, messageText: string): Promise<voi
 	const [, requestText] = messageText.split('/q ');
 	try {
 		const currentHistory = await getHistory(historyFile);
-		const response = await generateGptResponseWithHistory({ conversationHistory: currentHistory, userRequest: requestText }); // `${currentHistory} \n ${qTextRequest} \n ${requestText}`
+		const response = await generateGptResponseWithHistory({ conversationHistory: currentHistory, userRequest: requestText });
 		await sendGroupChatMessage(response, groupId);
 		await writeToHistoryFile({ role: 'user', content: requestText }, historyFile);
 		await writeToHistoryFile({ role: 'assistant', content: response }, historyFile);
