@@ -254,7 +254,8 @@ async function checkReplyIdIsBotId(messageId: number, groupId: string): Promise<
 	}
 	return false;
 }
-const shouldSendRandomReply = (message: any): boolean => randomReply && checkMatch(message.message, repliableWords) && Math.random() < randomReplyPercent && !message.reactions;
+const messageNotSeen = (message: any): boolean => !message.reactions && !message.editDate;
+const shouldSendRandomReply = (message: any): boolean => randomReply && checkMatch(message.message, repliableWords) && Math.random() < randomReplyPercent && messageNotSeen(message);
 const shouldTranscribeMedia = (message: any): boolean => isTelegramPremium && message.mediaUnread && isMediaTranscribable(message.media);
 const somebodyMentioned = (message: any): boolean => message.originalArgs.mentioned;
 
@@ -273,7 +274,7 @@ const processCommand = async (event: any) => {
 		return;
 	}
 
-	if (somebodyMentioned(message)) {
+	if (somebodyMentioned(message) && messageNotSeen(message)) {
 		const { replyToMsgId } = event.message.replyTo;
 		const botIsMentioned = await checkReplyIdIsBotId(replyToMsgId, groupId);
 		if (botIsMentioned) {
