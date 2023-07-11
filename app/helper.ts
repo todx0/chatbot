@@ -15,10 +15,12 @@ export async function convertToImage(buffer: Buffer): Promise<string> {
 	}
 	const folderPath = './images';
 	const filepath = `${folderPath}/image.jpg`;
+
 	if (!fs.existsSync(folderPath)) {
 		fs.mkdirSync(folderPath);
 	}
 	fs.writeFileSync(filepath, buffer, { flag: 'w' });
+
 	return filepath;
 }
 export async function filterMessages(messages: string[]): Promise<string[]> {
