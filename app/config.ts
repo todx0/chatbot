@@ -25,11 +25,9 @@ export const maxHistoryLength = 30;
 export const maxTokenLength = 4096;
 export const messageLimit = 700;
 export const historyFile = 'app/history/historyFile.json';
-export const randomReply = true;
+export const randomReply = false;
 export const randomReplyPercent = 0.3;
-export const repliableWords = [
-	'скам', 'крипт', 'тикток', 'инст', 'грузи', 'поль', 'ведьм', 'магаз', 'пиво', 'деньг',
-];
+export const repliableWords = [];
 export const chatCommands = {
 	'/recap': true,
 	'/q': true,
