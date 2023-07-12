@@ -1,0 +1,66 @@
+{
+	"root": true,
+	"parser": "@typescript-eslint/parser",
+	"plugins": [
+		"@typescript-eslint"
+	],
+	"extends": [
+		"airbnb",
+		"eslint:recommended",
+		"plugin:@typescript-eslint/eslint-recommended",
+		"plugin:@typescript-eslint/recommended"
+	],
+	"rules": {
+		"@typescript-eslint/no-explicit-any": "off",
+		"import/no-unresolved": "off",
+		"import/extensions": "off",
+		"indent": "off",
+		"max-len": "off",
+		"no-await-in-loop": "off",
+		"no-restricted-syntax": [
+			"off",
+			"ForStatement"
+		],
+		"no-underscore-dangle": "off",
+		"no-use-before-define": "off",
+		"no-tabs": "off",
+		"no-console": "off",
+		"comma-dangle": "off",
+		"prefer-const": "warn",
+		"consistent-return": "off",
+		"eqeqeq": "warn",
+		"prefer-destructuring": [
+			"warn",
+			{
+				"object": true,
+				"array": true
+			}
+		],
+		"no-mixed-spaces-and-tabs": [
+			"error",
+			"smart-tabs"
+		],
+		"no-bitwise": [
+			"error",
+			{
+				"allow": [
+					"~",
+					"^"
+				]
+			}
+		],
+		"no-plusplus": [
+			"error",
+			{
+				"allowForLoopAfterthoughts": true
+			}
+		],
+		"radix": [
+			"error",
+			"as-needed"
+		]
+	},
+	"env": {
+		"node": true
+	}
+}
