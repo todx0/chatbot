@@ -1,8 +1,8 @@
 import fs from 'fs';
 import { roleContent } from '../types.js';
-import { maxHistoryLength } from '../config.js';
+import { maxHistoryLength, historyFile } from '../config.js';
 
-export async function writeToHistoryFile(line: roleContent, fileName: string): Promise<void> {
+export async function writeToHistoryFile(line: roleContent, fileName: string = historyFile): Promise<void> {
 	try {
 		if (!fs.existsSync(fileName)) {
 			fs.writeFileSync(fileName, ''); // Create an empty file if it doesn't exist
@@ -30,7 +30,7 @@ export async function writeToHistoryFile(line: roleContent, fileName: string): P
 		console.error(`Error while writing to file: ${error.message}`);
 	}
 }
-export async function readHistoryFile(fileName: string): Promise<any[] | null> {
+export async function readHistoryFile(fileName: string = historyFile): Promise<any[] | null> {
 	try {
 		if (!fs.existsSync(fileName)) {
 			fs.writeFileSync(fileName, ''); // Create an empty file if it doesn't exist
@@ -49,7 +49,7 @@ export async function readHistoryFile(fileName: string): Promise<any[] | null> {
 		return null;
 	}
 }
-export async function clearHistory(fileName: string): Promise<void> {
+export async function clearHistory(fileName: string = historyFile): Promise<void> {
 	fs.truncate(fileName, 0, () => { console.log('History cleared'); });
 }
 export async function getHistory(fileName: string): Promise<any[]> {

@@ -130,7 +130,7 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 				: filteredMessages;
 			response = await generateGptResponse(`${recapTextRequest} ${messageString}`);
 			await sendGroupChatMessage(response, groupId);
-			await writeToHistoryFile({ role: 'assistant', content: response }, historyFile);
+			await writeToHistoryFile({ role: 'assistant', content: response });
 
 			return response;
 		}
@@ -140,7 +140,7 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 		if (chunks.length === 1) {
 			response = await generateGptResponse(`${recapTextRequest} ${chunks[0]}`);
 			await sendGroupChatMessage(response, groupId);
-			await writeToHistoryFile({ role: 'assistant', content: response }, historyFile);
+			await writeToHistoryFile({ role: 'assistant', content: response });
 			return response;
 		}
 
@@ -148,7 +148,7 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 		const responsesCombined = await combineAnswers(responses);
 		response = await generateGptResponse(`${toxicRecapRequest} ${responsesCombined}`);
 		await sendGroupChatMessage(response, groupId);
-		await writeToHistoryFile({ role: 'assistant', content: response }, historyFile);
+		await writeToHistoryFile({ role: 'assistant', content: response });
 		return response;
 	} catch (error: any) {
 		console.error('Error processing recap command:', error);
@@ -161,8 +161,8 @@ async function handleQCommand(groupId: string, messageText: string): Promise<voi
 		const currentHistory = await getHistory(historyFile);
 		const response = await generateGptResponseWithHistory({ conversationHistory: currentHistory, userRequest: requestText });
 		await sendGroupChatMessage(response, groupId);
-		await writeToHistoryFile({ role: 'user', content: requestText }, historyFile);
-		await writeToHistoryFile({ role: 'assistant', content: response }, historyFile);
+		await writeToHistoryFile({ role: 'user', content: requestText });
+		await writeToHistoryFile({ role: 'assistant', content: response });
 	} catch (error: any) {
 		console.error('Error processing q command:', error);
 		await sendGroupChatMessage(error, groupId);
@@ -271,8 +271,8 @@ const processCommand = async (event: any) => {
 	if (shouldSendRandomReply(message)) {
 		gptReply = await generateGptResponse(replyTo);
 		await replyToMessage(gptReply, message.id, groupId);
-		await writeToHistoryFile({ role: 'user', content: replyTo }, historyFile);
-		await writeToHistoryFile({ role: 'assistant', content: gptReply }, historyFile);
+		await writeToHistoryFile({ role: 'user', content: replyTo });
+		await writeToHistoryFile({ role: 'assistant', content: gptReply });
 		return;
 	}
 
@@ -283,8 +283,8 @@ const processCommand = async (event: any) => {
 			const currentHistory = await getHistory(historyFile);
 			gptReply = await generateGptResponseWithHistory({ conversationHistory: currentHistory, userRequest: replyTo });
 			await replyToMessage(gptReply, message.id, groupId);
-			await writeToHistoryFile({ role: 'user', content: replyTo }, historyFile);
-			await writeToHistoryFile({ role: 'assistant', content: gptReply }, historyFile);
+			await writeToHistoryFile({ role: 'user', content: replyTo });
+			await writeToHistoryFile({ role: 'assistant', content: gptReply });
 			return;
 		}
 	}
