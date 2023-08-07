@@ -170,8 +170,11 @@ async function handleQCommand(groupId: string, messageText: string): Promise<voi
 }
 async function handleImgCommand(groupId: string, messageText: string): Promise<void> {
 	const [, requestText] = messageText.split('/img ');
+	// TODO: add guard to check message not empty
 	try {
+		// TODO: check if valid url and send error if not
 		const url = await createImageFromPrompt(requestText);
+		// TODO: split this function
 		await downloadConvertAndSend(url, groupId);
 	} catch (error: any) {
 		console.error('Error processing /img command:', error);
