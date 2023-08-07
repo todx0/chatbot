@@ -40,7 +40,7 @@ export const chatCommands = {
 export const model = 'gpt-4-0613';
 export const systemContent = {
 	role: 'system',
-	content: `You are a chatbot. Provide a concise reply based on the message you receive. Always reply in annoyed sarcastic manner in ${language}.`
+	content: `You are a chatbot. Provide a concise reply based on the message you receive. Reply in annoyed sarcastic manner in ${language}but act less sarcastic when asked questions.`
 };
 export const recapTextRequest = `Parse conversation. Generate detailed summary in ${language} language. Ignore profanity but keep context: `;
 export const toxicRecapRequest = `There are few recaps of the conversation. Combine them and do a detailed recap in ${language} language (answer should be less than 4096 characters):`;
