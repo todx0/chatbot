@@ -18,7 +18,8 @@ import {
 	randomReplyPercent,
 	repliableWords,
 	chatCommands,
-	isTelegramPremium
+	isTelegramPremium,
+	botUsername
 } from './config.js';
 import {
 	writeToHistoryFile,
@@ -238,7 +239,6 @@ async function waitForTranscription(messageId: number, groupId: string): Promise
 		return null;
 	}
 }
-
 function isMediaTranscribable(media: mediaObject): boolean {
 	return (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
 }
@@ -249,6 +249,10 @@ function getCommand(messageText: string): string {
 	}
 	return '';
 }
+async function getMessageContentById(messageId: number, groupId: string): Promise<any> {
+	const message = await client.getMessages(groupId, { ids: messageId });
+	return message[0].message;
+}
 async function checkReplyIdIsBotId(messageId: number, groupId: string): Promise<boolean> {
 	const messages = await client.getMessages(groupId, { ids: messageId });
 	const senderId = String(messages[0]._senderId);
@@ -256,6 +260,16 @@ async function checkReplyIdIsBotId(messageId: number, groupId: string): Promise<
 		return true;
 	}
 	return false;
+}
+async function processMessage(userRequest: string, groupId: string, messageId: number): Promise<void> {
+	const currentHistory = await getHistory(historyFile);
+	const gptReply = await generateGptResponseWithHistory({
+		conversationHistory: currentHistory,
+		userRequest,
+	});
+	await replyToMessage(gptReply, messageId, groupId);
+	await writeToHistoryFile({ role: 'user', content: userRequest });
+	await writeToHistoryFile({ role: 'assistant', content: gptReply });
 }
 const messageNotSeen = (message: any): boolean => !message.reactions && !message.editDate;
 const shouldSendRandomReply = (message: any): boolean => randomReply && checkMatch(message.message, repliableWords) && Math.random() < randomReplyPercent && messageNotSeen(message);
@@ -267,27 +281,29 @@ const processCommand = async (event: any) => {
 	if (!message) return;
 
 	const groupId = message._chatPeer.channelId;
-
 	const replyTo = message.message;
-	let gptReply = '';
 
 	if (shouldSendRandomReply(message)) {
-		gptReply = await generateGptResponse(replyTo);
-		await replyToMessage(gptReply, message.id, groupId);
-		await writeToHistoryFile({ role: 'user', content: replyTo });
-		await writeToHistoryFile({ role: 'assistant', content: gptReply });
+		await processMessage(replyTo, groupId, message.id);
 		return;
 	}
 
 	if (somebodyMentioned(message) && messageNotSeen(message)) {
+		let isBotMentioned = false;
+		let isBotCalled = false;
+
 		const { replyToMsgId } = event.message.replyTo;
-		const botIsMentioned = await checkReplyIdIsBotId(replyToMsgId, groupId);
-		if (botIsMentioned) {
-			const currentHistory = await getHistory(historyFile);
-			gptReply = await generateGptResponseWithHistory({ conversationHistory: currentHistory, userRequest: replyTo });
-			await replyToMessage(gptReply, message.id, groupId);
-			await writeToHistoryFile({ role: 'user', content: replyTo });
-			await writeToHistoryFile({ role: 'assistant', content: gptReply });
+		isBotMentioned = await checkReplyIdIsBotId(replyToMsgId, groupId);
+		if (replyTo.includes(botUsername)) isBotCalled = true;
+
+		if (isBotMentioned) {
+			await processMessage(replyTo, groupId, message.id);
+			return;
+		}
+
+		if (isBotCalled) {
+			const messageContent = await getMessageContentById(replyToMsgId, groupId);
+			await processMessage(messageContent, groupId, replyToMsgId);
 			return;
 		}
 	}
