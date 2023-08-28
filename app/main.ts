@@ -34,7 +34,8 @@ import {
 	approximateTokenLength,
 	convertFilteredMessagesToString,
 	splitMessageInChunks,
-	checkMatch
+	checkMatch,
+	checkValidUrl
 } from './helper.js';
 import {
 	generateGptResponse,
@@ -171,11 +172,14 @@ async function handleQCommand(groupId: string, messageText: string): Promise<voi
 }
 async function handleImgCommand(groupId: string, messageText: string): Promise<void> {
 	const [, requestText] = messageText.split('/img ');
-	// TODO: add guard to check message not empty
+
+	if (!requestText) {
+		await sendGroupChatMessage('/image command requires a prompt', groupId);
+		return;
+	}
 	try {
-		// TODO: check if valid url and send error if not
 		const url = await createImageFromPrompt(requestText);
-		// TODO: split this function
+		if (!checkValidUrl(url)) return;
 		await downloadConvertAndSend(url, groupId);
 	} catch (error: any) {
 		console.error('Error processing /img command:', error);
@@ -184,15 +188,15 @@ async function handleImgCommand(groupId: string, messageText: string): Promise<v
 }
 async function handleImagineCommand(groupId: string, messageText: string): Promise<void> {
 	const msgLimit = parseInt(messageText.split(' ')[1]);
+	if (Number.isNaN(msgLimit)) {
+		await sendGroupChatMessage('/imagine command requires a limit: /imagine 50', groupId);
+		return;
+	}
+	if (msgLimit > 300) {
+		await sendGroupChatMessage('Max imagine limit is 300: /imagine 300', groupId);
+		return;
+	}
 	try {
-		if (Number.isNaN(msgLimit)) {
-			await sendGroupChatMessage('/imagine command requires a limit: /imagine 50', groupId);
-			return;
-		}
-		if (msgLimit > 300) {
-			await sendGroupChatMessage('Max imagine limit is 300: /imagine 300', groupId);
-			return;
-		}
 		const messages = await getMessages({ limit: msgLimit, groupId });
 		const filteredMessages = filterMessages(messages);
 		const recapText = await generateGptResponse(`${recapTextRequest} ${filteredMessages}`);
@@ -228,6 +232,7 @@ async function transcribeAudioMessage(msgId: number, groupId: string): Promise<A
 async function waitForTranscription(messageId: number, groupId: string): Promise<string | undefined | null> {
 	try {
 		let response = await transcribeAudioMessage(messageId, groupId);
+		// TODO: RETRY
 		while (response.pending) {
 			await sleep(5000);
 			response = await transcribeAudioMessage(messageId, groupId);
@@ -278,7 +283,9 @@ const somebodyMentioned = (message: any): boolean => message.originalArgs.mentio
 
 const processCommand = async (event: any) => {
 	const { message } = event;
+
 	if (!message) return;
+	if (!messageNotSeen(message)) return;
 
 	const groupId = message._chatPeer.channelId;
 	const replyTo = message.message;
@@ -288,13 +295,10 @@ const processCommand = async (event: any) => {
 		return;
 	}
 
-	if (somebodyMentioned(message) && messageNotSeen(message)) {
-		let isBotMentioned = false;
-		let isBotCalled = false;
-
+	if (somebodyMentioned(message)) {
 		const { replyToMsgId } = event.message.replyTo;
-		isBotMentioned = await checkReplyIdIsBotId(replyToMsgId, groupId);
-		if (replyTo.includes(botUsername)) isBotCalled = true;
+		const isBotMentioned: boolean = await checkReplyIdIsBotId(replyToMsgId, groupId);
+		const isBotCalled: boolean = replyTo.includes(botUsername);
 
 		if (isBotMentioned) {
 			await processMessage(replyTo, groupId, message.id);
@@ -316,21 +320,19 @@ const processCommand = async (event: any) => {
 		}
 	}
 
-	if (messageNotSeen(message)) {
-		const commandHandlers: CommandHandlers = {
-			'/recap': handleRecapCommand,
-			'/q': handleQCommand,
-			'/clear': handleClearCommand,
-			'/img': handleImgCommand,
-			'/imagine': handleImagineCommand,
-		};
+	const commandHandlers: CommandHandlers = {
+		'/recap': handleRecapCommand,
+		'/q': handleQCommand,
+		'/clear': handleClearCommand,
+		'/img': handleImgCommand,
+		'/imagine': handleImagineCommand,
+	};
 
-		const messageText = message?.message;
-		const command = getCommand(messageText);
-		const handler = commandHandlers[command];
-		if (handler) {
-			await handler(groupId, messageText);
-		}
+	const messageText = message?.message;
+	const command = getCommand(messageText);
+	const handler = commandHandlers[command];
+	if (handler) {
+		await handler(groupId, messageText);
 	}
 };
 

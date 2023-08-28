@@ -48,9 +48,18 @@ export async function splitMessageInChunks(message: string): Promise<string[]> {
 	}
 	return chunks;
 }
-export function checkMatch(message: string, matchArray: string[]) {
+export function checkMatch(message: string, matchArray: string[]): boolean {
 	for (let i = 0; i < matchArray.length; i++) {
-		if (message.includes(matchArray[i])) { return true; }
+		if (message.includes(matchArray[i])) {
+			return true;
+		}
+	}
+	return false;
+}
+export function checkValidUrl(link: string): boolean {
+	const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
+	if (urlRegex.test(link)) {
+		return true;
 	}
 	return false;
 }
