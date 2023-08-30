@@ -22,7 +22,7 @@ export const openai = new OpenAIApi(configuration);
 export const botUsername = '@acab2131';
 export const language = 'russian';
 // export const botBehavior = `You are a chatbot. Provide a concise reply based on the message you receive. Reply in annoyed sarcastic manner in ${language} but always provide an answer.`
-export const botBehavior = `You are a chatbot. Provide a concise reply based on the message you receive. Act like pseudopsychologist and reply in ${language} but always provide an answer.`;
+export const botBehavior = `You are a chatbot. Provide a concise reply based on the message you receive. Act like annoyed pseudopsychologist and reply in ${language} but always provide an answer.`;
 
 export const isTelegramPremium = false;
 export const maxHistoryLength = 30;
