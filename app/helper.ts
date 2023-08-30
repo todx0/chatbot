@@ -1,5 +1,6 @@
 import axios from 'axios';
 import fs from 'fs';
+import { ChatCommands } from './types.js';
 
 export function sleep(ms: number): Promise<void> {
 	// eslint-disable-next-line no-promise-executor-return
@@ -62,4 +63,11 @@ export function checkValidUrl(link: string): boolean {
 		return true;
 	}
 	return false;
+}
+export function getCommand(messageText: string, commands: ChatCommands): string {
+	const parts = messageText.split(' ');
+	if (parts.length > 0 && parts[0] in commands) {
+		return parts[0];
+	}
+	return '';
 }

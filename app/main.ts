@@ -6,7 +6,6 @@ import {
 	GetMessagesParams,
 	mediaObject,
 	CommandHandlers,
-	ChatCommands
 } from './types.js';
 import {
 	config,
@@ -36,7 +35,8 @@ import {
 	convertFilteredMessagesToString,
 	splitMessageInChunks,
 	checkMatch,
-	checkValidUrl
+	checkValidUrl,
+	getCommand
 } from './helper.js';
 import {
 	generateGptResponse,
@@ -244,13 +244,6 @@ async function waitForTranscription(messageId: number, groupId: string): Promise
 	} catch (error) {
 		return null;
 	}
-}
-function getCommand(messageText: string, commands: ChatCommands): string {
-	const parts = messageText.split(' ');
-	if (parts.length > 0 && parts[0] in commands) {
-		return parts[0];
-	}
-	return '';
 }
 async function getMessageContentById(messageId: number, groupId: string): Promise<any> {
 	const message = await client.getMessages(groupId, { ids: messageId });
