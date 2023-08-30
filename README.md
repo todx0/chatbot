@@ -2,18 +2,18 @@
 
 Telegram bot based on [gramjs](https://gram.js.org/) using 'advanced' AI technologies to annoy chat participants.
 
-The bot requires a real Telegram account and is not managed by BotFather. See how it [works](https://gram.js.org/getting-started/authorization#logging-in-as-a-user)
+The bot requires a real Telegram account and is not managed by BotFather. See how it [works](https://gram.js.org/getting-started/authorization#logging-in-as-a-user).
 
 ## Installation
 
-1. Install [Node.js](https://nodejs.org/en)
-2. Clone the repository
-3. Rename `.env.example` to `.env`
-4. Generate API_ID and API_HASH [here](https://gram.js.org/getting-started/authorization#getting-api-id-and-api-hash)
-5. Generate SESSION key. [Learn how](https://gram.js.org/getting-started/authorization)
-6. Get your OPENAI_API_KEY [here](https://platform.openai.com/account/api-keys)
-7. Get your ORGANIZATION_ID [here](https://platform.openai.com/account/org-settings)
-8. Login as a bot and send a message to @RawDataBot. Use `message.from.id` as BOT_ID
+1. Install [Node.js](https://nodejs.org/en).
+2. Clone the repository.
+3. Rename `.env.example` to `.env`.
+4. Generate API_ID and API_HASH [here](https://gram.js.org/getting-started/authorization#getting-api-id-and-api-hash).
+5. Generate SESSION key. [Learn how](https://gram.js.org/getting-started/authorization).
+6. Get your OPENAI_API_KEY [here](https://platform.openai.com/account/api-keys).
+7. Get your ORGANIZATION_ID [here](https://platform.openai.com/account/org-settings).
+8. Login as a bot and send a message to @RawDataBot. Use `message.from.id` as BOT_ID.
 
 After completing the above steps, you can proceed with the following commands:
 

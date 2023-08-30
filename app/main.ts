@@ -4,7 +4,6 @@ import { MessageIDLike } from 'telegram/define';
 import {
 	SendMessageParams,
 	GetMessagesParams,
-	mediaObject,
 	CommandHandlers,
 } from './types.js';
 import {
@@ -14,11 +13,7 @@ import {
 	toxicRecapRequest,
 	messageLimit,
 	maxTokenLength,
-	randomReply,
-	randomReplyPercent,
-	repliableWords,
 	chatCommands,
-	isTelegramPremium,
 	botUsername
 } from './config.js';
 import {
@@ -34,9 +29,12 @@ import {
 	approximateTokenLength,
 	convertFilteredMessagesToString,
 	splitMessageInChunks,
-	checkMatch,
 	checkValidUrl,
-	getCommand
+	getCommand,
+	messageNotSeen,
+	shouldSendRandomReply,
+	somebodyMentioned,
+	shouldTranscribeMedia
 } from './helper.js';
 import {
 	generateGptResponse,
@@ -267,11 +265,6 @@ async function processMessage(userRequest: string, groupId: string, messageId: n
 	await writeToHistoryFile({ role: 'user', content: userRequest });
 	await writeToHistoryFile({ role: 'assistant', content: gptReply });
 }
-const messageNotSeen = (message: any): boolean => !message.reactions && !message.editDate;
-const shouldSendRandomReply = (message: any): boolean => randomReply && checkMatch(message.message, repliableWords) && Math.random() < randomReplyPercent && messageNotSeen(message);
-const shouldTranscribeMedia = (message: any): boolean => isTelegramPremium && message.mediaUnread && isMediaTranscribable(message.media);
-const somebodyMentioned = (message: any): boolean => message.originalArgs.mentioned;
-const isMediaTranscribable = (media: mediaObject): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
 
 const processCommand = async (event: any) => {
 	const { message } = event;

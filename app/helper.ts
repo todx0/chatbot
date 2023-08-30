@@ -1,6 +1,15 @@
 import axios from 'axios';
 import fs from 'fs';
-import { ChatCommands } from './types.js';
+import {
+	ChatCommands,
+	mediaObject
+} from './types.js';
+import {
+	randomReply,
+	randomReplyPercent,
+	repliableWords,
+	isTelegramPremium,
+} from './config.js';
 
 export function sleep(ms: number): Promise<void> {
 	// eslint-disable-next-line no-promise-executor-return
@@ -71,3 +80,8 @@ export function getCommand(messageText: string, commands: ChatCommands): string 
 	}
 	return '';
 }
+export const messageNotSeen = (message: any): boolean => !message.reactions && !message.editDate;
+export const shouldSendRandomReply = (message: any): boolean => randomReply && checkMatch(message.message, repliableWords) && Math.random() < randomReplyPercent && messageNotSeen(message);
+export const shouldTranscribeMedia = (message: any): boolean => isTelegramPremium && message.mediaUnread && isMediaTranscribable(message.media);
+export const somebodyMentioned = (message: any): boolean => message.originalArgs.mentioned;
+export const isMediaTranscribable = (media: mediaObject): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
