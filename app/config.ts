@@ -21,6 +21,9 @@ export const openai = new OpenAIApi(configuration);
 // app
 export const botUsername = '@acab2131';
 export const language = 'russian';
+// export const botBehavior = `You are a chatbot. Provide a concise reply based on the message you receive. Reply in annoyed sarcastic manner in ${language} but always provide an answer.`
+export const botBehavior = `You are a chatbot. Provide a concise reply based on the message you receive. Act like pseudopsychologist and reply in ${language} but always provide an answer.`;
+
 export const isTelegramPremium = false;
 export const maxHistoryLength = 30;
 export const maxTokenLength = 4096;
@@ -41,7 +44,7 @@ export const chatCommands = {
 export const model = 'gpt-4-0613';
 export const systemContent = {
 	role: 'system',
-	content: `You are a chatbot. Provide a concise reply based on the message you receive. Reply in annoyed sarcastic manner in ${language} but always provide an answer.`
+	content: botBehavior
 };
 export const recapTextRequest = `Parse conversation. Generate detailed summary in ${language} language. Ignore profanity but keep context: `;
 export const toxicRecapRequest = `There are few recaps of the conversation. Combine them and do a detailed recap in ${language} language (answer should be less than 4096 characters):`;
