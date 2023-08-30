@@ -34,7 +34,7 @@ npm run start
 Please refer to `config.js` for configuration and usage instructions.
 
 - `botBehavior`: Set up desired bot behavior.
-- `isTelegramPremium`: If you have premium, setting this to true will allow the bot to automatically transcribe media messages.
+- `isTelegramPremium`: If bot account have Telegram premium, setting this to true will allow the bot to automatically transcribe media messages.
 - `randomReply`: This setting enables the bot to randomly reply to messages from a list.
 - `repliableWords`: Trigger words list for randomReply. Words should be comma-separated.
 - `randomReplyPercent`: The percentage of random replies. For example, 0.3 means 30%.
