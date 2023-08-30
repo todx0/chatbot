@@ -29,3 +29,6 @@ export interface mediaObject {
 export interface CommandHandlers {
 	[command: string]: (id: string, msg: string) => Promise<void | string>;
 }
+export interface ChatCommands {
+	[key: string]: boolean;
+}

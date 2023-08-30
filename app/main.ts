@@ -5,7 +5,8 @@ import {
 	SendMessageParams,
 	GetMessagesParams,
 	mediaObject,
-	CommandHandlers
+	CommandHandlers,
+	ChatCommands
 } from './types.js';
 import {
 	config,
@@ -244,12 +245,9 @@ async function waitForTranscription(messageId: number, groupId: string): Promise
 		return null;
 	}
 }
-function isMediaTranscribable(media: mediaObject): boolean {
-	return (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
-}
-function getCommand(messageText: string): string {
+function getCommand(messageText: string, commands: ChatCommands): string {
 	const parts = messageText.split(' ');
-	if (parts.length > 0 && parts[0] in chatCommands) {
+	if (parts.length > 0 && parts[0] in commands) {
 		return parts[0];
 	}
 	return '';
@@ -280,6 +278,7 @@ const messageNotSeen = (message: any): boolean => !message.reactions && !message
 const shouldSendRandomReply = (message: any): boolean => randomReply && checkMatch(message.message, repliableWords) && Math.random() < randomReplyPercent && messageNotSeen(message);
 const shouldTranscribeMedia = (message: any): boolean => isTelegramPremium && message.mediaUnread && isMediaTranscribable(message.media);
 const somebodyMentioned = (message: any): boolean => message.originalArgs.mentioned;
+const isMediaTranscribable = (media: mediaObject): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
 
 const processCommand = async (event: any) => {
 	const { message } = event;
@@ -329,7 +328,7 @@ const processCommand = async (event: any) => {
 	};
 
 	const messageText = message?.message;
-	const command = getCommand(messageText);
+	const command = getCommand(messageText, chatCommands);
 	const handler = commandHandlers[command];
 	if (handler) {
 		await handler(groupId, messageText);
