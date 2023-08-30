@@ -19,7 +19,7 @@ export const configuration = new Configuration({
 export const openai = new OpenAIApi(configuration);
 
 // app
-export const botUsername = '';
+export const botUsername = '@acab2131';
 export const language = 'english';
 export const isTelegramPremium = false;
 export const maxHistoryLength = 30;
