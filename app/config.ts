@@ -21,7 +21,7 @@ export const openai = new OpenAIApi(configuration);
 
 // app
 export const botUsername = config.BOT_USERNAME;
-export const language = 'russian';
+export const language = config.LANGUAGE;
 export const isTelegramPremium = false;
 export const maxHistoryLength = 30;
 export const maxTokenLength = 4096;
