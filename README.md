@@ -15,7 +15,6 @@ The bot requires a real Telegram account and is not managed by BotFather. See ho
 7. Get your ORGANIZATION_ID [here](https://platform.openai.com/account/org-settings).
 8. Login as a bot and send a message to @RawDataBot. Use `message.from.id` as BOT_ID.
 9. In config.ts change `botUsername` to your bot username including @
-10. Set up desired bot behavior in `botBehavior`
 
 After completing the above steps, you can proceed with the following commands:
 
@@ -34,6 +33,7 @@ npm run start
 
 Please refer to `config.js` for configuration and usage instructions.
 
+- `botBehavior` Set up desired bot behavior.
 - `isTelegramPremium`: If you have premium, setting this to true will allow the bot to automatically transcribe media messages.
 - `randomReply`: This setting enables the bot to randomly reply to messages from a list.
 - `repliableWords`: Trigger words list for randomReply. Words should be comma-separated.
