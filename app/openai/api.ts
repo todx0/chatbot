@@ -11,7 +11,6 @@ export async function generateGptResponseWithHistory(request: gptRequest): Promi
 		const response: any = await openai.createChatCompletion({
 			model,
 			messages: conversationHistory
-
 		});
 		return response.data.choices[0].message.content;
 	} catch (error: any) {
@@ -23,7 +22,6 @@ export async function generateGptResponse(message: string): Promise<string> {
 		const response: any = await openai.createChatCompletion({
 			model,
 			messages: [{ role: 'user', content: message }]
-
 		});
 		return response.data.choices[0].message.content;
 	} catch (error: any) {
