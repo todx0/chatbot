@@ -11,6 +11,7 @@ export const config = {
 	OPENAI_API_KEY: process.env.OPENAI_API_KEY,
 	ORGANIZATION_ID: process.env.ORGANIZATION_ID,
 	BOT_ID: process.env.BOT_ID,
+	BOT_USERNAME: process.env.BOT_USERNAME
 } as ProcessEnv;
 export const configuration = new Configuration({
 	organization: config.ORGANIZATION_ID,
@@ -19,7 +20,7 @@ export const configuration = new Configuration({
 export const openai = new OpenAIApi(configuration);
 
 // app
-export const botUsername = '@acab2131';
+export const botUsername = config.BOT_USERNAME;
 export const language = 'english';
 export const isTelegramPremium = false;
 export const maxHistoryLength = 30;
