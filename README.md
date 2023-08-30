@@ -49,6 +49,8 @@ Please refer to `config.js` for configuration and usage instructions.
 
 If you reply to the bot's message, the bot will always reply back.
 
+If you reply to a person's message and tag the bot, it will reply to the person's message.
+
 ## Heroku
 
 The bot is ready to be run on Heroku. See `Procfile` for more details.
