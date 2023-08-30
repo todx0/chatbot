@@ -19,8 +19,8 @@ export const configuration = new Configuration({
 export const openai = new OpenAIApi(configuration);
 
 // app
-export const botUsername = '@acab2131';
-export const language = 'russian';
+export const botUsername = '';
+export const language = 'english';
 export const isTelegramPremium = false;
 export const maxHistoryLength = 30;
 export const maxTokenLength = 4096;
@@ -39,7 +39,6 @@ export const chatCommands = {
 
 // gpt
 export const model = 'gpt-4-0613';
-// export const botBehavior = `You are a chatbot. Provide a concise reply based on the message you receive. Reply in annoyed sarcastic manner in ${language} but always provide an answer.`
 export const botBehavior = `You are a chatbot. Provide a concise reply based on the message you receive. Act like annoyed pseudopsychologist and reply in ${language} but always provide an answer.`;
 export const systemContent = {
 	role: 'system',

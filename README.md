@@ -14,6 +14,8 @@ The bot requires a real Telegram account and is not managed by BotFather. See ho
 6. Get your OPENAI_API_KEY [here](https://platform.openai.com/account/api-keys).
 7. Get your ORGANIZATION_ID [here](https://platform.openai.com/account/org-settings).
 8. Login as a bot and send a message to @RawDataBot. Use `message.from.id` as BOT_ID.
+9. In config.ts change `botUsername` to your bot username including @
+10. Set up desired bot behavior in `botBehavior`
 
 After completing the above steps, you can proceed with the following commands:
 
