@@ -53,7 +53,7 @@ export async function filterMessages(messages: string[]): Promise<string[]> {
 	return messages.filter((message) => !message.includes('/recap') && message.length < 300 && message.length);
 }
 export async function approximateTokenLength(messages: string[]): Promise<number> {
-	const totalLength = messages.map((str) => str.length).reduce((accumulator, currentValue) => accumulator + currentValue);
+	const totalLength = messages.map((str) => str.length).reduce((accumulator, currentValue) => accumulator + currentValue, 0);
 	return totalLength;
 }
 export async function splitMessageInChunks(message: string): Promise<string[]> {
