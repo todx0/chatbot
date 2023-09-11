@@ -1,9 +1,7 @@
 import { Configuration, OpenAIApi } from 'openai';
-import dotenv from 'dotenv';
 import { ProcessEnv } from './types.js';
 
 // system
-dotenv.config();
 export const config = {
 	API_ID: process.env.API_ID,
 	API_HASH: process.env.API_HASH,
@@ -29,7 +27,7 @@ export const messageLimit = 700;
 export const historyFile = 'app/history/historyFile.json';
 export const randomReply = false;
 export const randomReplyPercent = 0.3;
-export const repliableWords = [];
+export const wordsToReply = [];
 export const chatCommands = {
 	'/recap': true,
 	'/q': true,

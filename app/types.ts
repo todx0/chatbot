@@ -32,3 +32,6 @@ export interface CommandHandlers {
 export interface ChatCommands {
 	[key: string]: boolean;
 }
+export interface RetryFn {
+	<T>(fn: () => Promise<T>, maxAttempts: number): Promise<T>;
+}

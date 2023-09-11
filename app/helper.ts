@@ -7,10 +7,26 @@ import {
 import {
 	randomReply,
 	randomReplyPercent,
-	repliableWords,
+	wordsToReply,
 	isTelegramPremium,
 } from './config.js';
 
+export async function retry<T>(
+	fn: (...args: any[]) => Promise<T>,
+	maxAttempts: number,
+): Promise<T> {
+	let attempt = 1;
+	while (attempt <= maxAttempts) {
+		try {
+			const result: T = await fn();
+			return result;
+		} catch (error: any) {
+			console.log(`Attempt ${attempt} failed: ${error.message}`);
+			attempt += 1;
+		}
+	}
+	throw new Error(`Max attempts (${maxAttempts}) exceeded.`);
+}
 export function sleep(ms: number): Promise<void> {
 	// eslint-disable-next-line no-promise-executor-return
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -39,9 +55,6 @@ export async function filterMessages(messages: string[]): Promise<string[]> {
 export async function approximateTokenLength(messages: string[]): Promise<number> {
 	const totalLength = messages.map((str) => str.length).reduce((accumulator, currentValue) => accumulator + currentValue);
 	return totalLength;
-}
-export async function convertFilteredMessagesToString(messages: string[]): Promise<string> {
-	return messages.toString();
 }
 export async function splitMessageInChunks(message: string): Promise<string[]> {
 	const maxChunkSize = 3000;
@@ -74,14 +87,14 @@ export function checkValidUrl(link: string): boolean {
 	return false;
 }
 export function getCommand(messageText: string, commands: ChatCommands): string {
-	const parts = messageText.split(' ');
+	const parts: string[] = messageText.split(' ');
 	if (parts.length > 0 && parts[0] in commands) {
 		return parts[0];
 	}
 	return '';
 }
 export const messageNotSeen = (message: any): boolean => !message.reactions && !message.editDate;
-export const shouldSendRandomReply = (message: any): boolean => randomReply && checkMatch(message.message, repliableWords) && Math.random() < randomReplyPercent && messageNotSeen(message);
-export const shouldTranscribeMedia = (message: any): boolean => isTelegramPremium && message.mediaUnread && isMediaTranscribable(message.media);
+export const shouldSendRandomReply = (message: any): boolean => randomReply && checkMatch(message.message, wordsToReply) && Math.random() < randomReplyPercent && messageNotSeen(message);
+export const shouldTranscribeMedia = (message: any): boolean => isTelegramPremium && message.mediaUnread && canTranscribeMedia(message.media);
 export const somebodyMentioned = (message: any): boolean => message.originalArgs.mentioned;
-export const isMediaTranscribable = (media: mediaObject): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
+export const canTranscribeMedia = (media: mediaObject): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');

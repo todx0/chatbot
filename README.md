@@ -6,7 +6,7 @@ The bot requires a real Telegram account and is not managed by BotFather. See ho
 
 ## Installation
 
-1. Install [Node.js](https://nodejs.org/en).
+1. Install [Bun](https://bun.sh/docs/installation).
 2. Clone the repository.
 3. Rename `.env.example` to `.env`.
 4. Generate API_ID and API_HASH [here](https://gram.js.org/getting-started/authorization#getting-api-id-and-api-hash).
@@ -20,23 +20,20 @@ After completing the above steps, you can proceed with the following commands:
 
 ```bash
 # Install dependencies
-npm install
-
-# Compile
-tsc
+bun install
 
 # Start
-npm run start
+bun run start
 ```
 
 ## Usage
 
-Please refer to `config.js` for configuration and usage instructions.
+Please refer to `config.ts` for configuration and usage instructions.
 
 - `botBehavior`: Set up desired bot behavior.
 - `isTelegramPremium`: If bot account have Telegram premium, setting this to true will allow the bot to automatically transcribe media messages.
 - `randomReply`: This setting enables the bot to randomly reply to messages from a list.
-- `repliableWords`: Trigger words list for randomReply. Words should be comma-separated.
+- `wordsToReply`: Trigger words list for randomReply. Words should be comma-separated.
 - `randomReplyPercent`: The percentage of random replies. For example, 0.3 means 30%.
 - `chatCommands`: Set to true or false to enable or disable particular commands.
 
@@ -53,7 +50,7 @@ If you reply to a person's message and tag the bot, it will reply to the person'
 
 ## Heroku
 
-The bot is ready to be run on Heroku. See `Procfile` for more details.
+The bot is ready to be run on Heroku. Delete `Procfile` if you not run it there.
 
 To run on Heroku, execute the following command:
 

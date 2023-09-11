@@ -22,12 +22,11 @@ import {
 	getHistory,
 } from './history/history.js';
 import {
-	sleep,
+	retry,
 	convertToImage,
 	downloadFile,
 	filterMessages,
 	approximateTokenLength,
-	convertFilteredMessagesToString,
 	splitMessageInChunks,
 	checkValidUrl,
 	getCommand,
@@ -136,8 +135,7 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 			return response;
 		}
 
-		const filteredMessagesString = await convertFilteredMessagesToString(filteredMessages);
-		const chunks = await splitMessageInChunks(filteredMessagesString);
+		const chunks = await splitMessageInChunks(filteredMessages.toString());
 		if (chunks.length === 1) {
 			response = await generateGptResponse(`${recapTextRequest} ${chunks[0]}`);
 			await sendGroupChatMessage(response, groupId);
@@ -228,7 +226,7 @@ async function transcribeAudioMessage(msgId: number, groupId: string): Promise<A
 		return error.message;
 	}
 }
-async function waitForTranscription(messageId: number, groupId: string): Promise<string | undefined | null> {
+/* async function waitForTranscription(messageId: number, groupId: string): Promise<string | undefined | null> {
 	try {
 		let response = await transcribeAudioMessage(messageId, groupId);
 		// TODO: RETRY
@@ -241,6 +239,17 @@ async function waitForTranscription(messageId: number, groupId: string): Promise
 		}
 	} catch (error) {
 		return null;
+	}
+} */
+async function waitForTranscription(messageId: number, groupId: string): Promise<string> {
+	try {
+		const response = await retry(() => transcribeAudioMessage(messageId, groupId), 3);
+		if (response.text !== 'Error during transcription.') {
+			return response.text;
+		}
+		return '';
+	} catch (error) {
+		return error;
 	}
 }
 async function getMessageContentById(messageId: number, groupId: string): Promise<any> {
