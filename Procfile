@@ -1,1 +1,0 @@
-bot: bun run start
