@@ -1,15 +1,12 @@
-import { existsSync, readFileSync, truncate } from 'fs';
+import { truncate } from 'fs';
 import { roleContent } from '../types.js';
 import { maxHistoryLength, historyFile } from '../config.js';
 
 export async function writeToHistoryFile(line: roleContent, fileName: string = historyFile): Promise<void> {
 	try {
-		if (!existsSync(fileName)) {
-			Bun.write(fileName, '')
-			//fs.writeFileSync(fileName, ''); // Create an empty file if it doesn't exist
-		}
 		const file = Bun.file(fileName, { type: "application/json" });
-		//const oldContent = readFileSync(fileName, { encoding: 'utf-8' }).trim();
+		if (!file.size) Bun.write(fileName, '')
+
 		const oldContent = (await file.text()).trim()
 		let newContent: string;
 
@@ -27,20 +24,16 @@ export async function writeToHistoryFile(line: roleContent, fileName: string = h
 			newContent = JSON.stringify(lines);
 		}
 		Bun.write(fileName, newContent)
-		//fs.writeFileSync(fileName, newContent);
 	} catch (error: any) {
 		console.error(`Error while writing to file: ${error.message}`);
 	}
 }
 export async function readHistoryFile(fileName: string = historyFile): Promise<any[] | null> {
 	try {
-		if (!existsSync(fileName)) {
-			Bun.write(fileName, '')
-			//fs.writeFileSync(fileName, ''); // Create an empty file if it doesn't exist
-		}
 		const file = Bun.file(fileName, { type: "application/json" });
+		if (!file.size) Bun.write(fileName, '')
 		const content = (await file.text()).trim()
-		//const content = readFileSync(fileName, { encoding: 'utf-8' }).trim();
+
 		if (!content) {
 			return [];
 		}

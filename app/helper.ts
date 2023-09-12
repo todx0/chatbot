@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { existsSync, mkdirSync } from 'fs';
 import {
 	ChatCommands,
 	mediaObject
@@ -41,10 +40,9 @@ export async function convertToImage(buffer: Buffer): Promise<string> {
 	}
 	const folderPath = './images';
 	const filepath = `${folderPath}/image.jpg`;
+
 	const file = Bun.file(filepath);
-	if (!existsSync(folderPath)) {
-		mkdirSync(folderPath);
-	}
+	if (!file.size) Bun.write(filepath, '')
 	await Bun.write(file, buffer);
 	return filepath;
 }

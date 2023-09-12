@@ -204,14 +204,11 @@ async function handleImagineCommand(groupId: string, messageText: string): Promi
 		await sendGroupChatMessage(error, groupId);
 	}
 }
-async function downloadAndSendImageFromUrl(url: string, groupId: string): Promise<void | string> {
+async function downloadAndSendImageFromUrl(url: string, groupId: string): Promise<void> {
 	try {
 		const buffer = await downloadFile(url);
 		const imagePath = await convertToImage(buffer);
 		await sendImage(groupId, imagePath);
-		const test = 'test'
-		console.log(test)
-		return test
 	} catch (err) {
 		console.error(err);
 	}
