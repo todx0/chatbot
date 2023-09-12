@@ -13,7 +13,7 @@ export async function generateGptResponseWithHistory(request: gptRequest): Promi
 			messages: conversationHistory
 		});
 		return response.data.choices[0].message.content;
-	} catch (error any) {
+	} catch (error) {
 		return error.response.data.error.message;
 	}
 }
@@ -24,7 +24,7 @@ export async function generateGptResponse(message: string): Promise<string> {
 			messages: [{ role: 'user', content: message }]
 		});
 		return response.data.choices[0].message.content;
-	} catch (error any) {
+	} catch (error) {
 		return error.response.data.error.message;
 	}
 }
@@ -40,7 +40,7 @@ export async function createImageFromPrompt(text: string): Promise<string> {
 			size: '1024x1024',
 		});
 		return response.data.data[0].url;
-	} catch (error any) {
+	} catch (error) {
 		return error.response.data.error.message;
 	}
 }
