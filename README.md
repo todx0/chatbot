@@ -48,12 +48,9 @@ If you reply to the bot's message, the bot will always reply back.
 
 If you reply to a person's message and tag the bot, it will reply to the person's message.
 
-## Heroku
+## Hosting
 
-The bot is ready to be run on Heroku. Delete `Procfile` if you not run it there.
+I use Bun now so idk
+ヽ_(ヅ)_ノ
 
-To run on Heroku, execute the following command:
 
-```bash
-heroku scale bot=1
-```
