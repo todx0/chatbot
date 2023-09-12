@@ -171,13 +171,13 @@ async function handleImgCommand(groupId: string, messageText: string): Promise<v
 	const [, requestText] = messageText.split('/img ');
 
 	if (!requestText) {
-		await sendGroupChatMessage('/image command requires a prompt', groupId);
+		await sendGroupChatMessage('/img command requires a prompt', groupId);
 		return;
 	}
 	try {
 		const url = await createImageFromPrompt(requestText);
-		if (!checkValidUrl(url)) return;
-		await downloadConvertAndSend(url, groupId);
+		if (!url.includes('https://')) return;
+		await downloadAndSendImageFromUrl(url, groupId);
 	} catch (error: any) {
 		console.error('Error processing /img command:', error);
 		await sendGroupChatMessage(error, groupId);
@@ -198,17 +198,20 @@ async function handleImagineCommand(groupId: string, messageText: string): Promi
 		const filteredMessages = filterMessages(messages);
 		const recapText = await generateGptResponse(`${recapTextRequest} ${filteredMessages}`);
 		const url = await createImageFromPrompt(recapText);
-		await downloadConvertAndSend(url, groupId);
+		await downloadAndSendImageFromUrl(url, groupId);
 	} catch (error: any) {
 		console.error('Error processing /imagine command:', error);
 		await sendGroupChatMessage(error, groupId);
 	}
 }
-async function downloadConvertAndSend(url: string, groupId: string): Promise<void> {
+async function downloadAndSendImageFromUrl(url: string, groupId: string): Promise<void | string> {
 	try {
 		const buffer = await downloadFile(url);
 		const imagePath = await convertToImage(buffer);
 		await sendImage(groupId, imagePath);
+		const test = 'test'
+		console.log(test)
+		return test
 	} catch (err) {
 		console.error(err);
 	}
@@ -226,21 +229,6 @@ async function transcribeAudioMessage(msgId: number, groupId: string): Promise<A
 		return error.message;
 	}
 }
-/* async function waitForTranscription(messageId: number, groupId: string): Promise<string | undefined | null> {
-	try {
-		let response = await transcribeAudioMessage(messageId, groupId);
-		// TODO: RETRY
-		while (response.pending) {
-			await sleep(5000);
-			response = await transcribeAudioMessage(messageId, groupId);
-		}
-		if (response.text !== 'Error during transcription.') {
-			return response.text;
-		}
-	} catch (error) {
-		return null;
-	}
-} */
 async function waitForTranscription(messageId: number, groupId: string): Promise<string> {
 	try {
 		const response = await retry(() => transcribeAudioMessage(messageId, groupId), 3);

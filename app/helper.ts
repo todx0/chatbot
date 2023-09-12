@@ -1,5 +1,5 @@
 import axios from 'axios';
-import fs from 'fs';
+import { existsSync, mkdirSync } from 'fs';
 import {
 	ChatCommands,
 	mediaObject
@@ -41,12 +41,11 @@ export async function convertToImage(buffer: Buffer): Promise<string> {
 	}
 	const folderPath = './images';
 	const filepath = `${folderPath}/image.jpg`;
-
-	if (!fs.existsSync(folderPath)) {
-		fs.mkdirSync(folderPath);
+	const file = Bun.file(filepath);
+	if (!existsSync(folderPath)) {
+		mkdirSync(folderPath);
 	}
-	fs.writeFileSync(filepath, buffer, { flag: 'w' });
-
+	await Bun.write(file, buffer);
 	return filepath;
 }
 export async function filterMessages(messages: string[]): Promise<string[]> {
@@ -80,11 +79,7 @@ export function checkMatch(message: string, matchArray: string[]): boolean {
 	return false;
 }
 export function checkValidUrl(link: string): boolean {
-	const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
-	if (urlRegex.test(link)) {
-		return true;
-	}
-	return false;
+	return (link.includes('https://')) ? true : false
 }
 export function getCommand(messageText: string, commands: ChatCommands): string {
 	const parts: string[] = messageText.split(' ');

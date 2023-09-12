@@ -1,14 +1,16 @@
-import fs from 'fs';
+import { existsSync, readFileSync, truncate } from 'fs';
 import { roleContent } from '../types.js';
 import { maxHistoryLength, historyFile } from '../config.js';
 
 export async function writeToHistoryFile(line: roleContent, fileName: string = historyFile): Promise<void> {
 	try {
-		if (!fs.existsSync(fileName)) {
-			fs.writeFileSync(fileName, ''); // Create an empty file if it doesn't exist
+		if (!existsSync(fileName)) {
+			Bun.write(fileName, '')
+			//fs.writeFileSync(fileName, ''); // Create an empty file if it doesn't exist
 		}
-
-		const oldContent = fs.readFileSync(fileName, { encoding: 'utf-8' }).trim();
+		const file = Bun.file(fileName, { type: "application/json" });
+		//const oldContent = readFileSync(fileName, { encoding: 'utf-8' }).trim();
+		const oldContent = (await file.text()).trim()
 		let newContent: string;
 
 		if (oldContent === '') {
@@ -24,18 +26,21 @@ export async function writeToHistoryFile(line: roleContent, fileName: string = h
 			lines.push(line);
 			newContent = JSON.stringify(lines);
 		}
-
-		fs.writeFileSync(fileName, newContent);
+		Bun.write(fileName, newContent)
+		//fs.writeFileSync(fileName, newContent);
 	} catch (error: any) {
 		console.error(`Error while writing to file: ${error.message}`);
 	}
 }
 export async function readHistoryFile(fileName: string = historyFile): Promise<any[] | null> {
 	try {
-		if (!fs.existsSync(fileName)) {
-			fs.writeFileSync(fileName, ''); // Create an empty file if it doesn't exist
+		if (!existsSync(fileName)) {
+			Bun.write(fileName, '')
+			//fs.writeFileSync(fileName, ''); // Create an empty file if it doesn't exist
 		}
-		const content = fs.readFileSync(fileName, { encoding: 'utf-8' }).trim();
+		const file = Bun.file(fileName, { type: "application/json" });
+		const content = (await file.text()).trim()
+		//const content = readFileSync(fileName, { encoding: 'utf-8' }).trim();
 		if (!content) {
 			return [];
 		}
@@ -50,7 +55,7 @@ export async function readHistoryFile(fileName: string = historyFile): Promise<a
 	}
 }
 export async function clearHistory(fileName: string = historyFile): Promise<void> {
-	fs.truncate(fileName, 0, () => { console.log('History cleared'); });
+	truncate(fileName, 0, () => { console.log('History cleared'); });
 }
 export async function getHistory(fileName: string): Promise<any[]> {
 	const fileContent = await readHistoryFile(fileName);
