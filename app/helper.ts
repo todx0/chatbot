@@ -22,13 +22,10 @@ export async function retry<T>(
 		} catch (error: any) {
 			console.log(`Attempt ${attempt} failed: ${error.message}`);
 			attempt += 1;
+			Bun.sleep(1000)
 		}
 	}
 	throw new Error(`Max attempts (${maxAttempts}) exceeded.`);
-}
-export function sleep(ms: number): Promise<void> {
-	// eslint-disable-next-line no-promise-executor-return
-	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 export async function downloadFile(url: string): Promise<Buffer> {
 	const response = await axios.get(url, { responseType: 'arraybuffer' });
