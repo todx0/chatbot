@@ -50,7 +50,7 @@ If you reply to a person's message and tag the bot, it will reply to the person'
 
 ## Hosting
 
-I use Bun now so idk
-ヽ_(ヅ)_ノ
+I'm no longer friends with Heroku.
+[fly.io](https://fly.io/) does everything out of the box.
 
 

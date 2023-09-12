@@ -149,7 +149,7 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 		await sendGroupChatMessage(response, groupId);
 		await writeToHistoryFile({ role: 'assistant', content: response });
 		return response;
-	} catch (error: any) {
+	} catch (error any) {
 		console.error('Error processing recap command:', error);
 		await sendGroupChatMessage(error, groupId);
 	}
@@ -162,7 +162,7 @@ async function handleQCommand(groupId: string, messageText: string): Promise<voi
 		await sendGroupChatMessage(response, groupId);
 		await writeToHistoryFile({ role: 'user', content: requestText });
 		await writeToHistoryFile({ role: 'assistant', content: response });
-	} catch (error: any) {
+	} catch (error any) {
 		console.error('Error processing q command:', error);
 		await sendGroupChatMessage(error, groupId);
 	}
@@ -178,7 +178,7 @@ async function handleImgCommand(groupId: string, messageText: string): Promise<v
 		const url = await createImageFromPrompt(requestText);
 		if (!url.includes('https://')) return;
 		await downloadAndSendImageFromUrl(url, groupId);
-	} catch (error: any) {
+	} catch (error any) {
 		console.error('Error processing /img command:', error);
 		await sendGroupChatMessage(error, groupId);
 	}
@@ -199,7 +199,7 @@ async function handleImagineCommand(groupId: string, messageText: string): Promi
 		const recapText = await generateGptResponse(`${recapTextRequest} ${filteredMessages}`);
 		const url = await createImageFromPrompt(recapText);
 		await downloadAndSendImageFromUrl(url, groupId);
-	} catch (error: any) {
+	} catch (error any) {
 		console.error('Error processing /imagine command:', error);
 		await sendGroupChatMessage(error, groupId);
 	}
@@ -221,7 +221,7 @@ async function transcribeAudioMessage(msgId: number, groupId: string): Promise<A
 		});
 		const result = await client.invoke(transcribeAudio);
 		return result;
-	} catch (error: any) {
+	} catch (error any) {
 		console.error(`Error while transcribing message: ${error.message}`);
 		return error.message;
 	}

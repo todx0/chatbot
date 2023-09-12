@@ -24,7 +24,7 @@ export async function writeToHistoryFile(line: roleContent, fileName: string = h
 			newContent = JSON.stringify(lines);
 		}
 		Bun.write(fileName, newContent)
-	} catch (error: any) {
+	} catch (error any) {
 		console.error(`Error while writing to file: ${error.message}`);
 	}
 }
@@ -42,7 +42,7 @@ export async function readHistoryFile(fileName: string = historyFile): Promise<a
 			throw new Error('File content is not a valid JSON array');
 		}
 		return history;
-	} catch (error: any) {
+	} catch (error any) {
 		console.error(`Error while reading file "${fileName}": ${error.message}`);
 		return null;
 	}

@@ -19,7 +19,7 @@ export async function retry<T>(
 		try {
 			const result: T = await fn();
 			return result;
-		} catch (error: any) {
+		} catch (error) {
 			console.log(`Attempt ${attempt} failed: ${error.message}`);
 			attempt += 1;
 			Bun.sleep(1000)
