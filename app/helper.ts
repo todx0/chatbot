@@ -73,9 +73,6 @@ export function checkMatch(message: string, matchArray: string[]): boolean {
 	}
 	return false;
 }
-export function checkValidUrl(link: string): boolean {
-	return (link.includes('https://')) ? true : false
-}
 export function getCommand(messageText: string, commands: ChatCommands): string {
 	const parts: string[] = messageText.split(' ');
 	if (parts.length > 0 && parts[0] in commands) {
