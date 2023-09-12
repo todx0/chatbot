@@ -21,10 +21,9 @@ export const openai = new OpenAIApi(configuration);
 export const botUsername = config.BOT_USERNAME;
 export const language = config.LANGUAGE;
 export const isTelegramPremium = false;
-export const maxHistoryLength = 30;
+export const maxHistoryLength = 15;
 export const maxTokenLength = 4096;
 export const messageLimit = 700;
-export const historyFile = 'app/history/historyFile.json';
 export const randomReply = false;
 export const randomReplyPercent = 0.3;
 export const wordsToReply = [];
@@ -35,6 +34,7 @@ export const chatCommands = {
 	'/img': true,
 	'/imagine': true
 };
+export const dbname = 'db.sqlite'
 
 // gpt
 export const model = 'gpt-4-0613';

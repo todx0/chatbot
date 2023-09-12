@@ -1,7 +1,9 @@
 import axios from 'axios';
+import { Database } from 'bun:sqlite';
 import {
 	ChatCommands,
-	mediaObject
+	mediaObject,
+	roleContent
 } from './types.js';
 import {
 	randomReply,
@@ -9,6 +11,7 @@ import {
 	wordsToReply,
 	isTelegramPremium,
 } from './config.js';
+import { dbname } from './config.js';
 
 export async function retry<T>(
 	fn: (...args: any[]) => Promise<T>,
@@ -85,3 +88,45 @@ export const shouldSendRandomReply = (message: any): boolean => randomReply && c
 export const shouldTranscribeMedia = (message: any): boolean => isTelegramPremium && message.mediaUnread && canTranscribeMedia(message.media);
 export const somebodyMentioned = (message: any): boolean => message.originalArgs.mentioned;
 export const canTranscribeMedia = (media: mediaObject): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
+
+export async function writeToDatabase(object: roleContent, dbsqlite = dbname): Promise<void> {
+	const db = new Database(dbsqlite);
+	const { role, content } = object;
+	try {
+		db.run(`INSERT INTO messages (role, content) VALUES (?, ?)`, [role, content]);
+	} catch (error) {
+		return error
+	}
+}
+export async function readFromDatabase(dbsqlite = dbname): Promise<any[]> {
+	const db = new Database(dbsqlite);
+	try {
+		const rows = db.query('SELECT role, content FROM messages').all();
+		return rows;
+	} catch (error) {
+		return error
+	}
+}
+export async function clearDatabase(dbsqlite = dbname): Promise<void> {
+	const db = new Database(dbsqlite);
+	try {
+		db.run('DELETE FROM messages')
+	} catch (error) {
+		return error
+	}
+}
+export async function dbTrim(amountToRemove: number, dbsqlite = dbname): Promise<void> {
+	const db = new Database(dbsqlite);
+	const queryRemove = `DELETE FROM messages ORDER BY ID ASC LIMIT ${amountToRemove};`;
+	db.run(queryRemove)
+}
+export async function dbCreateTables(): Promise<void> {
+	const db = new Database('db.sqlite');
+	db.run(`
+	  CREATE TABLE IF NOT EXISTS messages (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		role TEXT,
+		content TEXT
+	  )
+	`);
+}

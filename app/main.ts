@@ -8,19 +8,14 @@ import {
 } from './types.js';
 import {
 	config,
-	historyFile,
 	recapTextRequest,
 	toxicRecapRequest,
 	messageLimit,
 	maxTokenLength,
 	chatCommands,
-	botUsername
+	botUsername,
+	maxHistoryLength
 } from './config.js';
-import {
-	writeToHistoryFile,
-	clearHistory,
-	getHistory,
-} from './history/history.js';
 import {
 	retry,
 	convertToImage,
@@ -32,12 +27,17 @@ import {
 	messageNotSeen,
 	shouldSendRandomReply,
 	somebodyMentioned,
-	shouldTranscribeMedia
+	shouldTranscribeMedia,
+	dbCreateTables,
+	readFromDatabase,
+	writeToDatabase,
+	clearDatabase,
+	dbTrim,
 } from './helper.js';
 import {
 	generateGptResponse,
 	createImageFromPrompt,
-	generateGptResponseWithHistory,
+	generateGptRespWithHistory,
 	generateGptResponses,
 	combineAnswers
 } from './openai/api.js';
@@ -101,9 +101,7 @@ async function getMessages({ limit, groupId }: GetMessagesParams): Promise<strin
 	return messages.reverse();
 }
 async function handleClearCommand(groupId: string): Promise<void> {
-	await Promise.all([
-		clearHistory(historyFile),
-	]);
+	await clearDatabase()
 	await sendGroupChatMessage('History cleared', groupId);
 }
 async function handleRecapCommand(groupId: string, messageText: string): Promise<void | string> {
@@ -129,8 +127,8 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 				: filteredMessages;
 			response = await generateGptResponse(`${recapTextRequest} ${messageString}`);
 			await sendGroupChatMessage(response, groupId);
-			await writeToHistoryFile({ role: 'assistant', content: response });
-
+			//await writeToDatabase({ role: 'assistant', content: response });
+			await writeToDatabase({ role: 'assistant', content: response })
 			return response;
 		}
 
@@ -138,7 +136,7 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 		if (chunks.length === 1) {
 			response = await generateGptResponse(`${recapTextRequest} ${chunks[0]}`);
 			await sendGroupChatMessage(response, groupId);
-			await writeToHistoryFile({ role: 'assistant', content: response });
+			await writeToDatabase({ role: 'assistant', content: response });
 			return response;
 		}
 
@@ -146,7 +144,7 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 		const responsesCombined = await combineAnswers(responses);
 		response = await generateGptResponse(`${toxicRecapRequest} ${responsesCombined}`);
 		await sendGroupChatMessage(response, groupId);
-		await writeToHistoryFile({ role: 'assistant', content: response });
+		await writeToDatabase({ role: 'assistant', content: response });
 		return response;
 	} catch (error) {
 		console.error('Error processing recap command:', error);
@@ -156,11 +154,11 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 async function handleQCommand(groupId: string, messageText: string): Promise<void> {
 	const [, requestText] = messageText.split('/q ');
 	try {
-		const currentHistory = await getHistory(historyFile);
-		const response = await generateGptResponseWithHistory({ conversationHistory: currentHistory, userRequest: requestText });
+		const currentHistory = await readFromDatabase()
+		const response = await generateGptRespWithHistory({ conversationHistory: currentHistory, userRequest: requestText });
 		await sendGroupChatMessage(response, groupId);
-		await writeToHistoryFile({ role: 'user', content: requestText });
-		await writeToHistoryFile({ role: 'assistant', content: response });
+		await writeToDatabase({ role: 'user', content: requestText });
+		await writeToDatabase({ role: 'assistant', content: response });
 	} catch (error) {
 		console.error('Error processing q command:', error);
 		await sendGroupChatMessage(error, groupId);
@@ -249,14 +247,20 @@ async function checkReplyIdIsBotId(messageId: number, groupId: string): Promise<
 	return false;
 }
 async function processMessage(userRequest: string, groupId: string, messageId: number): Promise<void> {
-	const currentHistory = await getHistory(historyFile);
-	const gptReply = await generateGptResponseWithHistory({
+	const currentHistory = await readFromDatabase();
+	const gptReply = await generateGptRespWithHistory({
 		conversationHistory: currentHistory,
 		userRequest,
 	});
 	await replyToMessage(gptReply, messageId, groupId);
-	await writeToHistoryFile({ role: 'user', content: userRequest });
-	await writeToHistoryFile({ role: 'assistant', content: gptReply });
+	await writeToDatabase({ role: 'user', content: userRequest });
+	await writeToDatabase({ role: 'assistant', content: gptReply });
+
+	const historyLength = currentHistory.length
+	if (historyLength > maxHistoryLength) {
+		const diff = historyLength - maxHistoryLength - 1
+		await dbTrim(diff)
+	}
 }
 
 const processCommand = async (event: any) => {
@@ -315,6 +319,7 @@ const processCommand = async (event: any) => {
 };
 
 (async () => {
+	await dbCreateTables()
 	await client.connect();
 	client.addEventHandler(processCommand);
 })();

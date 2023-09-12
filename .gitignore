@@ -8,3 +8,4 @@ config-local.yml
 dist
 image.jpg
 historyFile.json
+db.sqlite
