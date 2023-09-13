@@ -8,12 +8,14 @@ export async function generateGptRespWithHistory(userRequest: string): Promise<s
 		await writeToDatabase(userRoleContent);
 		const currentHistory = await readFromDatabase()
 		currentHistory.unshift(systemContent)
-		const response: any = await openai.createChatCompletion({
+
+		const response = await openai.createChatCompletion({
 			model,
 			messages: currentHistory
 		});
-		await writeToDatabase({ role: 'assistant', content: response });
-		return response.data.choices[0].message.content;
+		const openAiResponse = response.data.choices[0].message.content;
+		await writeToDatabase({ role: 'assistant', content: openAiResponse });
+		return openAiResponse;
 	} catch (error) {
 		return error.response.data.error.message;
 	}

@@ -2,7 +2,7 @@ import { MessageIDLike } from 'telegram/define';
 
 export interface roleContent {
 	role: 'user' | 'assistant' | 'system';
-	content: any;
+	content: string;
 }
 export interface ProcessEnv {
 	[key: string]: string;
