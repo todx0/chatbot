@@ -1,13 +1,13 @@
 import { openai, model, systemContent } from '../config';
 import { roleContent } from '../types';
-import { readRoleContentFromDatabase, insertToMessages } from '../helper'
+import { readRoleContentFromDatabase, insertToMessages } from '../helper';
 
 export async function generateGptRespWithHistory(userRequest: string): Promise<string> {
 	try {
-		const userRoleContent: roleContent = { role: 'user', content: userRequest }
+		const userRoleContent: roleContent = { role: 'user', content: userRequest };
 		await insertToMessages(userRoleContent);
-		const currentHistory = await readRoleContentFromDatabase()
-		currentHistory.unshift(systemContent)
+		const currentHistory = await readRoleContentFromDatabase();
+		currentHistory.unshift(systemContent);
 
 		const response = await openai.createChatCompletion({
 			model,
@@ -22,13 +22,13 @@ export async function generateGptRespWithHistory(userRequest: string): Promise<s
 }
 export async function generateGptResponse(userRequest: string): Promise<string> {
 	try {
-		const userRoleContent: roleContent = { role: 'user', content: userRequest }
+		const userRoleContent: roleContent = { role: 'user', content: userRequest };
 		const response: any = await openai.createChatCompletion({
 			model,
 			messages: [userRoleContent]
 		});
-		await insertToMessages(userRoleContent)
-		await insertToMessages({ role: 'assistant', content: response })
+		await insertToMessages(userRoleContent);
+		await insertToMessages({ role: 'assistant', content: response });
 		return response.data.choices[0].message.content;
 	} catch (error) {
 		return error.response.data.error.message;
@@ -55,10 +55,6 @@ export async function createImageFromPrompt(text: string): Promise<string> {
 	}
 }
 export async function combineAnswers(answers: string[]): Promise<string> {
-	try {
-		const combinedAnswer = await generateGptResponse(`Combine array of answers to one. \n ${answers}`);
-		return combinedAnswer;
-	} catch (error) {
-		throw error;
-	}
+	const combinedAnswer = await generateGptResponse(`Combine array of answers to one. \n ${answers}`);
+	return combinedAnswer;
 }
