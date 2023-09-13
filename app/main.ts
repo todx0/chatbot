@@ -127,7 +127,6 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 				: filteredMessages;
 			response = await generateGptResponse(`${recapTextRequest} ${messageString}`);
 			await sendGroupChatMessage(response, groupId);
-			//await writeToDatabase({ role: 'assistant', content: response });
 			await writeToDatabase({ role: 'assistant', content: response })
 			return response;
 		}
@@ -154,11 +153,9 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 async function handleQCommand(groupId: string, messageText: string): Promise<void> {
 	const [, requestText] = messageText.split('/q ');
 	try {
-		const currentHistory = await readFromDatabase()
-		const response = await generateGptRespWithHistory({ conversationHistory: currentHistory, userRequest: requestText });
+
+		const response = await generateGptRespWithHistory(requestText);
 		await sendGroupChatMessage(response, groupId);
-		await writeToDatabase({ role: 'user', content: requestText });
-		await writeToDatabase({ role: 'assistant', content: response });
 	} catch (error) {
 		console.error('Error processing q command:', error);
 		await sendGroupChatMessage(error, groupId);
@@ -247,20 +244,8 @@ async function checkReplyIdIsBotId(messageId: number, groupId: string): Promise<
 	return false;
 }
 async function processMessage(userRequest: string, groupId: string, messageId: number): Promise<void> {
-	const currentHistory = await readFromDatabase();
-	const gptReply = await generateGptRespWithHistory({
-		conversationHistory: currentHistory,
-		userRequest,
-	});
+	const gptReply = await generateGptRespWithHistory(userRequest);
 	await replyToMessage(gptReply, messageId, groupId);
-	await writeToDatabase({ role: 'user', content: userRequest });
-	await writeToDatabase({ role: 'assistant', content: gptReply });
-
-	const historyLength = currentHistory.length
-	if (historyLength > maxHistoryLength) {
-		const diff = historyLength - maxHistoryLength - 1
-		await dbTrim(diff)
-	}
 }
 
 const processCommand = async (event: any) => {

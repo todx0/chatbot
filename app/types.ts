@@ -4,10 +4,6 @@ export interface roleContent {
 	role: 'user' | 'assistant' | 'system';
 	content: any;
 }
-export interface gptRequest {
-	conversationHistory: any[],
-	userRequest: string
-}
 export interface ProcessEnv {
 	[key: string]: string;
 }
