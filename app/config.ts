@@ -9,7 +9,8 @@ export const config = {
 	OPENAI_API_KEY: process.env.OPENAI_API_KEY,
 	ORGANIZATION_ID: process.env.ORGANIZATION_ID,
 	BOT_ID: process.env.BOT_ID,
-	BOT_USERNAME: process.env.BOT_USERNAME
+	BOT_USERNAME: process.env.BOT_USERNAME,
+	LANGUAGE: process.env.LANGUAGE
 } as ProcessEnv;
 export const configuration = new Configuration({
 	organization: config.ORGANIZATION_ID,
