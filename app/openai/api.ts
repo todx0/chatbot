@@ -1,12 +1,12 @@
-import { openai, model, systemContent } from '../config.js';
-import { roleContent } from '../types.js';
-import { readFromDatabase, writeToDatabase } from '../helper.js'
+import { openai, model, systemContent } from '../config';
+import { roleContent } from '../types';
+import { readRoleContentFromDatabase, insertToMessages } from '../helper'
 
 export async function generateGptRespWithHistory(userRequest: string): Promise<string> {
 	try {
 		const userRoleContent: roleContent = { role: 'user', content: userRequest }
-		await writeToDatabase(userRoleContent);
-		const currentHistory = await readFromDatabase()
+		await insertToMessages(userRoleContent);
+		const currentHistory = await readRoleContentFromDatabase()
 		currentHistory.unshift(systemContent)
 
 		const response = await openai.createChatCompletion({
@@ -14,7 +14,7 @@ export async function generateGptRespWithHistory(userRequest: string): Promise<s
 			messages: currentHistory
 		});
 		const openAiResponse = response.data.choices[0].message.content;
-		await writeToDatabase({ role: 'assistant', content: openAiResponse });
+		await insertToMessages({ role: 'assistant', content: openAiResponse });
 		return openAiResponse;
 	} catch (error) {
 		return error.response.data.error.message;
@@ -27,8 +27,8 @@ export async function generateGptResponse(userRequest: string): Promise<string> 
 			model,
 			messages: [userRoleContent]
 		});
-		await writeToDatabase(userRoleContent)
-		await writeToDatabase({ role: 'assistant', content: response })
+		await insertToMessages(userRoleContent)
+		await insertToMessages({ role: 'assistant', content: response })
 		return response.data.choices[0].message.content;
 	} catch (error) {
 		return error.response.data.error.message;

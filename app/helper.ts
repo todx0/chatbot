@@ -1,17 +1,18 @@
 import axios from 'axios';
+import { unlink } from 'node:fs/promises';
 import { Database } from 'bun:sqlite';
 import {
 	ChatCommands,
 	mediaObject,
 	roleContent
-} from './types.js';
+} from './types';
 import {
 	randomReply,
 	randomReplyPercent,
 	wordsToReply,
 	isTelegramPremium,
-} from './config.js';
-import { dbname } from './config.js';
+	dbname
+} from './config';
 
 export async function retry<T>(
 	fn: (...args: any[]) => Promise<T>,
@@ -25,34 +26,26 @@ export async function retry<T>(
 		} catch (error) {
 			console.log(`Attempt ${attempt} failed: ${error.message}`);
 			attempt += 1;
-			Bun.sleep(1000)
+			Bun.sleep(1000);
 		}
 	}
 	throw new Error(`Max attempts (${maxAttempts}) exceeded.`);
 }
 export async function downloadFile(url: string): Promise<Buffer> {
-	try {
-		const response = await axios.get(url, { responseType: 'arraybuffer' });
-		return Buffer.from(response.data, 'binary');
-	} catch (error) {
-		throw error;
-	}
+	const response = await axios.get(url, { responseType: 'arraybuffer' });
+	return Buffer.from(response.data, 'binary');
 }
 export async function convertToImage(buffer: Buffer): Promise<string> {
-	try {
-		if (!(buffer instanceof Buffer)) {
-			throw new Error('Not a buffer');
-		}
-		const folderPath = './images';
-		const filepath = `${folderPath}/image.jpg`;
-		const file = Bun.file(filepath);
-
-		if (!file.size) Bun.write(filepath, '')
-		await Bun.write(file, buffer);
-		return filepath;
-	} catch (error) {
-		throw error;
+	if (!(buffer instanceof Buffer)) {
+		throw new Error('Not a buffer');
 	}
+	const folderPath = './images';
+	const filepath = `${folderPath}/image.jpg`;
+	const file = Bun.file(filepath);
+
+	if (!file.size) Bun.write(filepath, '');
+	await Bun.write(file, buffer);
+	return filepath;
 }
 export async function filterMessages(messages: string[]): Promise<string[]> {
 	return messages.filter((message) => !message.includes('/recap') && message.length < 300 && message.length);
@@ -97,52 +90,36 @@ export const shouldTranscribeMedia = (message: any): boolean => isTelegramPremiu
 export const somebodyMentioned = (message: any): boolean => message.originalArgs.mentioned;
 export const canTranscribeMedia = (media: mediaObject): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
 
-export async function writeToDatabase(object: roleContent, dbsqlite = dbname): Promise<void> {
+export async function insertToMessages(object: roleContent, dbsqlite = dbname): Promise<void> {
 	const db = new Database(dbsqlite);
 	const { role, content } = object;
-	try {
-		db.run(`INSERT INTO messages (role, content) VALUES (?, ?)`, [role, content]);
-	} catch (error) {
-		throw error;
-	}
+	db.run('INSERT INTO messages (role, content) VALUES (?, ?)', [role, content]);
 }
-export async function readFromDatabase(dbsqlite = dbname): Promise<any[]> {
+export async function readRoleContentFromDatabase(dbsqlite = dbname): Promise<any[]> {
 	const db = new Database(dbsqlite);
-	try {
-		const rows = db.query('SELECT role, content FROM messages').all();
-		return rows;
-	} catch (error) {
-		throw error;
-	}
+	const rows = db.query('SELECT role, content FROM messages').all();
+	return rows;
 }
-export async function clearDatabase(dbsqlite = dbname): Promise<void> {
+export async function clearMessagesTable(dbsqlite = dbname): Promise<void> {
 	const db = new Database(dbsqlite);
-	try {
-		db.run('DELETE FROM messages');
-	} catch (error) {
-		throw error;
-	}
+	db.run('DELETE FROM messages');
 }
-export async function dbTrim(amountToRemove: number, dbsqlite = dbname): Promise<void> {
+export async function trimMessagesTable(amountToRemove: number, dbsqlite = dbname): Promise<void> {
 	const db = new Database(dbsqlite);
 	const queryRemove = `DELETE FROM messages ORDER BY ID ASC LIMIT ${amountToRemove};`;
-	try {
-		db.run(queryRemove);
-	} catch (error) {
-		throw error;
-	}
+	db.run(queryRemove);
 }
-export async function dbCreateTables(dbsqlite = 'db.sqlite'): Promise<void> {
+export async function createMessagesTable(dbsqlite = 'db.sqlite'): Promise<void> {
 	const db = new Database(dbsqlite);
-	try {
-		db.run(`
+	db.run(`
 		CREATE TABLE IF NOT EXISTS messages (
 		  id INTEGER PRIMARY KEY AUTOINCREMENT,
 		  role TEXT,
 		  content TEXT
 		)
 	  `);
-	} catch (error) {
-		throw error;
-	}
+}
+export async function deleteDatabase(dbsqlite = 'db.sqlite'): Promise<void> {
+	await unlink(dbsqlite);
+	console.log(`Deleted the database file '${dbsqlite}'.`);
 }

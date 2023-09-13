@@ -1,5 +1,5 @@
 import { Configuration, OpenAIApi } from 'openai';
-import { ProcessEnv } from './types.js';
+import { ProcessEnv } from './types';
 
 // system
 export const config = {
@@ -35,7 +35,7 @@ export const chatCommands = {
 	'/img': true,
 	'/imagine': true
 };
-export const dbname = 'db.sqlite'
+export const dbname = 'db.sqlite';
 
 // gpt
 export const model = 'gpt-4-0613';

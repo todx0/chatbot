@@ -5,7 +5,7 @@ import {
 	SendMessageParams,
 	GetMessagesParams,
 	CommandHandlers,
-} from './types.js';
+} from './types';
 import {
 	config,
 	recapTextRequest,
@@ -14,7 +14,7 @@ import {
 	maxTokenLength,
 	chatCommands,
 	botUsername,
-} from './config.js';
+} from './config';
 import {
 	retry,
 	convertToImage,
@@ -27,16 +27,16 @@ import {
 	shouldSendRandomReply,
 	somebodyMentioned,
 	shouldTranscribeMedia,
-	dbCreateTables,
-	clearDatabase,
-} from './helper.js';
+	createMessagesTable,
+	clearMessagesTable,
+} from './helper';
 import {
 	generateGptResponse,
 	createImageFromPrompt,
 	generateGptRespWithHistory,
 	generateGptResponses,
 	combineAnswers
-} from './openai/api.js';
+} from './openai/api';
 
 const {
 	SESSION,
@@ -58,63 +58,39 @@ async function sendMessage(obj: SendMessageParams): Promise<Api.TypeUpdates | un
 		replyToMsgId,
 		silent
 	});
-	try {
-		const result = await client.invoke(sendMsg);
-		return result;
-	} catch (error) {
-		throw error;
-	}
+	const result = await client.invoke(sendMsg);
+	return result;
 }
 async function sendGroupChatMessage(messageText: string, groupId: string): Promise<Api.TypeUpdates | undefined> {
-	try {
-		const message = await sendMessage({
-			peer: groupId,
-			message: messageText,
-			silent: false
-		});
-		return message;
-	} catch (error) {
-		throw error;
-	}
+	const message = await sendMessage({
+		peer: groupId,
+		message: messageText,
+		silent: false
+	});
+	return message;
 }
 async function replyToMessage(messageText: string, replyToMsgId: MessageIDLike, groupId: string): Promise<Api.TypeUpdates | undefined> {
-	try {
-		const message = await sendMessage({
-			peer: groupId,
-			message: messageText,
-			replyToMsgId,
-			silent: true
-		});
-		return message;
-	} catch (error) {
-		throw error;
-	}
+	const message = await sendMessage({
+		peer: groupId,
+		message: messageText,
+		replyToMsgId,
+		silent: true
+	});
+	return message;
 }
 async function sendImage(groupId: string, imagePath: string): Promise<Api.Message> {
-	try {
-		return client.sendMessage(groupId, { file: imagePath });
-	} catch (error) {
-		throw error;
-	}
+	return client.sendMessage(groupId, { file: imagePath });
 }
 async function getMessages({ limit, groupId }: GetMessagesParams): Promise<string[]> {
 	const messages: string[] = [];
-	try {
-		for await (const message of client.iterMessages(`-${groupId}`, { limit })) {
-			messages.push(`${message._sender.firstName}: ${message.message}`);
-		}
-		return messages.reverse();
-	} catch (error) {
-		throw error;
+	for await (const message of client.iterMessages(`-${groupId}`, { limit })) {
+		messages.push(`${message._sender.firstName}: ${message.message}`);
 	}
+	return messages.reverse();
 }
 async function handleClearCommand(groupId: string): Promise<void> {
-	try {
-		await clearDatabase();
-		await sendGroupChatMessage('History cleared', groupId);
-	} catch (error) {
-		throw error;
-	}
+	await clearMessagesTable();
+	await sendGroupChatMessage('History cleared', groupId);
 }
 async function handleRecapCommand(groupId: string, messageText: string): Promise<void | string> {
 	const msgLimit = parseInt(messageText.split(' ')[1]);
@@ -207,64 +183,40 @@ async function handleImagineCommand(groupId: string, messageText: string): Promi
 	}
 }
 async function downloadAndSendImageFromUrl(url: string, groupId: string): Promise<void> {
-	try {
-		const buffer = await downloadFile(url);
-		const imagePath = await convertToImage(buffer);
-		await sendImage(groupId, imagePath);
-	} catch (error) {
-		throw error;
-	}
+	const buffer = await downloadFile(url);
+	const imagePath = await convertToImage(buffer);
+	await sendImage(groupId, imagePath);
 }
 async function transcribeAudioMessage(msgId: number, groupId: string): Promise<Api.messages.TranscribedAudio> {
-	try {
-		const transcribeAudio = new Api.messages.TranscribeAudio({
-			peer: groupId,
-			msgId,
-		});
-		const result = await client.invoke(transcribeAudio);
-		return result;
-	} catch (error) {
-		throw error;
-	}
+	const transcribeAudio = new Api.messages.TranscribeAudio({
+		peer: groupId,
+		msgId,
+	});
+	const result = await client.invoke(transcribeAudio);
+	return result;
 }
 async function waitForTranscription(messageId: number, groupId: string): Promise<string> {
-	try {
-		const response = await retry(() => transcribeAudioMessage(messageId, groupId), 3);
-		if (response.text !== 'Error during transcription.') {
-			return response.text;
-		}
-		return '';
-	} catch (error) {
-		throw error;
+	const response = await retry(() => transcribeAudioMessage(messageId, groupId), 3);
+	if (response.text !== 'Error during transcription.') {
+		return response.text;
 	}
+	return '';
 }
 async function getMessageContentById(messageId: number, groupId: string): Promise<any> {
-	try {
-		const message = await client.getMessages(groupId, { ids: messageId });
-		return message[0].message;
-	} catch (error) {
-		throw error;
-	}
+	const message = await client.getMessages(groupId, { ids: messageId });
+	return message[0].message;
 }
 async function checkReplyIdIsBotId(messageId: number, groupId: string): Promise<boolean> {
-	try {
-		const messages = await client.getMessages(groupId, { ids: messageId });
-		const senderId = String(messages[0]._senderId);
-		if (senderId === String(BOT_ID)) {
-			return true;
-		}
-		return false;
-	} catch (error) {
-		throw error;
+	const messages = await client.getMessages(groupId, { ids: messageId });
+	const senderId = String(messages[0]._senderId);
+	if (senderId === String(BOT_ID)) {
+		return true;
 	}
+	return false;
 }
 async function processMessage(userRequest: string, groupId: string, messageId: number): Promise<void> {
-	try {
-		const gptReply = await generateGptRespWithHistory(userRequest);
-		await replyToMessage(gptReply, messageId, groupId);
-	} catch (error) {
-		throw error;
-	}
+	const gptReply = await generateGptRespWithHistory(userRequest);
+	await replyToMessage(gptReply, messageId, groupId);
 }
 
 const processCommand = async (event: any) => {
@@ -323,7 +275,7 @@ const processCommand = async (event: any) => {
 };
 
 (async () => {
-	await dbCreateTables()
+	await createMessagesTable();
 	await client.connect();
 	client.addEventHandler(processCommand);
 })();
