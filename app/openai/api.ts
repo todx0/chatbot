@@ -1,4 +1,4 @@
-import { openai, model } from '../config.js';
+import { openai, model, systemContent } from '../config.js';
 import { gptRequest } from '../types.js';
 
 
@@ -6,6 +6,7 @@ export async function generateGptRespWithHistory(request: gptRequest): Promise<s
 	try {
 		const { conversationHistory, userRequest } = request;
 		const userRequestObject = { role: 'user', content: userRequest };
+		conversationHistory.unshift(systemContent)
 		conversationHistory.push(userRequestObject);
 
 		const response: any = await openai.createChatCompletion({
