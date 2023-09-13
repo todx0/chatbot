@@ -42,7 +42,7 @@ describe('helper functions test suite', async () => {
 		afterEach(async () => {
 			await deleteDatabase(testingdb);
 		});
-		test.only('create and trim records', async () => {
+		test('create and trim records', async () => {
 			const trimAmount = 10;
 			const testData: roleContent = { role: 'user', content: 'test string' };
 			const promises = Array(maxHistoryLength).fill(0).map(() => insertToMessages(testData, testingdb));
