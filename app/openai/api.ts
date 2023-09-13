@@ -25,10 +25,8 @@ export async function generateGptResponse(userRequest: string): Promise<string> 
 			model,
 			messages: [userRoleContent]
 		});
-		await Promise.all([
-			await writeToDatabase(userRoleContent),
-			await writeToDatabase({ role: 'assistant', content: response })
-		])
+		await writeToDatabase(userRoleContent)
+		await writeToDatabase({ role: 'assistant', content: response })
 		return response.data.choices[0].message.content;
 	} catch (error) {
 		return error.response.data.error.message;

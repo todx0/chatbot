@@ -14,7 +14,6 @@ import {
 	maxTokenLength,
 	chatCommands,
 	botUsername,
-	maxHistoryLength
 } from './config.js';
 import {
 	retry,
@@ -29,10 +28,8 @@ import {
 	somebodyMentioned,
 	shouldTranscribeMedia,
 	dbCreateTables,
-	readFromDatabase,
 	writeToDatabase,
 	clearDatabase,
-	dbTrim,
 } from './helper.js';
 import {
 	generateGptResponse,
@@ -127,7 +124,6 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 				: filteredMessages;
 			response = await generateGptResponse(`${recapTextRequest} ${messageString}`);
 			await sendGroupChatMessage(response, groupId);
-			await writeToDatabase({ role: 'assistant', content: response })
 			return response;
 		}
 
@@ -135,7 +131,6 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 		if (chunks.length === 1) {
 			response = await generateGptResponse(`${recapTextRequest} ${chunks[0]}`);
 			await sendGroupChatMessage(response, groupId);
-			await writeToDatabase({ role: 'assistant', content: response });
 			return response;
 		}
 
@@ -143,7 +138,6 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 		const responsesCombined = await combineAnswers(responses);
 		response = await generateGptResponse(`${toxicRecapRequest} ${responsesCombined}`);
 		await sendGroupChatMessage(response, groupId);
-		await writeToDatabase({ role: 'assistant', content: response });
 		return response;
 	} catch (error) {
 		console.error('Error processing recap command:', error);
@@ -153,7 +147,6 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 async function handleQCommand(groupId: string, messageText: string): Promise<void> {
 	const [, requestText] = messageText.split('/q ');
 	try {
-
 		const response = await generateGptRespWithHistory(requestText);
 		await sendGroupChatMessage(response, groupId);
 	} catch (error) {
