@@ -31,20 +31,28 @@ export async function retry<T>(
 	throw new Error(`Max attempts (${maxAttempts}) exceeded.`);
 }
 export async function downloadFile(url: string): Promise<Buffer> {
-	const response = await axios.get(url, { responseType: 'arraybuffer' });
-	return Buffer.from(response.data, 'binary');
+	try {
+		const response = await axios.get(url, { responseType: 'arraybuffer' });
+		return Buffer.from(response.data, 'binary');
+	} catch (error) {
+		throw error;
+	}
 }
 export async function convertToImage(buffer: Buffer): Promise<string> {
-	if (!(buffer instanceof Buffer)) {
-		throw new Error('Not a buffer');
-	}
-	const folderPath = './images';
-	const filepath = `${folderPath}/image.jpg`;
+	try {
+		if (!(buffer instanceof Buffer)) {
+			throw new Error('Not a buffer');
+		}
+		const folderPath = './images';
+		const filepath = `${folderPath}/image.jpg`;
+		const file = Bun.file(filepath);
 
-	const file = Bun.file(filepath);
-	if (!file.size) Bun.write(filepath, '')
-	await Bun.write(file, buffer);
-	return filepath;
+		if (!file.size) Bun.write(filepath, '')
+		await Bun.write(file, buffer);
+		return filepath;
+	} catch (error) {
+		throw error;
+	}
 }
 export async function filterMessages(messages: string[]): Promise<string[]> {
 	return messages.filter((message) => !message.includes('/recap') && message.length < 300 && message.length);
@@ -95,7 +103,7 @@ export async function writeToDatabase(object: roleContent, dbsqlite = dbname): P
 	try {
 		db.run(`INSERT INTO messages (role, content) VALUES (?, ?)`, [role, content]);
 	} catch (error) {
-		return error
+		throw error;
 	}
 }
 export async function readFromDatabase(dbsqlite = dbname): Promise<any[]> {
@@ -104,29 +112,37 @@ export async function readFromDatabase(dbsqlite = dbname): Promise<any[]> {
 		const rows = db.query('SELECT role, content FROM messages').all();
 		return rows;
 	} catch (error) {
-		return error
+		throw error;
 	}
 }
 export async function clearDatabase(dbsqlite = dbname): Promise<void> {
 	const db = new Database(dbsqlite);
 	try {
-		db.run('DELETE FROM messages')
+		db.run('DELETE FROM messages');
 	} catch (error) {
-		return error
+		throw error;
 	}
 }
 export async function dbTrim(amountToRemove: number, dbsqlite = dbname): Promise<void> {
 	const db = new Database(dbsqlite);
 	const queryRemove = `DELETE FROM messages ORDER BY ID ASC LIMIT ${amountToRemove};`;
-	db.run(queryRemove)
+	try {
+		db.run(queryRemove);
+	} catch (error) {
+		throw error;
+	}
 }
-export async function dbCreateTables(): Promise<void> {
-	const db = new Database('db.sqlite');
-	db.run(`
-	  CREATE TABLE IF NOT EXISTS messages (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		role TEXT,
-		content TEXT
-	  )
-	`);
+export async function dbCreateTables(dbsqlite = 'db.sqlite'): Promise<void> {
+	const db = new Database(dbsqlite);
+	try {
+		db.run(`
+		CREATE TABLE IF NOT EXISTS messages (
+		  id INTEGER PRIMARY KEY AUTOINCREMENT,
+		  role TEXT,
+		  content TEXT
+		)
+	  `);
+	} catch (error) {
+		throw error;
+	}
 }

@@ -28,7 +28,6 @@ import {
 	somebodyMentioned,
 	shouldTranscribeMedia,
 	dbCreateTables,
-	writeToDatabase,
 	clearDatabase,
 } from './helper.js';
 import {
@@ -63,43 +62,59 @@ async function sendMessage(obj: SendMessageParams): Promise<Api.TypeUpdates | un
 		const result = await client.invoke(sendMsg);
 		return result;
 	} catch (error) {
-		console.error(`Error sending message: ${error}`);
+		throw error;
 	}
 }
 async function sendGroupChatMessage(messageText: string, groupId: string): Promise<Api.TypeUpdates | undefined> {
-	const message = await sendMessage({
-		peer: groupId,
-		message: messageText,
-		silent: false
-	});
-	return message;
+	try {
+		const message = await sendMessage({
+			peer: groupId,
+			message: messageText,
+			silent: false
+		});
+		return message;
+	} catch (error) {
+		throw error;
+	}
 }
 async function replyToMessage(messageText: string, replyToMsgId: MessageIDLike, groupId: string): Promise<Api.TypeUpdates | undefined> {
-	const message = await sendMessage({
-		peer: groupId,
-		message: messageText,
-		replyToMsgId,
-		silent: true
-	});
-	return message;
-}
-async function sendImage(groupId: string, imagePath: string): Promise<void> {
 	try {
-		await client.sendMessage(groupId, { file: imagePath });
-	} catch (err) {
-		console.error(err);
+		const message = await sendMessage({
+			peer: groupId,
+			message: messageText,
+			replyToMsgId,
+			silent: true
+		});
+		return message;
+	} catch (error) {
+		throw error;
+	}
+}
+async function sendImage(groupId: string, imagePath: string): Promise<Api.Message> {
+	try {
+		return client.sendMessage(groupId, { file: imagePath });
+	} catch (error) {
+		throw error;
 	}
 }
 async function getMessages({ limit, groupId }: GetMessagesParams): Promise<string[]> {
 	const messages: string[] = [];
-	for await (const message of client.iterMessages(`-${groupId}`, { limit })) {
-		messages.push(`${message._sender.firstName}: ${message.message}`);
+	try {
+		for await (const message of client.iterMessages(`-${groupId}`, { limit })) {
+			messages.push(`${message._sender.firstName}: ${message.message}`);
+		}
+		return messages.reverse();
+	} catch (error) {
+		throw error;
 	}
-	return messages.reverse();
 }
 async function handleClearCommand(groupId: string): Promise<void> {
-	await clearDatabase()
-	await sendGroupChatMessage('History cleared', groupId);
+	try {
+		await clearDatabase();
+		await sendGroupChatMessage('History cleared', groupId);
+	} catch (error) {
+		throw error;
+	}
 }
 async function handleRecapCommand(groupId: string, messageText: string): Promise<void | string> {
 	const msgLimit = parseInt(messageText.split(' ')[1]);
@@ -140,8 +155,8 @@ async function handleRecapCommand(groupId: string, messageText: string): Promise
 		await sendGroupChatMessage(response, groupId);
 		return response;
 	} catch (error) {
-		console.error('Error processing recap command:', error);
 		await sendGroupChatMessage(error, groupId);
+		throw error;
 	}
 }
 async function handleQCommand(groupId: string, messageText: string): Promise<void> {
@@ -150,8 +165,8 @@ async function handleQCommand(groupId: string, messageText: string): Promise<voi
 		const response = await generateGptRespWithHistory(requestText);
 		await sendGroupChatMessage(response, groupId);
 	} catch (error) {
-		console.error('Error processing q command:', error);
 		await sendGroupChatMessage(error, groupId);
+		throw error;
 	}
 }
 async function handleImgCommand(groupId: string, messageText: string): Promise<void> {
@@ -166,8 +181,8 @@ async function handleImgCommand(groupId: string, messageText: string): Promise<v
 		if (!url.includes('https://')) return;
 		await downloadAndSendImageFromUrl(url, groupId);
 	} catch (error) {
-		console.error('Error processing /img command:', error);
 		await sendGroupChatMessage(error, groupId);
+		throw error;
 	}
 }
 async function handleImagineCommand(groupId: string, messageText: string): Promise<void> {
@@ -187,8 +202,8 @@ async function handleImagineCommand(groupId: string, messageText: string): Promi
 		const url = await createImageFromPrompt(recapText);
 		await downloadAndSendImageFromUrl(url, groupId);
 	} catch (error) {
-		console.error('Error processing /imagine command:', error);
 		await sendGroupChatMessage(error, groupId);
+		throw error;
 	}
 }
 async function downloadAndSendImageFromUrl(url: string, groupId: string): Promise<void> {
@@ -196,8 +211,8 @@ async function downloadAndSendImageFromUrl(url: string, groupId: string): Promis
 		const buffer = await downloadFile(url);
 		const imagePath = await convertToImage(buffer);
 		await sendImage(groupId, imagePath);
-	} catch (err) {
-		console.error(err);
+	} catch (error) {
+		throw error;
 	}
 }
 async function transcribeAudioMessage(msgId: number, groupId: string): Promise<Api.messages.TranscribedAudio> {
@@ -209,8 +224,7 @@ async function transcribeAudioMessage(msgId: number, groupId: string): Promise<A
 		const result = await client.invoke(transcribeAudio);
 		return result;
 	} catch (error) {
-		console.error(`Error while transcribing message: ${error.message}`);
-		return error.message;
+		throw error;
 	}
 }
 async function waitForTranscription(messageId: number, groupId: string): Promise<string> {
@@ -221,24 +235,36 @@ async function waitForTranscription(messageId: number, groupId: string): Promise
 		}
 		return '';
 	} catch (error) {
-		return error;
+		throw error;
 	}
 }
 async function getMessageContentById(messageId: number, groupId: string): Promise<any> {
-	const message = await client.getMessages(groupId, { ids: messageId });
-	return message[0].message;
+	try {
+		const message = await client.getMessages(groupId, { ids: messageId });
+		return message[0].message;
+	} catch (error) {
+		throw error;
+	}
 }
 async function checkReplyIdIsBotId(messageId: number, groupId: string): Promise<boolean> {
-	const messages = await client.getMessages(groupId, { ids: messageId });
-	const senderId = String(messages[0]._senderId);
-	if (senderId === String(BOT_ID)) {
-		return true;
+	try {
+		const messages = await client.getMessages(groupId, { ids: messageId });
+		const senderId = String(messages[0]._senderId);
+		if (senderId === String(BOT_ID)) {
+			return true;
+		}
+		return false;
+	} catch (error) {
+		throw error;
 	}
-	return false;
 }
 async function processMessage(userRequest: string, groupId: string, messageId: number): Promise<void> {
-	const gptReply = await generateGptRespWithHistory(userRequest);
-	await replyToMessage(gptReply, messageId, groupId);
+	try {
+		const gptReply = await generateGptRespWithHistory(userRequest);
+		await replyToMessage(gptReply, messageId, groupId);
+	} catch (error) {
+		throw error;
+	}
 }
 
 const processCommand = async (event: any) => {

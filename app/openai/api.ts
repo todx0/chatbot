@@ -33,8 +33,12 @@ export async function generateGptResponse(userRequest: string): Promise<string> 
 	}
 }
 export async function generateGptResponses(requestText: string, messages: string[]): Promise<string[]> {
-	const promises = messages.map((innerArr) => generateGptResponse(`${requestText} ${innerArr}`));
-	return Promise.all(promises);
+	try {
+		const promises = messages.map((innerArr) => generateGptResponse(`${requestText} ${innerArr}`));
+		return Promise.all(promises);
+	} catch (error) {
+		return error.response.data.error.message;
+	}
 }
 export async function createImageFromPrompt(text: string): Promise<string> {
 	try {
@@ -49,6 +53,10 @@ export async function createImageFromPrompt(text: string): Promise<string> {
 	}
 }
 export async function combineAnswers(answers: string[]): Promise<string> {
-	const combinedAnswer = await generateGptResponse(`Combine array of answers to one. \n ${answers}`);
-	return combinedAnswer;
+	try {
+		const combinedAnswer = await generateGptResponse(`Combine array of answers to one. \n ${answers}`);
+		return combinedAnswer;
+	} catch (error) {
+		throw error;
+	}
 }
