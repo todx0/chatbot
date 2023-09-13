@@ -1,4 +1,4 @@
-import { MessageIDLike } from 'telegram/define';
+import { MessageIDLike, } from 'telegram/define';
 
 export interface roleContent {
 	role: 'user' | 'assistant' | 'system';
@@ -23,7 +23,7 @@ export interface mediaObject {
 	}
 }
 export interface CommandHandlers {
-	[command: string]: (id: string, msg: string) => Promise<void | string>;
+	[command: string]: (id: string, msg: string, client) => Promise<void | string>;
 }
 export interface ChatCommands {
 	[key: string]: boolean;

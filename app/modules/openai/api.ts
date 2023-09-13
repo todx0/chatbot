@@ -1,6 +1,6 @@
-import { openai, model, systemContent } from '../config';
-import { roleContent } from '../types';
-import { readRoleContentFromDatabase, insertToMessages } from '../helper';
+import { openai, model, systemContent } from '../../config';
+import { roleContent } from '../../types';
+import { readRoleContentFromDatabase, insertToMessages } from '../../helper';
 
 export async function generateGptRespWithHistory(userRequest: string): Promise<string> {
 	try {

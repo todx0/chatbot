@@ -11,10 +11,15 @@
 		"plugin:@typescript-eslint/recommended"
 	],
 	"rules": {
+		"no-unused-vars": [
+			"off",
+			{
+				"argsIgnorePattern": "^Bun$"
+			}
+		],
 		"@typescript-eslint/no-explicit-any": "off",
 		"@typescript-eslint/no-unused-vars": "off",
 		"import/extensions": "off",
-		"no-unused-vars": "off",
 		"import/no-unresolved": "off",
 		"no-loop-func": "off",
 		"guard-for-in": "off",
