@@ -13,10 +13,10 @@ export async function generateGptRespWithHistory(userRequest: string): Promise<s
 			model,
 			messages: currentHistory
 		});
-		const openAiResponse = response.data.choices[0].message.content;
+		const openAiResponse: string | undefined = response?.data?.choices[0]?.message?.content ?? 'No response received from openAi.';
 		await insertToMessages({ role: 'assistant', content: openAiResponse });
 		return openAiResponse;
-	} catch (error) {
+	} catch (error: any) {
 		return error.response.data.error.message;
 	}
 }
@@ -30,7 +30,7 @@ export async function generateGptResponse(userRequest: string): Promise<string> 
 		await insertToMessages(userRoleContent);
 		await insertToMessages({ role: 'assistant', content: response });
 		return response.data.choices[0].message.content;
-	} catch (error) {
+	} catch (error: any) {
 		return error.response.data.error.message;
 	}
 }
@@ -38,7 +38,7 @@ export async function generateGptResponses(requestText: string, messages: string
 	try {
 		const promises = messages.map((innerArr) => generateGptResponse(`${requestText} ${innerArr}`));
 		return Promise.all(promises);
-	} catch (error) {
+	} catch (error: any) {
 		return error.response.data.error.message;
 	}
 }
@@ -50,7 +50,7 @@ export async function createImageFromPrompt(text: string): Promise<string> {
 			size: '1024x1024',
 		});
 		return response.data.data[0].url;
-	} catch (error) {
+	} catch (error: any) {
 		return error.response.data.error.message;
 	}
 }

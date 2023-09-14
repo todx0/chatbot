@@ -25,7 +25,7 @@ export async function retry<T>(
 			const result: T = await fn();
 			return result;
 		} catch (error) {
-			console.log(`Attempt ${attempt} failed: ${error.message}`);
+			console.log(`Attempt ${attempt} failed: ${error}`);
 			attempt += 1;
 			Bun.sleep(1000);
 		}
@@ -85,7 +85,7 @@ export function getCommand(messageText: string, commands: ChatCommands): string 
 	}
 	return '';
 }
-export const messageNotSeen = (message: Api.Message): boolean => message.id && !message.reactions && !message.editDate;
+export const messageNotSeen = (message: Api.Message): boolean => !message.reactions && !message.editDate;
 export const shouldSendRandomReply = (message: Api.Message): boolean => randomReply && checkMatch(message.message, wordsToReply) && Math.random() < randomReplyPercent && messageNotSeen(message);
 export const shouldTranscribeMedia = (message: any): boolean => isTelegramPremium && message.mediaUnread && canTranscribeMedia(message.media);
 export const somebodyMentioned = (message: Api.Message): boolean => message.originalArgs.mentioned;
