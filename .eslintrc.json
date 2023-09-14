@@ -91,7 +91,7 @@
 		"no-promise-executor-return": "warn",
 		"no-restricted-globals": "warn",
 		"no-constructor-return": "warn",
-		"no-undef": "warn",
+		"no-undef": "off",
 		"no-continue": "warn",
 		"no-useless-concat": "warn",
 		"no-useless-constructor": "warn",

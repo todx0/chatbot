@@ -28,7 +28,7 @@ import {
 import client from './main';
 
 // use this workaround instead destructuring config because 'bun test' fails otherwise.
-const { BOT_ID } = process.env;
+const { BOT_ID } = Bun.env;
 
 export async function sendMessage(obj: SendMessageParams): Promise<Api.TypeUpdates | undefined> {
 	const {
@@ -43,23 +43,6 @@ export async function sendMessage(obj: SendMessageParams): Promise<Api.TypeUpdat
 	const result = await client.invoke(sendMsg);
 	return result;
 }
-/* export async function sendGroupChatMessage(messageText: string, groupId: string): Promise<Api.Message | undefined> {
-	const message = await client.sendMessage({
-		peer: groupId as unknown as Api.TypeInputPeer,
-		message: messageText,
-		silent: false
-	});
-	return message;
-}
-export async function replyToMessage(messageText: string, replyToMsgId: MessageIDLike, groupId: string): Promise<Api.TypeUpdates | undefined> {
-	const message = await client.sendMessage({
-		peer: groupId as unknown as Api.TypeInputPeer,
-		message: messageText,
-		replyToMsgId,
-		silent: true
-	});
-	return message;
-} */
 export async function sendImage(groupId: string, imagePath: string): Promise<Api.Message> {
 	return client.sendMessage(groupId, { file: imagePath });
 }
@@ -112,7 +95,7 @@ export async function handleRecapCommand(groupId: string, messageText: string): 
 	  }
 	  await sendMessage({ peer: groupId, message: response });
 	} catch (error) {
-	  await sendMessage({ peer: groupId, message: error });
+	  await sendMessage({ peer: groupId, message: String(error) });
 	  throw error;
 	}
 }
@@ -127,7 +110,7 @@ export async function handleQCommand(groupId: string, messageText: string): Prom
 	} catch (error) {
 		await sendMessage({
 			peer: groupId,
-			message: error
+			message: String(error)
 		});
 		throw error;
 	}
@@ -149,7 +132,7 @@ export async function handleImgCommand(groupId: string, messageText: string): Pr
 	} catch (error) {
 		await sendMessage({
 			peer: groupId,
-			message: error
+			message: String(error)
 		});
 		throw error;
 	}
@@ -179,7 +162,7 @@ export async function handleImagineCommand(groupId: string, messageText: string)
 	} catch (error) {
 		await sendMessage({
 			peer: groupId,
-			message: error
+			message: String(error)
 		});
 		throw error;
 	}

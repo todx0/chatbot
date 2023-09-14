@@ -8,6 +8,7 @@ import {
 	sendMessage
 } from './mainFunctions';
 import {
+	config,
 	chatCommands,
 	botUsername,
 	commandHandlers
@@ -22,13 +23,20 @@ import {
 } from './helper';
 
 // use this workaround instead destructuring config because 'bun test' fails otherwise.
-const { SESSION, API_ID, API_HASH } = process.env;
+const { SESSION, API_ID, API_HASH } = Bun.env;
+
+if (API_ID === undefined) {
+	throw new Error('API_ID is not defined in the environment variables');
+}
+if (API_HASH === undefined) {
+	throw new Error('API_HASH is not defined in the environment variables');
+}
 const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH, {
 	connectionRetries: 5,
 });
 export default client;
 
-export const processCommand = async (event): Promise<void> => {
+export const processCommand = async (event: any): Promise<void> => {
 	const { message } = event;
 
 	if (!message) return;

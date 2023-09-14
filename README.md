@@ -19,11 +19,11 @@ The bot requires a real Telegram account and is not managed by BotFather. See ho
 After completing the above steps, you can proceed with the following commands:
 
 ```bash
-# Install dependencies
+# Install
 bun install
 
 # Start
-bun run start
+bun start
 ```
 
 ## Usage
