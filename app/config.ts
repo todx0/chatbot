@@ -1,16 +1,22 @@
 import { Configuration, OpenAIApi } from 'openai';
-import { ProcessEnv } from './types';
-
+import { ProcessEnv, CommandHandlers } from './types';
+import {
+	handleImagineCommand,
+	handleImgCommand,
+	handleClearCommand,
+	handleRecapCommand,
+	handleQCommand
+} from './mainFunctions';
 // system
 export const config = {
-	API_ID: process.env.API_ID,
-	API_HASH: process.env.API_HASH,
-	SESSION: process.env.SESSION,
-	OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-	ORGANIZATION_ID: process.env.ORGANIZATION_ID,
-	BOT_ID: process.env.BOT_ID,
-	BOT_USERNAME: process.env.BOT_USERNAME,
-	LANGUAGE: process.env.LANGUAGE
+	API_ID: Bun.env.API_ID,
+	API_HASH: Bun.env.API_HASH,
+	SESSION: Bun.env.SESSION,
+	OPENAI_API_KEY: Bun.env.OPENAI_API_KEY,
+	ORGANIZATION_ID: Bun.env.ORGANIZATION_ID,
+	BOT_ID: Bun.env.BOT_ID,
+	BOT_USERNAME: Bun.env.BOT_USERNAME,
+	LANGUAGE: Bun.env.LANGUAGE
 } as ProcessEnv;
 export const configuration = new Configuration({
 	organization: config.ORGANIZATION_ID,
@@ -34,6 +40,13 @@ export const chatCommands = {
 	'/clear': true,
 	'/img': true,
 	'/imagine': true
+};
+export const commandHandlers: CommandHandlers = {
+	'/recap': handleRecapCommand,
+	'/q': handleQCommand,
+	'/clear': handleClearCommand,
+	'/img': handleImgCommand,
+	'/imagine': handleImagineCommand,
 };
 export const dbname = 'db.sqlite';
 

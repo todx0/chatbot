@@ -4,7 +4,6 @@ import {
 	GetMessagesParams,
 } from './types';
 import {
-	config,
 	recapTextRequest,
 	toxicRecapRequest,
 	messageLimit,
@@ -27,9 +26,9 @@ import {
 	combineAnswers
 } from './modules/openai/api';
 import client from './main';
-const {
-	BOT_ID,
-} = config;
+
+// use this workaround instead destructuring config because 'bun test' fails otherwise.
+const { BOT_ID } = process.env;
 
 export async function sendMessage(obj: SendMessageParams): Promise<Api.TypeUpdates | undefined> {
 	const {
@@ -71,7 +70,6 @@ export async function getMessages({ limit, groupId }: GetMessagesParams): Promis
 	}
 	return messages.reverse();
 }
-
 export async function handleClearCommand(groupId: string): Promise<void> {
 	await clearMessagesTable();
 	await sendMessage({
@@ -79,68 +77,43 @@ export async function handleClearCommand(groupId: string): Promise<void> {
 		message: 'History cleared',
 	});
 }
-export async function handleRecapCommand(groupId: string, messageText: string): Promise<void | string> {
+export async function handleRecapCommand(groupId: string, messageText: string): Promise<void> {
 	const msgLimit = parseInt(messageText.split(' ')[1]);
-	const obj = {
-		peer: groupId,
-		message: messageText
-	};
+
 	if (Number.isNaN(msgLimit)) {
-		await sendMessage({
-			peer: groupId,
-			message: '/recap command requires a limit: /recap 50'
-		});
-		return;
+	  await sendMessage({ peer: groupId, message: '/recap command requires a limit: /recap 50' });
+	  return;
 	}
+
 	if (msgLimit > messageLimit) {
-		await sendMessage({
-			peer: groupId,
-			message: 'Max recap limit is 500: /recap 500'
-		});
-		return;
+	  await sendMessage({ peer: groupId, message: 'Max recap limit is 500: /recap 500' });
+	  return;
 	}
-	const messages = await getMessages({ limit: msgLimit, groupId });
-	const filteredMessages = await filterMessages(messages);
+
 	try {
-		let response;
-		const messagesLength = await approximateTokenLength(filteredMessages);
+	  const messages = await getMessages({ limit: msgLimit, groupId });
+	  const filteredMessages = await filterMessages(messages);
+	  let response: string;
 
-		if (messagesLength <= maxTokenLength) {
-			const messageString = Array.isArray(filteredMessages)
-				? filteredMessages.join(' ')
-				: filteredMessages;
+	  const messagesLength = await approximateTokenLength(filteredMessages);
+
+	  if (messagesLength <= maxTokenLength) {
+			const messageString = Array.isArray(filteredMessages) ? filteredMessages.join(' ') : filteredMessages;
 			response = await generateGptResponse(`${recapTextRequest} ${messageString}`);
-			await sendMessage({
-				peer: groupId,
-				message: response
-			});
-			return response;
-		}
-
-		const chunks = await splitMessageInChunks(filteredMessages.toString());
-		if (chunks.length === 1) {
-			response = await generateGptResponse(`${recapTextRequest} ${chunks[0]}`);
-			await sendMessage({
-				peer: groupId,
-				message: response
-			});
-			return response;
-		}
-
-		const responses = await generateGptResponses(recapTextRequest, chunks);
-		const responsesCombined = await combineAnswers(responses);
-		response = await generateGptResponse(`${toxicRecapRequest} ${responsesCombined}`);
-		await sendMessage({
-			peer: groupId,
-			message: response
-		});
-		return response;
+	  } else {
+			const chunks = await splitMessageInChunks(filteredMessages.toString());
+			if (chunks.length === 1) {
+				response = await generateGptResponse(`${recapTextRequest} ${chunks[0]}`);
+			} else {
+				const responses = await generateGptResponses(recapTextRequest, chunks);
+				const responsesCombined = await combineAnswers(responses);
+				response = await generateGptResponse(`${toxicRecapRequest} ${responsesCombined}`);
+			}
+	  }
+	  await sendMessage({ peer: groupId, message: response });
 	} catch (error) {
-		await sendMessage({
-			peer: groupId,
-			message: error
-		});
-		throw error;
+	  await sendMessage({ peer: groupId, message: error });
+	  throw error;
 	}
 }
 export async function handleQCommand(groupId: string, messageText: string): Promise<void> {

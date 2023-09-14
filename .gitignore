@@ -9,3 +9,4 @@ dist
 image.jpg
 historyFile.json
 db.sqlite
+.env.local

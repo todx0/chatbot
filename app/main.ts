@@ -1,24 +1,16 @@
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions/index.js';
 import {
-	CommandHandlers,
-} from './types';
-import {
 	processMessage,
 	checkReplyIdIsBotId,
 	getMessageContentById,
 	waitForTranscription,
-	handleImagineCommand,
-	handleImgCommand,
-	handleQCommand,
-	handleRecapCommand,
-	handleClearCommand,
 	sendMessage
 } from './mainFunctions';
 import {
-	config,
 	chatCommands,
 	botUsername,
+	commandHandlers
 } from './config';
 import {
 	getCommand,
@@ -29,18 +21,14 @@ import {
 	createMessagesTable,
 } from './helper';
 
-const {
-	SESSION,
-	API_ID,
-	API_HASH,
-} = config;
-
+// use this workaround instead destructuring config because 'bun test' fails otherwise.
+const { SESSION, API_ID, API_HASH } = process.env;
 const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH, {
 	connectionRetries: 5,
 });
 export default client;
 
-const processCommand = async (event) => {
+export const processCommand = async (event): Promise<void> => {
 	const { message } = event;
 
 	if (!message) return;
@@ -48,7 +36,7 @@ const processCommand = async (event) => {
 
 	const groupId = message._chatPeer.channelId;
 	const replyTo = message.message;
-
+	console.log(groupId);
 	if (shouldSendRandomReply(message)) {
 		await processMessage(replyTo, groupId, message.id);
 		return;
@@ -83,14 +71,6 @@ const processCommand = async (event) => {
 			return;
 		}
 	}
-
-	const commandHandlers: CommandHandlers = {
-		'/recap': handleRecapCommand,
-		'/q': handleQCommand,
-		'/clear': handleClearCommand,
-		'/img': handleImgCommand,
-		'/imagine': handleImagineCommand,
-	};
 
 	const messageText = message?.message;
 	const command = getCommand(messageText, chatCommands);
