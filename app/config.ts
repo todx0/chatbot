@@ -1,39 +1,40 @@
 import { Configuration, OpenAIApi } from 'openai';
 import { ProcessEnv, CommandHandlers } from './types';
 import {
-	handleImagineCommand,
+	handleQCommand,
 	handleImgCommand,
 	handleClearCommand,
 	handleRecapCommand,
-	handleQCommand
+	handleImagineCommand,
 } from './mainFunctions';
 // system
 export const config = {
 	API_ID: Bun.env.API_ID,
-	API_HASH: Bun.env.API_HASH,
+	BOT_ID: Bun.env.BOT_ID,
 	SESSION: Bun.env.SESSION,
+	API_HASH: Bun.env.API_HASH,
+	LANGUAGE: Bun.env.LANGUAGE,
+	BOT_USERNAME: Bun.env.BOT_USERNAME,
 	OPENAI_API_KEY: Bun.env.OPENAI_API_KEY,
 	ORGANIZATION_ID: Bun.env.ORGANIZATION_ID,
-	BOT_ID: Bun.env.BOT_ID,
-	BOT_USERNAME: Bun.env.BOT_USERNAME,
-	LANGUAGE: Bun.env.LANGUAGE
 } as ProcessEnv;
 export const configuration = new Configuration({
-	organization: config.ORGANIZATION_ID,
 	apiKey: config.OPENAI_API_KEY,
+	organization: config.ORGANIZATION_ID,
 });
 export const openai = new OpenAIApi(configuration);
 
 // app
-export const botUsername = config.BOT_USERNAME;
-export const language = config.LANGUAGE;
-export const isTelegramPremium = false;
+export const messageLimit = 700;
 export const maxHistoryLength = 15;
 export const maxTokenLength = 4096;
-export const messageLimit = 700;
-export const randomReply = false;
-export const randomReplyPercent = 0.3;
-export const wordsToReply = [];
+export const randomReplyPercent = 0.2;
+export const isTelegramPremium = false;
+export const randomReply = true;
+export const messageLengthToTriggerReply = 20;
+export const language = config.LANGUAGE;
+export const botUsername = config.BOT_USERNAME;
+
 export const chatCommands = {
 	'/recap': true,
 	'/q': true,

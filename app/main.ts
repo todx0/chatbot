@@ -1,25 +1,24 @@
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions/index.js';
 import {
+	sendMessage,
 	processMessage,
 	checkReplyIdIsBotId,
-	getMessageContentById,
 	waitForTranscription,
-	sendMessage
+	getMessageContentById,
 } from './mainFunctions';
 import {
-	config,
-	chatCommands,
 	botUsername,
+	chatCommands,
 	commandHandlers
 } from './config';
 import {
 	getCommand,
 	messageNotSeen,
-	shouldSendRandomReply,
+	shouldRandomReply,
 	somebodyMentioned,
-	shouldTranscribeMedia,
 	createMessagesTable,
+	shouldTranscribeMedia,
 } from './helper';
 
 // use this workaround instead destructuring config because 'bun test' fails otherwise.
@@ -43,20 +42,26 @@ export const processCommand = async (event: any): Promise<void> => {
 	if (!messageNotSeen(message)) return;
 
 	const groupId = message._chatPeer.channelId;
-	const replyTo = message.message;
+	const messageText = message.message;
 
-	if (shouldSendRandomReply(message)) {
-		await processMessage(replyTo, groupId, message.id);
+	const command = getCommand(messageText, chatCommands);
+	const handler = commandHandlers[command];
+	if (handler) {
+		await handler(groupId, messageText, client);
+	}
+
+	if (shouldRandomReply(message)) {
+		await processMessage(messageText, groupId, message.id);
 		return;
 	}
 
 	if (somebodyMentioned(message)) {
 		const { replyToMsgId } = event.message.replyTo;
 		const isBotMentioned: boolean = await checkReplyIdIsBotId(replyToMsgId, groupId);
-		const isBotCalled: boolean = replyTo.includes(botUsername);
+		const isBotCalled: boolean = messageText.includes(botUsername);
 
 		if (isBotMentioned) {
-			await processMessage(replyTo, groupId, message.id);
+			await processMessage(messageText, groupId, message.id);
 			return;
 		}
 
@@ -76,15 +81,7 @@ export const processCommand = async (event: any): Promise<void> => {
 				replyToMsgId: message.id,
 				silent: true
 			});
-			return;
 		}
-	}
-
-	const messageText = message?.message;
-	const command = getCommand(messageText, chatCommands);
-	const handler = commandHandlers[command];
-	if (handler) {
-		await handler(groupId, messageText, client);
 	}
 };
 

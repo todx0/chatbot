@@ -3,16 +3,16 @@ import { Api } from 'telegram';
 import { unlink } from 'node:fs/promises';
 import { Database } from 'bun:sqlite';
 import {
-	ChatCommands,
+	roleContent,
 	mediaObject,
-	roleContent
+	ChatCommands
 } from './types';
 import {
+	dbname,
 	randomReply,
-	randomReplyPercent,
-	wordsToReply,
 	isTelegramPremium,
-	dbname
+	randomReplyPercent,
+	messageLengthToTriggerReply
 } from './config';
 
 export async function retry<T>(
@@ -25,7 +25,7 @@ export async function retry<T>(
 			const result: T = await fn();
 			return result;
 		} catch (error) {
-			console.log(`Attempt ${attempt} failed: ${error}`);
+			console.error(`Attempt ${attempt} failed: ${error}`);
 			attempt += 1;
 			Bun.sleep(1000);
 		}
@@ -34,7 +34,6 @@ export async function retry<T>(
 }
 export async function downloadFile(url: string): Promise<Buffer> {
 	const response = await axios.get(url, { responseType: 'arraybuffer' });
-	console.log(response);
 	return Buffer.from(response.data, 'binary');
 }
 export async function convertToImage(buffer: Buffer): Promise<string> {
@@ -86,7 +85,7 @@ export function getCommand(messageText: string, commands: ChatCommands): string 
 	return '';
 }
 export const messageNotSeen = (message: Api.Message): boolean => !message.reactions && !message.editDate;
-export const shouldSendRandomReply = (message: Api.Message): boolean => randomReply && checkMatch(message.message, wordsToReply) && Math.random() < randomReplyPercent && messageNotSeen(message);
+export const shouldRandomReply = (message: Api.Message): boolean => randomReply && Math.random() < randomReplyPercent && messageNotSeen(message) && message.message.length > messageLengthToTriggerReply;
 export const shouldTranscribeMedia = (message: any): boolean => isTelegramPremium && message.mediaUnread && canTranscribeMedia(message.media);
 export const somebodyMentioned = (message: Api.Message): boolean => message.originalArgs.mentioned;
 export const canTranscribeMedia = (media: mediaObject): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
