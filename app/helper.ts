@@ -10,9 +10,9 @@ import {
 import {
 	dbname,
 	randomReply,
+	replyThreshold,
 	isTelegramPremium,
 	randomReplyPercent,
-	messageLengthToTriggerReply
 } from './config';
 
 export async function retry<T>(
@@ -85,7 +85,7 @@ export function getCommand(messageText: string, commands: ChatCommands): string 
 	return '';
 }
 export const messageNotSeen = (message: Api.Message): boolean => !message.reactions && !message.editDate;
-export const shouldRandomReply = (message: Api.Message): boolean => randomReply && Math.random() < randomReplyPercent && messageNotSeen(message) && message.message.length > messageLengthToTriggerReply;
+export const shouldRandomReply = (message: Api.Message): boolean => randomReply && Math.random() < randomReplyPercent && messageNotSeen(message) && message.message.length > replyThreshold;
 export const shouldTranscribeMedia = (message: any): boolean => isTelegramPremium && message.mediaUnread && canTranscribeMedia(message.media);
 export const somebodyMentioned = (message: Api.Message): boolean => message.originalArgs.mentioned;
 export const canTranscribeMedia = (media: mediaObject): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');

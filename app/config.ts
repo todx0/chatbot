@@ -31,7 +31,7 @@ export const maxTokenLength = 4096;
 export const randomReplyPercent = 0.2;
 export const isTelegramPremium = false;
 export const randomReply = true;
-export const messageLengthToTriggerReply = 20;
+export const replyThreshold = 20;
 export const language = config.LANGUAGE;
 export const botUsername = config.BOT_USERNAME;
 
