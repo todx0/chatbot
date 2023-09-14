@@ -28,7 +28,7 @@ bun start
 
 ## Usage
 
-Please refer to `config.ts` for configuration and usage instructions.
+Please refer to `app/config.ts` for configuration and usage instructions.
 
 - `botBehavior`: Set up desired bot behavior.
 - `isTelegramPremium`: If bot account have Telegram premium, setting this to true will allow the bot to automatically transcribe media messages.
@@ -50,7 +50,6 @@ If you reply to a person's message and tag the bot, it will reply to the person'
 
 ## Hosting
 
-I'm no longer friends with Heroku.
-[fly.io](https://fly.io/) does everything out of the box.
+[fly.io](https://fly.io/) does everything out of the box and supports Bun.
 
 
