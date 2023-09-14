@@ -36,7 +36,7 @@ export const processCommand = async (event): Promise<void> => {
 
 	const groupId = message._chatPeer.channelId;
 	const replyTo = message.message;
-	console.log(groupId);
+
 	if (shouldSendRandomReply(message)) {
 		await processMessage(replyTo, groupId, message.id);
 		return;
