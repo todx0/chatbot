@@ -4,6 +4,7 @@
 	"name": "chatbot",
 	"module": "app/main.ts",
 	"scripts": {
+		"depl": "flyctl deploy",
 		"lint": "eslint . --ext .ts",
 		"start": "bun ./app/main.ts"
 	},
