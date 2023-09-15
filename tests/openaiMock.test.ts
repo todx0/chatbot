@@ -15,7 +15,7 @@ import {
 	mockArrayOfMessages,
 	mockResponseContent,
 	mockChatCompletionResponse,
-} from './testData/testData';
+} from './testData/testDataForMocks';
 
 describe('main functions', () => {
 	beforeEach(async () => {

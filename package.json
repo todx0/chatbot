@@ -5,6 +5,7 @@
 	"module": "app/main.ts",
 	"scripts": {
 		"depl": "flyctl deploy",
+		"stop": "flyctl machine stop",
 		"lint": "eslint . --ext .ts",
 		"start": "bun ./app/main.ts"
 	},

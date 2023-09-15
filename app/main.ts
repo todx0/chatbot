@@ -6,7 +6,7 @@ import {
 	checkReplyIdIsBotId,
 	waitForTranscription,
 	getMessageContentById,
-} from './mainFunctions';
+} from './mainHelper';
 import {
 	botUsername,
 	chatCommands,

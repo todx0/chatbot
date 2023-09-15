@@ -6,7 +6,7 @@ import {
 	handleClearCommand,
 	handleRecapCommand,
 	handleImagineCommand,
-} from './mainFunctions';
+} from './mainHelper';
 // system
 export const config = {
 	API_ID: Bun.env.API_ID,
