@@ -54,7 +54,9 @@ describe('main functions', () => {
 		mock(() => ({
 			insertToMessages: jest.fn(() => {})
 		}));
+		//@ts-ignore
 		spyOn(openai, 'createChatCompletion').mockImplementation(() => mockChatCompletionResponse);
+		//@ts-ignore
 		spyOn(openai, 'createImage').mockImplementation(() => mockCreateImage);
 	});
 	afterEach(async () => {
