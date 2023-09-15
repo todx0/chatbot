@@ -8,7 +8,6 @@ import {
 	createImageFromPrompt,
 	generateGptRespWithHistory,
 } from '../app/modules/openai/api';
-
 import {
 	mockImage,
 	mockCreateImage,
@@ -17,6 +16,7 @@ import {
 	mockResponseContent,
 	mockChatCompletionResponse,
 } from './testData/testData';
+
 describe('main functions', () => {
 	beforeEach(async () => {
 		mock(() => ({
@@ -28,6 +28,8 @@ describe('main functions', () => {
 		spyOn(openai, 'createImage').mockImplementation(() => mockCreateImage);
 	});
 	afterEach(async () => {
+		spyOn(openai, 'createChatCompletion').mockClear();
+		spyOn(openai, 'createImage').mockClear();
 	});
 
 	test('mock generateGptResponse', async () => {
