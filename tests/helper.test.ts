@@ -1,5 +1,5 @@
 import {
-	expect, test, describe, jest, afterEach, beforeEach
+	expect, test, describe, jest, afterEach, beforeEach,
 } from 'bun:test';
 import { roleContent } from '../app/types';
 import { maxHistoryLength } from '../app/config';

@@ -9,13 +9,13 @@ export async function generateGptRespWithHistory(userRequest: string): Promise<s
 		const currentHistory = await readRoleContentFromDatabase();
 		currentHistory.unshift(systemContent);
 
-		const response = await openai.createChatCompletion({
+		const response: any = await openai.createChatCompletion({
 			model,
 			messages: currentHistory
 		});
-		const openAiResponse: string | undefined = response?.data?.choices[0]?.message?.content ?? 'No response received from openAi.';
-		await insertToMessages({ role: 'assistant', content: openAiResponse });
-		return openAiResponse;
+		const responseContent = response.data.choices[0].message.content;
+		await insertToMessages({ role: 'assistant', content: responseContent });
+		return responseContent;
 	} catch (error: any) {
 		return error.response.data.error.message;
 	}
@@ -27,8 +27,9 @@ export async function generateGptResponse(userRequest: string): Promise<string> 
 			model,
 			messages: [userRoleContent]
 		});
+		const responseContent = response.data.choices[0].message.content;
 		await insertToMessages(userRoleContent);
-		await insertToMessages({ role: 'assistant', content: response });
+		await insertToMessages({ role: 'assistant', content: responseContent });
 		return response.data.choices[0].message.content;
 	} catch (error: any) {
 		return error.response.data.error.message;
