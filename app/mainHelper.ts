@@ -192,6 +192,7 @@ export async function getMessageContentById(messageId: number, groupId: string):
 	return message[0].message;
 }
 export async function checkReplyIdIsBotId(messageId: number, groupId: string): Promise<boolean> {
+	if (!messageId) return false;
 	const messages = await client.getMessages(groupId, { ids: messageId });
 	const senderId = String(messages[0]._senderId);
 	if (senderId === String(BOT_ID)) {

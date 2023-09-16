@@ -51,26 +51,26 @@ export const processCommand = async (event: any): Promise<void> => {
 	}
 
 	if (shouldRandomReply(message)) {
+		// TODO pass more than 1 message for bot to understand context
 		await processMessage(messageText, groupId, message.id);
 		return;
 	}
 
 	if (somebodyMentioned(message)) {
-		const { replyToMsgId } = event.message.replyTo;
-		const isBotMentioned: boolean = await checkReplyIdIsBotId(replyToMsgId, groupId);
-		const isBotCalled: boolean = messageText.includes(botUsername);
+		const replyToMsgId = event.message.replyTo?.replyToMsgId;
+		const isBotCalled = messageText.includes(botUsername);
 
-		if (isBotMentioned) {
-			await processMessage(messageText, groupId, message.id);
-			return;
+		if (replyToMsgId && (await checkReplyIdIsBotId(replyToMsgId, groupId))) {
+		  await processMessage(messageText, groupId, message.id);
+		  return;
 		}
 
 		if (isBotCalled) {
-			const messageContent = await getMessageContentById(replyToMsgId, groupId);
-			await processMessage(messageContent, groupId, replyToMsgId);
-			return;
+		  const messageContentWithoutBotName = messageText.replace(botUsername, '');
+		  await processMessage(messageContentWithoutBotName, groupId, replyToMsgId);
+		  return;
 		}
-	}
+	  }
 
 	if (shouldTranscribeMedia(message)) {
 		const transcribedAudio = await waitForTranscription(message.id, groupId);
