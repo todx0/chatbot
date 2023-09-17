@@ -1,19 +1,11 @@
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions/index.js';
-import {
-	sendMessage,
-	processMessage,
-	checkReplyIdIsBotId,
-	waitForTranscription,
-	getMessageContentById,
+import TelegramBot, {
 } from './mainHelper';
 import {
 	botUsername,
-	chatCommands,
-	commandHandlers
 } from './config';
 import {
-	getCommand,
 	messageNotSeen,
 	shouldRandomReply,
 	somebodyMentioned,
@@ -35,7 +27,9 @@ const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH,
 });
 export default client;
 
-export const processCommand = async (event: any): Promise<void> => {
+const bot = new TelegramBot(client);
+
+export const botWorkflow: (event: any) => Promise<void> = async (event: any) => {
 	const { message } = event;
 
 	if (!message) return;
@@ -44,15 +38,26 @@ export const processCommand = async (event: any): Promise<void> => {
 	const groupId = message._chatPeer.channelId;
 	const messageText = message.message;
 
-	const command = getCommand(messageText, chatCommands);
-	const handler = commandHandlers[command];
-	if (handler) {
-		await handler(groupId, messageText, client);
+	await bot.setGroupId(groupId);
+
+	const commandMappings: Record<string, (msgText: string) => Promise<void>> = {
+		'/recap': (msgText) => bot.handleRecapCommand(msgText),
+		'/q': (msgText) => bot.handleQCommand(msgText),
+		'/img': (msgText) => bot.handleImgCommand(msgText),
+		'/imagine': (msgText) => bot.handleImagineCommand(msgText),
+		'/clear': () => bot.handleClearCommand(),
+	};
+
+	for (const command in commandMappings) {
+		if (messageText.includes(command)) {
+			await commandMappings[command](messageText);
+			return;
+		}
 	}
 
 	if (shouldRandomReply(message)) {
-		// TODO pass more than 1 message for bot to understand context
-		await processMessage(messageText, groupId, message.id);
+		await bot.fetchAndInsertMessages(10);
+		await bot.processMessage(messageText, message.id);
 		return;
 	}
 
@@ -60,27 +65,22 @@ export const processCommand = async (event: any): Promise<void> => {
 		const replyToMsgId = event.message.replyTo?.replyToMsgId;
 		const isBotCalled = messageText.includes(botUsername);
 
-		if (replyToMsgId && (await checkReplyIdIsBotId(replyToMsgId, groupId))) {
-		  await processMessage(messageText, groupId, message.id);
-		  return;
+		if (replyToMsgId && (await bot.checkReplyIdIsBotId(replyToMsgId))) {
+			await bot.processMessage(messageText, message.id);
+			return;
 		}
 
 		if (isBotCalled) {
-		  const messageContentWithoutBotName = messageText.replace(botUsername, '');
-		  await processMessage(messageContentWithoutBotName, groupId, replyToMsgId);
-		  return;
+			const messageContentWithoutBotName = messageText.replace(botUsername, '');
+			await bot.processMessage(messageContentWithoutBotName, replyToMsgId);
+			return;
 		}
-	  }
+	}
 
 	if (shouldTranscribeMedia(message)) {
-		const transcribedAudio = await waitForTranscription(message.id, groupId);
+		const transcribedAudio = await bot.waitForTranscription(message.id);
 		if (transcribedAudio) {
-			await sendMessage({
-				peer: groupId,
-				message: transcribedAudio,
-				replyToMsgId: message.id,
-				silent: true
-			});
+			await bot.processMessage(transcribedAudio, message.id, false);
 		}
 	}
 };
@@ -88,5 +88,5 @@ export const processCommand = async (event: any): Promise<void> => {
 (async () => {
 	await createMessagesTable();
 	await client.connect();
-	client.addEventHandler(processCommand);
+	client.addEventHandler(botWorkflow);
 })();

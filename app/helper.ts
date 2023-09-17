@@ -32,10 +32,12 @@ export async function retry<T>(
 	}
 	throw new Error(`Max attempts (${maxAttempts}) exceeded.`);
 }
+
 export async function downloadFile(url: string): Promise<Buffer> {
 	const response = await axios.get(url, { responseType: 'arraybuffer' });
 	return Buffer.from(response.data, 'binary');
 }
+
 export async function convertToImage(buffer: Buffer): Promise<string> {
 	if (!(buffer instanceof Buffer)) {
 		throw new Error('Not a buffer');
@@ -48,13 +50,16 @@ export async function convertToImage(buffer: Buffer): Promise<string> {
 	await Bun.write(file, buffer);
 	return filepath;
 }
+
 export async function filterMessages(messages: string[]): Promise<string[]> {
 	return messages.filter((message) => !message.includes('/recap') && message.length < 300 && message.length);
 }
+
 export async function approximateTokenLength(messages: string[]): Promise<number> {
 	const totalLength = messages.map((str) => str.length).reduce((accumulator, currentValue) => accumulator + currentValue, 0);
 	return totalLength;
 }
+
 export async function splitMessageInChunks(message: string, maxChunkSize: number = 3000): Promise<string[]> {
 	const messageLength = message.length;
 	const chunkCount = Math.ceil(messageLength / maxChunkSize);
@@ -69,6 +74,7 @@ export async function splitMessageInChunks(message: string, maxChunkSize: number
 	}
 	return chunks;
 }
+
 export function checkMatch(message: string, matchArray: string[]): boolean {
 	for (let i = 0; i < matchArray.length; i++) {
 		if (message.includes(matchArray[i])) {
@@ -77,6 +83,7 @@ export function checkMatch(message: string, matchArray: string[]): boolean {
 	}
 	return false;
 }
+
 export function getCommand(messageText: string, commands: ChatCommands): string {
 	const parts: string[] = messageText.split(' ');
 	if (parts.length > 0 && parts[0] in commands) {
@@ -84,31 +91,30 @@ export function getCommand(messageText: string, commands: ChatCommands): string 
 	}
 	return '';
 }
-export const messageNotSeen = (message: Api.Message): boolean => !message.reactions && !message.editDate;
-export const shouldRandomReply = (message: Api.Message): boolean => randomReply && Math.random() < randomReplyPercent && messageNotSeen(message) && message.message.length > replyThreshold;
-export const shouldTranscribeMedia = (message: any): boolean => isTelegramPremium && message.mediaUnread && canTranscribeMedia(message.media);
-export const somebodyMentioned = (message: Api.Message): boolean => message.originalArgs.mentioned;
-export const canTranscribeMedia = (media: mediaObject): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
 
 export async function insertToMessages(object: roleContent, dbsqlite = dbname): Promise<void> {
 	const db = new Database(dbsqlite);
 	const { role, content } = object;
 	db.run('INSERT INTO messages (role, content) VALUES (?, ?)', [role, content]);
 }
+
 export async function readRoleContentFromDatabase(dbsqlite = dbname): Promise<any[]> {
 	const db = new Database(dbsqlite);
 	const rows = db.query('SELECT role, content FROM messages').all();
 	return rows;
 }
+
 export async function clearMessagesTable(dbsqlite = dbname): Promise<void> {
 	const db = new Database(dbsqlite);
 	db.run('DELETE FROM messages');
 }
+
 export async function trimMessagesTable(amountToRemove: number, dbsqlite = dbname): Promise<void> {
 	const db = new Database(dbsqlite);
 	const queryRemove = `DELETE FROM messages ORDER BY ID ASC LIMIT ${amountToRemove};`;
 	db.run(queryRemove);
 }
+
 export async function createMessagesTable(dbsqlite = 'db.sqlite'): Promise<void> {
 	const db = new Database(dbsqlite);
 	db.run(`
@@ -119,7 +125,23 @@ export async function createMessagesTable(dbsqlite = 'db.sqlite'): Promise<void>
 		)
 	  `);
 }
+
 export async function deleteDatabase(dbsqlite = 'db.sqlite'): Promise<void> {
 	await unlink(dbsqlite);
 	console.log(`Deleted the database file '${dbsqlite}'.`);
 }
+
+export async function processCommands(messageText: string, handlers: object): Promise<void> {
+	for (const [command, handler] of Object.entries(handlers)) {
+	  if (messageText.includes(command)) {
+			return handler(messageText);
+	  }
+	}
+	return Promise.resolve();
+}
+
+export const messageNotSeen = (message: Api.Message): boolean => !message.reactions && !message.editDate;
+export const shouldRandomReply = (message: Api.Message): boolean => randomReply && Math.random() < randomReplyPercent && messageNotSeen(message) && message.message.length > replyThreshold;
+export const shouldTranscribeMedia = (message: any): boolean => isTelegramPremium && message.mediaUnread && canTranscribeMedia(message.media);
+export const somebodyMentioned = (message: Api.Message): boolean => message.originalArgs.mentioned;
+export const canTranscribeMedia = (media: mediaObject): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');

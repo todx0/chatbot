@@ -1,211 +1,251 @@
 import { Api } from 'telegram';
 import {
 	SendMessageParams,
-	GetMessagesParams,
 } from './types';
 import {
-	recapTextRequest,
-	toxicRecapRequest,
+	dbname,
 	messageLimit,
 	maxTokenLength,
+	recapTextRequest,
+	toxicRecapRequest,
 } from './config';
 import {
 	retry,
-	convertToImage,
 	downloadFile,
 	filterMessages,
-	approximateTokenLength,
-	splitMessageInChunks,
+	convertToImage,
+	insertToMessages,
 	clearMessagesTable,
+	splitMessageInChunks,
+	approximateTokenLength,
 } from './helper';
 import {
+	combineAnswers,
 	generateGptResponse,
+	generateGptResponses,
 	createImageFromPrompt,
 	generateGptRespWithHistory,
-	generateGptResponses,
-	combineAnswers
+
 } from './modules/openai/api';
-import client from './main';
 
 // use this workaround instead destructuring config because 'bun test' fails otherwise.
 const { BOT_ID } = Bun.env;
 
-export async function sendMessage(obj: SendMessageParams): Promise<Api.TypeUpdates | undefined> {
-	const {
-		peer, message, replyToMsgId, silent
-	} = obj;
-	const sendMsg = new Api.messages.SendMessage({
-		peer,
-		message,
-		replyToMsgId,
-		silent
-	});
-	const result = await client.invoke(sendMsg);
-	return result;
-}
-export async function sendImage(groupId: string, imagePath: string): Promise<Api.Message> {
-	return client.sendMessage(groupId, { file: imagePath });
-}
-export async function getMessages({ limit, groupId }: GetMessagesParams): Promise<string[]> {
-	const messages: string[] = [];
-	for await (const message of client.iterMessages(`-${groupId}`, { limit })) {
-		messages.push(`${message._sender.firstName}: ${message.message}`);
-	}
-	return messages.reverse();
-}
-export async function handleClearCommand(groupId: string): Promise<void> {
-	await clearMessagesTable();
-	await sendMessage({
-		peer: groupId,
-		message: 'History cleared',
-	});
-}
-export async function handleRecapCommand(groupId: string, messageText: string): Promise<void> {
-	const msgLimit = parseInt(messageText.split(' ')[1]);
+export default class TelegramBot {
+	private readonly client: any;
 
-	if (Number.isNaN(msgLimit)) {
-	  await sendMessage({ peer: groupId, message: '/recap command requires a limit: /recap 50' });
-	  return;
+	private groupId: any;
+
+	constructor(client: any, groupId: any = 0) {
+		this.client = client;
+		this.groupId = groupId;
 	}
 
-	if (msgLimit > messageLimit) {
-	  await sendMessage({ peer: groupId, message: 'Max recap limit is 500: /recap 500' });
-	  return;
+	getGroupId(): number {
+		return this.groupId;
 	}
 
-	try {
-	  const messages = await getMessages({ limit: msgLimit, groupId });
-	  const filteredMessages = await filterMessages(messages);
-	  let response: string;
+	async setGroupId(newValue: number): Promise<void> {
+		this.groupId = newValue;
+	}
 
-	  const messagesLength = await approximateTokenLength(filteredMessages);
+	async sendMessage(obj: SendMessageParams): Promise<Api.TypeUpdates | undefined> {
+		const {
+			peer, message, replyToMsgId, silent
+		} = obj;
+		const sendMsg = new Api.messages.SendMessage({
+			peer,
+			message,
+			replyToMsgId,
+			silent
+		});
+		const result = await this.client.invoke(sendMsg);
+		return result;
+	}
 
-	  if (messagesLength <= maxTokenLength) {
-			const messageString = Array.isArray(filteredMessages) ? filteredMessages.join(' ') : filteredMessages;
-			response = await generateGptResponse(`${recapTextRequest} ${messageString}`);
-	  } else {
-			const chunks = await splitMessageInChunks(filteredMessages.toString());
-			if (chunks.length === 1) {
-				response = await generateGptResponse(`${recapTextRequest} ${chunks[0]}`);
-			} else {
-				const responses = await generateGptResponses(recapTextRequest, chunks);
-				const responsesCombined = await combineAnswers(responses);
-				response = await generateGptResponse(`${toxicRecapRequest} ${responsesCombined}`);
-			}
-	  }
-	  await sendMessage({ peer: groupId, message: response });
-	} catch (error) {
-	  await sendMessage({ peer: groupId, message: String(error) });
-	  throw error;
+	async sendImage(imagePath: string): Promise<Api.Message> {
+		return this.client.sendMessage(this.groupId, { file: imagePath });
 	}
-}
-export async function handleQCommand(groupId: string, messageText: string): Promise<void> {
-	const [, requestText] = messageText.split('/q ');
-	try {
-		const response = await generateGptRespWithHistory(requestText);
-		await sendMessage({
-			peer: groupId,
-			message: response
-		});
-	} catch (error) {
-		await sendMessage({
-			peer: groupId,
-			message: String(error)
-		});
-		throw error;
-	}
-}
-export async function handleImgCommand(groupId: string, messageText: string): Promise<void> {
-	const [, requestText] = messageText.split('/img ');
 
-	if (!requestText) {
-		await sendMessage({
-			peer: groupId,
-			message: '/img command requires a prompt'
+	async getMessages(limit: number): Promise<string[]> {
+		const messages: string[] = [];
+		for await (const message of this.client.iterMessages(`-${this.groupId}`, { limit })) {
+			messages.push(`${message._sender.firstName}: ${message.message}`);
+		}
+		return messages.reverse();
+	}
+
+	async handleClearCommand(): Promise<void> {
+		await clearMessagesTable();
+		await this.sendMessage({
+			peer: this.groupId,
+			message: 'History cleared',
 		});
-		return;
 	}
-	try {
-		const url = await createImageFromPrompt(requestText);
-		if (!url.includes('https://')) return;
-		await downloadAndSendImageFromUrl(url, groupId);
-	} catch (error) {
-		await sendMessage({
-			peer: groupId,
-			message: String(error)
+
+	 async handleRecapCommand(messageText: string): Promise<void> {
+		const msgLimit = parseInt(messageText.split(' ')[1]);
+
+		if (Number.isNaN(msgLimit)) {
+			console.log(this.groupId);
+			const obj = { peer: this.groupId, message: '/recap command requires a limit: /recap 50' };
+		  await this.sendMessage(obj);
+		  return;
+		}
+
+		if (msgLimit > messageLimit) {
+		  await this.sendMessage({ peer: this.groupId, message: `Max recap limit is ${messageLimit}: /recap ${messageLimit}` });
+		  return;
+		}
+
+		try {
+		  const messages = await this.getMessages(msgLimit);
+		  const filteredMessages = await filterMessages(messages);
+		  let response: string;
+
+		  const messagesLength = await approximateTokenLength(filteredMessages);
+
+		  if (messagesLength <= maxTokenLength) {
+				const messageString = Array.isArray(filteredMessages) ? filteredMessages.join(' ') : filteredMessages;
+				response = await generateGptResponse(`${recapTextRequest} ${messageString}`);
+		  } else {
+				const chunks = await splitMessageInChunks(filteredMessages.toString());
+				if (chunks.length === 1) {
+					response = await generateGptResponse(`${recapTextRequest} ${chunks[0]}`);
+				} else {
+					const responses = await generateGptResponses(recapTextRequest, chunks);
+					const responsesCombined = await combineAnswers(responses);
+					response = await generateGptResponse(`${toxicRecapRequest} ${responsesCombined}`);
+				}
+		  }
+		  await this.sendMessage({ peer: this.groupId, message: response });
+		} catch (error) {
+		  await this.sendMessage({ peer: this.groupId, message: String(error) });
+		  throw error;
+		}
+	}
+
+	async handleQCommand(messageText: string): Promise<void> {
+		const [, requestText] = messageText.split('/q ');
+		try {
+			const response = await generateGptRespWithHistory(requestText);
+			await this.sendMessage({
+				peer: this.groupId,
+				message: response
+			});
+		} catch (error) {
+			await this.sendMessage({
+				peer: this.groupId,
+				message: String(error)
+			});
+			throw error;
+		}
+	}
+
+	async handleImgCommand(messageText: string): Promise<void> {
+		const [, requestText] = messageText.split('/img ');
+
+		if (!requestText) {
+			await this.sendMessage({
+				peer: this.groupId,
+				message: '/img command requires a prompt'
+			});
+			return;
+		}
+		try {
+			const url = await createImageFromPrompt(requestText);
+			if (!url.includes('https://')) return;
+			await this.downloadAndSendImageFromUrl(url);
+		} catch (error) {
+			await this.sendMessage({
+				peer: this.groupId,
+				message: String(error)
+			});
+			throw error;
+		}
+	}
+
+	async handleImagineCommand(messageText: string): Promise<void> {
+		const msgLimit = parseInt(messageText.split(' ')[1]);
+		if (Number.isNaN(msgLimit)) {
+			await this.sendMessage({
+				peer: this.groupId,
+				message: '/imagine command requires a limit: /imagine 50'
+			});
+			return;
+		}
+		if (msgLimit > 300) {
+			await this.sendMessage({
+				peer: this.groupId,
+				message: 'Max imagine limit is 300: /imagine 300'
+			});
+			return;
+		}
+		try {
+			const messages = await this.getMessages(msgLimit);
+			const filteredMessages = filterMessages(messages);
+			const recapText = await generateGptResponse(`${recapTextRequest} ${filteredMessages}`);
+			const url = await createImageFromPrompt(recapText);
+			await this.downloadAndSendImageFromUrl(url);
+		} catch (error) {
+			await this.sendMessage({
+				peer: this.groupId,
+				message: String(error)
+			});
+			throw error;
+		}
+	}
+
+	async downloadAndSendImageFromUrl(url: string): Promise<void> {
+		const buffer = await downloadFile(url);
+		const imagePath = await convertToImage(buffer);
+		await this.sendImage(imagePath);
+	}
+
+	async transcribeAudioMessage(msgId: number): Promise<Api.messages.TranscribedAudio> {
+		const transcribeAudio = new Api.messages.TranscribeAudio({
+			peer: this.groupId,
+			msgId,
 		});
-		throw error;
+		const result = await this.client.invoke(transcribeAudio);
+		return result;
 	}
-}
-export async function handleImagineCommand(groupId: string, messageText: string): Promise<void> {
-	const msgLimit = parseInt(messageText.split(' ')[1]);
-	if (Number.isNaN(msgLimit)) {
-		await sendMessage({
-			peer: groupId,
-			message: '/imagine command requires a limit: /imagine 50'
+
+	async waitForTranscription(messageId: number): Promise<string> {
+		const response = await retry(() => this.transcribeAudioMessage(messageId), 3);
+		if (response.text !== 'Error during transcription.') {
+			return response.text;
+		}
+		return '';
+	}
+
+	async getMessageContentById(messageId: number): Promise<any> {
+		const message = await this.client.getMessages(this.groupId, { ids: messageId });
+		return message[0].message;
+	}
+
+	async checkReplyIdIsBotId(messageId: number): Promise<boolean> {
+		if (!messageId) return false;
+		const messages = await this.client.getMessages(this.groupId, { ids: messageId });
+		const senderId = String(messages[0]._senderId);
+		if (senderId === String(BOT_ID)) {
+			return true;
+		}
+		return false;
+	}
+
+	async processMessage(userRequest: string, messageId: number, history = true): Promise<void> {
+		const message = history ? await generateGptRespWithHistory(userRequest) : userRequest;
+		await this.sendMessage({
+			peer: this.groupId,
+			message,
+			replyToMsgId: messageId,
+			silent: true
 		});
-		return;
 	}
-	if (msgLimit > 300) {
-		await sendMessage({
-			peer: groupId,
-			message: 'Max imagine limit is 300: /imagine 300'
-		});
-		return;
+
+	async fetchAndInsertMessages(limit: number, db: string = dbname): Promise<void> {
+		const messages = await this.getMessages(limit);
+		messages.forEach(message => insertToMessages({ role: 'user', content: message }, db));
 	}
-	try {
-		const messages = await getMessages({ limit: msgLimit, groupId });
-		const filteredMessages = filterMessages(messages);
-		const recapText = await generateGptResponse(`${recapTextRequest} ${filteredMessages}`);
-		const url = await createImageFromPrompt(recapText);
-		await downloadAndSendImageFromUrl(url, groupId);
-	} catch (error) {
-		await sendMessage({
-			peer: groupId,
-			message: String(error)
-		});
-		throw error;
-	}
-}
-export async function downloadAndSendImageFromUrl(url: string, groupId: string): Promise<void> {
-	const buffer = await downloadFile(url);
-	const imagePath = await convertToImage(buffer);
-	await sendImage(groupId, imagePath);
-}
-export async function transcribeAudioMessage(msgId: number, groupId: string): Promise<Api.messages.TranscribedAudio> {
-	const transcribeAudio = new Api.messages.TranscribeAudio({
-		peer: groupId,
-		msgId,
-	});
-	const result = await client.invoke(transcribeAudio);
-	return result;
-}
-export async function waitForTranscription(messageId: number, groupId: string): Promise<string> {
-	const response = await retry(() => transcribeAudioMessage(messageId, groupId), 3);
-	if (response.text !== 'Error during transcription.') {
-		return response.text;
-	}
-	return '';
-}
-export async function getMessageContentById(messageId: number, groupId: string): Promise<any> {
-	const message = await client.getMessages(groupId, { ids: messageId });
-	return message[0].message;
-}
-export async function checkReplyIdIsBotId(messageId: number, groupId: string): Promise<boolean> {
-	if (!messageId) return false;
-	const messages = await client.getMessages(groupId, { ids: messageId });
-	const senderId = String(messages[0]._senderId);
-	if (senderId === String(BOT_ID)) {
-		return true;
-	}
-	return false;
-}
-export async function processMessage(userRequest: string, groupId: string, messageId: number): Promise<void> {
-	const gptReply = await generateGptRespWithHistory(userRequest);
-	await sendMessage({
-		peer: groupId,
-		message: gptReply,
-		replyToMsgId: messageId,
-		silent: true
-	});
 }

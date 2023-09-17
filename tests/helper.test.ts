@@ -87,4 +87,10 @@ describe('helper functions', async () => {
 		expect(canTranscribeMediaRes).toBeTrue;
 		expect(shouldTranscribeMediaRes).toBeTrue;
 	});
+
+	test('split message in chunks', async () => {
+		const messageToSplit = 'Long test message to split in chunks';
+		const res = await splitMessageInChunks(messageToSplit, 2);
+		expect(res).toBeArrayOfSize(18);
+	});
 });

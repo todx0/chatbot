@@ -19,9 +19,6 @@ import {
 
 describe('main functions', () => {
 	beforeEach(async () => {
-		mock(() => ({
-			insertToMessages: jest.fn(() => {})
-		}));
 		//@ts-ignore
 		spyOn(openai, 'createChatCompletion').mockImplementation(() => mockChatCompletionResponse);
 		//@ts-ignore

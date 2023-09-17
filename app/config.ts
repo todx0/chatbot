@@ -1,12 +1,6 @@
 import { Configuration, OpenAIApi } from 'openai';
-import { ProcessEnv, CommandHandlers } from './types';
-import {
-	handleQCommand,
-	handleImgCommand,
-	handleClearCommand,
-	handleRecapCommand,
-	handleImagineCommand,
-} from './mainHelper';
+import { ProcessEnv } from './types';
+
 // system
 export const config = {
 	API_ID: Bun.env.API_ID,
@@ -42,13 +36,7 @@ export const chatCommands = {
 	'/img': true,
 	'/imagine': true
 };
-export const commandHandlers: CommandHandlers = {
-	'/recap': handleRecapCommand,
-	'/q': handleQCommand,
-	'/clear': handleClearCommand,
-	'/img': handleImgCommand,
-	'/imagine': handleImagineCommand,
-};
+
 export const dbname = 'db.sqlite';
 
 // gpt
