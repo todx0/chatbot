@@ -141,7 +141,7 @@ export async function processCommands(messageText: string, handlers: object): Pr
 }
 
 export const messageNotSeen = (message: Api.Message): boolean => !message.reactions && !message.editDate;
-export const shouldRandomReply = (message: Api.Message): boolean => randomReply && Math.random() < randomReplyPercent && messageNotSeen(message) && message.message.length > replyThreshold;
+export const shouldRandomReply = (message: Api.Message): boolean => randomReply && Math.random() * 100 < randomReplyPercent && messageNotSeen(message) && message.message.length > replyThreshold;
 export const shouldTranscribeMedia = (message: any): boolean => isTelegramPremium && message.mediaUnread && canTranscribeMedia(message.media);
 export const somebodyMentioned = (message: Api.Message): boolean => message.originalArgs.mentioned;
 export const canTranscribeMedia = (media: mediaObject): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');

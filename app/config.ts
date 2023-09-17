@@ -16,16 +16,12 @@ export const configuration = new Configuration({
 	apiKey: config.OPENAI_API_KEY,
 	organization: config.ORGANIZATION_ID,
 });
-export const openai = new OpenAIApi(configuration);
 
 // app
 export const messageLimit = 700;
 export const maxHistoryLength = 15;
 export const maxTokenLength = 4096;
-export const randomReplyPercent = 0.04;
 export const isTelegramPremium = false;
-export const randomReply = true;
-export const replyThreshold = 20;
 export const language = config.LANGUAGE;
 export const botUsername = config.BOT_USERNAME;
 
@@ -36,10 +32,14 @@ export const chatCommands = {
 	'/img': true,
 	'/imagine': true
 };
-
 export const dbname = 'db.sqlite';
+// random reply
+export const randomReply = true;
+export const randomReplyPercent = 4;
+export const replyThreshold = 25;
 
-// gpt
+// openai
+export const openai = new OpenAIApi(configuration);
 export const model = 'gpt-4-0613';
 export const botBehavior = `You are a chatbot. Provide a concise reply based on the message you receive. Act like annoyed pseudopsychologist and reply in ${language} but always provide an answer.`;
 export const systemContent = {

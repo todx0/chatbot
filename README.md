@@ -32,10 +32,12 @@ Please refer to `app/config.ts` for configuration and usage instructions.
 
 - `botBehavior`: Set up desired bot behavior.
 - `isTelegramPremium`: If bot account have Telegram premium, setting this to true will allow the bot to automatically transcribe media messages.
+- `chatCommands`: Set to true or false to enable or disable particular commands.
+
+### Random reply
 - `randomReply`: This setting enables the bot to randomly reply to a message in chat.
 - `replyThreshold`: The minimum length of a sentence that triggers a random reply to avoid responding to very short messages.
-- `randomReplyPercent`: The percentage of random replies. For example, 0.3 means 30%.
-- `chatCommands`: Set to true or false to enable or disable particular commands.
+- `randomReplyPercent`: The percentage of random replies.
 
 ### Commands
 - `/q` - Allows the user to ask the bot a question. Example: `/q how to avoid taxes?`
