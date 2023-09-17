@@ -28,3 +28,7 @@ export interface ChatCommands {
 export interface RetryFn {
 	<T>(fn: () => Promise<T>, maxAttempts: number): Promise<T>;
 }
+export interface DatabaseOptions {
+    limit?: number;
+    dbsqlite?: string;
+}

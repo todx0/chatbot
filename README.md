@@ -28,12 +28,18 @@ bun start
 
 ## Usage
 
+If you reply to the bot's message, the bot will always reply back.
+
+If you reply to a person's message and tag the bot, it will reply to the person's message.
+
+Mentioning the bot will result in a reply. Same as /q command but bot also knows recent context.
+
 Please refer to `app/config.ts` for configuration and usage instructions.
 
 - `botBehavior`: Set up desired bot behavior.
 - `isTelegramPremium`: If bot account have Telegram premium, setting this to true will allow the bot to automatically transcribe media messages.
 - `chatCommands`: Set to true or false to enable or disable particular commands.
-
+- `maxHistoryLength`: Max length of a history that is being passed to bot. More history - more expensive API calls.
 ### Random reply
 - `randomReply`: This setting enables the bot to randomly reply to a message in chat.
 - `replyThreshold`: The minimum length of a sentence that triggers a random reply to avoid responding to very short messages.
@@ -45,10 +51,6 @@ Please refer to `app/config.ts` for configuration and usage instructions.
 - `/img` - Generates an image based on the query. Example: `/img prison cell`
 - `/imagine` - Generates an image based on the summary message from `/recap`. Example: `/imagine 200`
 - `/clear` - Clears the chat bot's history file. This command is useful for debugging purposes.
-
-If you reply to the bot's message, the bot will always reply back.
-
-If you reply to a person's message and tag the bot, it will reply to the person's message.
 
 ## Hosting
 

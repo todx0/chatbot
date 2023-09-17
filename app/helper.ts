@@ -5,12 +5,14 @@ import { Database } from 'bun:sqlite';
 import {
 	roleContent,
 	mediaObject,
-	ChatCommands
+	ChatCommands,
+	DatabaseOptions
 } from './types';
 import {
 	dbname,
 	randomReply,
 	replyThreshold,
+	maxHistoryLength,
 	isTelegramPremium,
 	randomReplyPercent,
 } from './config';
@@ -98,9 +100,11 @@ export async function insertToMessages(object: roleContent, dbsqlite = dbname): 
 	db.run('INSERT INTO messages (role, content) VALUES (?, ?)', [role, content]);
 }
 
-export async function readRoleContentFromDatabase(dbsqlite = dbname): Promise<any[]> {
+export async function readRoleContentFromDatabase(options: DatabaseOptions = {}): Promise<any[]> {
+	const { limit = maxHistoryLength, dbsqlite = dbname } = options;
 	const db = new Database(dbsqlite);
-	const rows = db.query('SELECT role, content FROM messages').all();
+	const query = `SELECT role, content FROM messages ORDER BY id DESC LIMIT ${limit}`;
+	const rows = db.query(query).all();
 	return rows;
 }
 

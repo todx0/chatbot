@@ -4,6 +4,7 @@ import {
 } from './types';
 import {
 	dbname,
+	botUsername,
 	messageLimit,
 	maxTokenLength,
 	recapTextRequest,
@@ -25,7 +26,6 @@ import {
 	generateGptResponses,
 	createImageFromPrompt,
 	generateGptRespWithHistory,
-
 } from './modules/openai/api';
 
 // use this workaround instead destructuring config because 'bun test' fails otherwise.
@@ -87,28 +87,27 @@ export default class TelegramBot {
 		const msgLimit = parseInt(messageText.split(' ')[1]);
 
 		if (Number.isNaN(msgLimit)) {
-			console.log(this.groupId);
 			const obj = { peer: this.groupId, message: '/recap command requires a limit: /recap 50' };
-		  await this.sendMessage(obj);
-		  return;
+			await this.sendMessage(obj);
+			return;
 		}
 
 		if (msgLimit > messageLimit) {
-		  await this.sendMessage({ peer: this.groupId, message: `Max recap limit is ${messageLimit}: /recap ${messageLimit}` });
-		  return;
+			await this.sendMessage({ peer: this.groupId, message: `Max recap limit is ${messageLimit}: /recap ${messageLimit}` });
+			return;
 		}
 
 		try {
-		  const messages = await this.getMessages(msgLimit);
-		  const filteredMessages = await filterMessages(messages);
-		  let response: string;
+			const messages = await this.getMessages(msgLimit);
+			const filteredMessages = await filterMessages(messages);
+			let response: string;
 
-		  const messagesLength = await approximateTokenLength(filteredMessages);
+			const messagesLength = await approximateTokenLength(filteredMessages);
 
-		  if (messagesLength <= maxTokenLength) {
+			if (messagesLength <= maxTokenLength) {
 				const messageString = Array.isArray(filteredMessages) ? filteredMessages.join(' ') : filteredMessages;
 				response = await generateGptResponse(`${recapTextRequest} ${messageString}`);
-		  } else {
+			} else {
 				const chunks = await splitMessageInChunks(filteredMessages.toString());
 				if (chunks.length === 1) {
 					response = await generateGptResponse(`${recapTextRequest} ${chunks[0]}`);
@@ -174,10 +173,10 @@ export default class TelegramBot {
 			});
 			return;
 		}
-		if (msgLimit > 300) {
+		if (msgLimit > messageLimit) {
 			await this.sendMessage({
 				peer: this.groupId,
-				message: 'Max imagine limit is 300: /imagine 300'
+				message: `Max imagine limit is ${messageLimit}: /imagine ${messageLimit}`
 			});
 			return;
 		}
@@ -235,7 +234,8 @@ export default class TelegramBot {
 	}
 
 	async processMessage(userRequest: string, messageId: number, history = true): Promise<void> {
-		const message = history ? await generateGptRespWithHistory(userRequest) : userRequest;
+		let message = userRequest.replace(botUsername, '');
+		message = history ? await generateGptRespWithHistory(message) : message;
 		await this.sendMessage({
 			peer: this.groupId,
 			message,

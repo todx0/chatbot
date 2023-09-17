@@ -72,7 +72,7 @@ export const botWorkflow: (event: any) => Promise<void> = async (event: any) => 
 
 		if (isBotCalled) {
 			const messageContentWithoutBotName = messageText.replace(botUsername, '');
-			await bot.processMessage(messageContentWithoutBotName, replyToMsgId);
+			await bot.processMessage(messageContentWithoutBotName, message.id);
 			return;
 		}
 	}

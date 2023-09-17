@@ -44,11 +44,12 @@ describe('helper functions', async () => {
 			const testData: roleContent = { role: 'user', content: 'test string' };
 			const promises = Array(maxHistoryLength).fill(0).map(() => insertToMessages(testData, testingdb));
 			await Promise.all(promises);
-			const dbQueryRes = await readRoleContentFromDatabase(testingdb);
+			const dbRequest = { limit: 100, dbsqlite: testingdb };
+			const dbQueryRes = await readRoleContentFromDatabase(dbRequest);
 			await trimMessagesTable(trimAmount, testingdb);
-			const queryResAfterTrim = await readRoleContentFromDatabase(testingdb);
+			const queryResAfterTrim = await readRoleContentFromDatabase(dbRequest);
 			await clearMessagesTable(testingdb);
-			const dbQueryAfterClear = await readRoleContentFromDatabase(testingdb);
+			const dbQueryAfterClear = await readRoleContentFromDatabase(dbRequest);
 
 			expect(dbQueryRes).toBeArrayOfSize(maxHistoryLength);
 			expect(queryResAfterTrim.length).toEqual(dbQueryRes.length - trimAmount);

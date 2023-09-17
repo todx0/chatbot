@@ -16,6 +16,7 @@ describe('main helper functions', async () => {
 	const testingdb = 'testing.sqlite';
 	const bot = new TelegramBot(client);
 	beforeEach(async () => {
+		try { await deleteDatabase(testingdb); } catch (e) { console.log(); }
 		await createMessagesTable(testingdb);
 		//@ts-ignore
 		spyOn(bot, 'getMessages').mockResolvedValue(longMockArrayOfMessages);
@@ -27,7 +28,8 @@ describe('main helper functions', async () => {
 
 	test('fetchAndInsertMessages adding messages to db', async () => {
 		await bot.fetchAndInsertMessages(10, testingdb);
-		const dbResponse = await readRoleContentFromDatabase(testingdb);
+		const dbRequest = { limit: 100, dbsqlite: testingdb };
+		const dbResponse = await readRoleContentFromDatabase(dbRequest);
 		const len = longMockArrayOfMessages.length;
 		expect(dbResponse).toBeArrayOfSize(len);
 	});
