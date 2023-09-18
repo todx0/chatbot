@@ -1,5 +1,5 @@
 import {
-	expect, test, describe, jest, afterEach, beforeEach, mock, spyOn
+	expect, test, describe, jest, afterEach, beforeEach, mock, spyOn, beforeAll, afterAll
 } from 'bun:test';
 import { openai } from '../app/config';
 import {
@@ -18,13 +18,13 @@ import {
 } from './testData/testDataForMocks';
 
 describe('main functions', () => {
-	beforeEach(async () => {
+	beforeAll(async () => {
 		//@ts-ignore
 		spyOn(openai, 'createChatCompletion').mockImplementation(() => mockChatCompletionResponse);
 		//@ts-ignore
 		spyOn(openai, 'createImage').mockImplementation(() => mockCreateImage);
 	});
-	afterEach(async () => {
+	afterAll(async () => {
 		spyOn(openai, 'createChatCompletion').mockClear();
 		spyOn(openai, 'createImage').mockClear();
 	});

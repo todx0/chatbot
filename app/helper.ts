@@ -9,13 +9,15 @@ import {
 	DatabaseOptions
 } from './types';
 import {
-	dbname,
+	config,
 	randomReply,
 	replyThreshold,
 	maxHistoryLength,
 	isTelegramPremium,
 	randomReplyPercent,
 } from './config';
+
+const dbname = config.DB_NAME;
 
 export async function retry<T>(
 	fn: (...args: any[]) => Promise<T>,
@@ -44,8 +46,7 @@ export async function convertToImage(buffer: Buffer): Promise<string> {
 	if (!(buffer instanceof Buffer)) {
 		throw new Error('Not a buffer');
 	}
-	const folderPath = './images';
-	const filepath = `${folderPath}/image.jpg`;
+	const filepath = './images/image.jpg';
 	const file = Bun.file(filepath);
 
 	if (!file.size) Bun.write(filepath, '');
@@ -113,13 +114,14 @@ export async function clearMessagesTable(dbsqlite = dbname): Promise<void> {
 	db.run('DELETE FROM messages');
 }
 
-export async function trimMessagesTable(amountToRemove: number, dbsqlite = dbname): Promise<void> {
+export async function trimMessagesTable(options: DatabaseOptions = {}): Promise<void> {
+	const { limit = maxHistoryLength, dbsqlite = dbname } = options;
 	const db = new Database(dbsqlite);
-	const queryRemove = `DELETE FROM messages ORDER BY ID ASC LIMIT ${amountToRemove};`;
+	const queryRemove = `DELETE FROM messages ORDER BY ID ASC LIMIT ${limit};`;
 	db.run(queryRemove);
 }
 
-export async function createMessagesTable(dbsqlite = 'db.sqlite'): Promise<void> {
+export async function createMessagesTable(dbsqlite = dbname): Promise<void> {
 	const db = new Database(dbsqlite);
 	db.run(`
 		CREATE TABLE IF NOT EXISTS messages (
@@ -130,9 +132,13 @@ export async function createMessagesTable(dbsqlite = 'db.sqlite'): Promise<void>
 	  `);
 }
 
-export async function deleteDatabase(dbsqlite = 'db.sqlite'): Promise<void> {
-	await unlink(dbsqlite);
-	console.log(`Deleted the database file '${dbsqlite}'.`);
+export async function deleteDatabase(dbsqlite = dbname): Promise<void> {
+	try {
+		await unlink(dbsqlite);
+		console.log(`Deleted the database file '${dbsqlite}'.`);
+	} catch (error) {
+		console.log();
+	}
 }
 
 export async function processCommands(messageText: string, handlers: object): Promise<void> {

@@ -5,6 +5,7 @@ import { ProcessEnv } from './types';
 export const config = {
 	API_ID: Bun.env.API_ID,
 	BOT_ID: Bun.env.BOT_ID,
+	DB_NAME: Bun.env.DB_NAME,
 	SESSION: Bun.env.SESSION,
 	API_HASH: Bun.env.API_HASH,
 	LANGUAGE: Bun.env.LANGUAGE,
@@ -18,12 +19,12 @@ export const configuration = new Configuration({
 });
 
 // app
-export const messageLimit = 700;
 export const maxHistoryLength = 15;
-export const maxTokenLength = 4096;
 export const isTelegramPremium = false;
 export const language = config.LANGUAGE;
 export const botUsername = config.BOT_USERNAME;
+export const messageLimit = 700;
+export const maxTokenLength = 4096;
 
 export const chatCommands = {
 	'/recap': true,
@@ -32,7 +33,6 @@ export const chatCommands = {
 	'/img': true,
 	'/imagine': true
 };
-export const dbname = 'db.sqlite';
 // random reply
 export const randomReply = true;
 export const randomReplyPercent = 4;

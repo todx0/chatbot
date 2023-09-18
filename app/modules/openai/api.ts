@@ -17,7 +17,7 @@ export async function generateGptRespWithHistory(userRequest: string): Promise<s
 		await insertToMessages({ role: 'assistant', content: responseContent });
 		return responseContent;
 	} catch (error: any) {
-		return error.response.data.error.message;
+		return error?.response?.data?.error?.message;
 	}
 }
 export async function generateGptResponse(userRequest: string): Promise<string> {
@@ -32,7 +32,7 @@ export async function generateGptResponse(userRequest: string): Promise<string> 
 		await insertToMessages({ role: 'assistant', content: responseContent });
 		return response.data.choices[0].message.content;
 	} catch (error: any) {
-		return error.response.data.error.message;
+		return error?.response?.data?.error?.message;
 	}
 }
 export async function generateGptResponses(requestText: string, messages: string[]): Promise<string[]> {
@@ -40,7 +40,7 @@ export async function generateGptResponses(requestText: string, messages: string
 		const promises = messages.map((innerArr) => generateGptResponse(`${requestText} ${innerArr}`));
 		return Promise.all(promises);
 	} catch (error: any) {
-		return error.response.data.error.message;
+		return error?.response?.data?.error?.message;
 	}
 }
 export async function createImageFromPrompt(text: string): Promise<string> {
@@ -52,7 +52,7 @@ export async function createImageFromPrompt(text: string): Promise<string> {
 		});
 		return response.data.data[0].url;
 	} catch (error: any) {
-		return error.response.data.error.message;
+		return error?.response?.data?.error?.message;
 	}
 }
 export async function combineAnswers(answers: string[]): Promise<string> {

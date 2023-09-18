@@ -31,24 +31,22 @@ describe('helper functions', async () => {
 	});
 
 	describe('sqlite db tests', async () => {
-		const testingdb = 'testing.sqlite';
-
 		beforeEach(async () => {
-			await createMessagesTable(testingdb);
+			//await createMessagesTable();
 		});
 		afterEach(async () => {
-			await deleteDatabase(testingdb);
+			//await deleteDatabase();
 		});
 		test('create and trim records', async () => {
 			const trimAmount = 10;
 			const testData: roleContent = { role: 'user', content: 'test string' };
-			const promises = Array(maxHistoryLength).fill(0).map(() => insertToMessages(testData, testingdb));
+			const promises = Array(maxHistoryLength).fill(0).map(() => insertToMessages(testData));
 			await Promise.all(promises);
-			const dbRequest = { limit: 100, dbsqlite: testingdb };
+			const dbRequest = { limit: 100 };
 			const dbQueryRes = await readRoleContentFromDatabase(dbRequest);
-			await trimMessagesTable(trimAmount, testingdb);
+			await trimMessagesTable({ limit: trimAmount });
 			const queryResAfterTrim = await readRoleContentFromDatabase(dbRequest);
-			await clearMessagesTable(testingdb);
+			await clearMessagesTable();
 			const dbQueryAfterClear = await readRoleContentFromDatabase(dbRequest);
 
 			expect(dbQueryRes).toBeArrayOfSize(maxHistoryLength);

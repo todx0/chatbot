@@ -1,7 +1,6 @@
 import { deleteDatabase } from '../app/helper';
 const testingdb = 'testing.sqlite';
-
+const database = Bun.env.DB_NAME;
 (async () => {
-	const result = await deleteDatabase(testingdb);
-	console.log(result);
+	await deleteDatabase(database);
 })();

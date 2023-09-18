@@ -3,7 +3,6 @@ import {
 	SendMessageParams,
 } from './types';
 import {
-	dbname,
 	botUsername,
 	messageLimit,
 	maxTokenLength,
@@ -244,8 +243,8 @@ export default class TelegramBot {
 		});
 	}
 
-	async fetchAndInsertMessages(limit: number, db: string = dbname): Promise<void> {
+	async fetchAndInsertMessages(limit: number): Promise<void> {
 		const messages = await this.getMessages(limit);
-		messages.forEach(message => insertToMessages({ role: 'user', content: message }, db));
+		messages.forEach(message => insertToMessages({ role: 'user', content: message }));
 	}
 }
