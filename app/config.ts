@@ -53,9 +53,9 @@ export const toxicRecapRequest = `There are few recaps of the conversation. Comb
 // func
 function checkRequiredEnvVariables(requiredEnvVariables: string[]): void {
 	for (const variable of requiredEnvVariables) {
-	  if (!Bun.env[variable]) {
+		if (!Bun.env[variable]) {
 			throw new Error(`Missing environment variable: ${variable}`);
-	  }
+		}
 	}
 }
 
