@@ -7,13 +7,11 @@ import {
 	retry,
 	filterMessages,
 	messageNotSeen,
-	deleteDatabase,
 	insertToMessages,
 	trimMessagesTable,
 	somebodyMentioned,
 	canTranscribeMedia,
 	clearMessagesTable,
-	createMessagesTable,
 	splitMessageInChunks,
 	shouldTranscribeMedia,
 	approximateTokenLength,
@@ -32,10 +30,8 @@ describe('helper functions', async () => {
 
 	describe('sqlite db tests', async () => {
 		beforeEach(async () => {
-			//await createMessagesTable();
 		});
 		afterEach(async () => {
-			//await deleteDatabase();
 		});
 		test('create and trim records', async () => {
 			const trimAmount = 10;

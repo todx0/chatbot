@@ -2,10 +2,8 @@ import {
 	expect, test, describe, afterEach, beforeEach, spyOn
 } from 'bun:test';
 import {
-	deleteDatabase,
-	createMessagesTable,
-	readRoleContentFromDatabase,
 	clearMessagesTable,
+	readRoleContentFromDatabase,
 } from '../app/helper';
 import TelegramBot from '../app/mainHelper';
 import client from '../app/main';
@@ -16,14 +14,11 @@ import {
 describe('main helper functions', async () => {
 	const bot = new TelegramBot(client);
 	beforeEach(async () => {
-		/* 		try { await deleteDatabase(); } catch (e) { console.log(); }
-		await createMessagesTable(); */
 		//@ts-ignore
 		spyOn(bot, 'getMessages').mockResolvedValue(longMockArrayOfMessages);
 	});
 
 	afterEach(async () => {
-	  //await deleteDatabase();
 	});
 
 	test('fetchAndInsertMessages adding messages to db', async () => {
