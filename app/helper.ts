@@ -104,9 +104,9 @@ export async function readRoleContentFromDatabase(options: DatabaseOptions = {})
 	const { limit = maxHistoryLength, dbsqlite } = options;
 	const dbName = dbsqlite || Bun.env.DB_NAME;
 	const db = new Database(dbName);
-	const query = `SELECT role, content FROM messages ORDER BY id DESC LIMIT ${limit}`;
+	const query = `SELECT role, content FROM messages ORDER BY id ASC LIMIT ${limit}`;
 	const rows = db.query(query).all();
-	return rows;
+	return rows; // reverse?
 }
 
 export async function clearMessagesTable(dbsqlite?: string): Promise<void> {

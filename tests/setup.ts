@@ -1,5 +1,6 @@
 import { beforeAll, afterAll } from 'bun:test';
 import { deleteDatabase, createMessagesTable, checkDatabaseExist } from '../app/helper';
+
 beforeAll(async () => {
 	Bun.env.DB_NAME = 'testing.sqlite';
 	console.log('\nInitializing beforeAll hook..\n');

@@ -40,6 +40,7 @@ export const replyThreshold = 25;
 
 // openai
 export const openai = new OpenAIApi(configuration);
+export const temperature = 0.8;
 export const model = 'gpt-4-0613';
 export const botBehavior = `You are a chatbot. Provide a concise reply based on the message you receive. Act like annoyed pseudopsychologist and reply in ${language} but always provide an answer.`;
 export const systemContent = {

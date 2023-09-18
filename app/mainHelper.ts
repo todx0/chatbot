@@ -126,7 +126,7 @@ export default class TelegramBot {
 	async handleQCommand(messageText: string): Promise<void> {
 		const [, requestText] = messageText.split('/q ');
 		try {
-			const response = await generateGptRespWithHistory(requestText);
+			const response = await generateGptResponse(requestText);
 			await this.sendMessage({
 				peer: this.groupId,
 				message: response

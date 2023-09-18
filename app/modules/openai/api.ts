@@ -1,4 +1,6 @@
-import { openai, model, systemContent } from '../../config';
+import {
+	openai, model, systemContent, temperature
+} from '../../config';
 import { roleContent } from '../../types';
 import { readRoleContentFromDatabase, insertToMessages } from '../../helper';
 
@@ -11,6 +13,7 @@ export async function generateGptRespWithHistory(userRequest: string): Promise<s
 
 		const response: any = await openai.createChatCompletion({
 			model,
+			temperature,
 			messages: currentHistory
 		});
 		const responseContent = response.data.choices[0].message.content;
@@ -22,14 +25,15 @@ export async function generateGptRespWithHistory(userRequest: string): Promise<s
 }
 
 export async function generateGptResponse(userRequest: string): Promise<string> {
-	// Only response from openai is written to database.
 	try {
 		const userRoleContent: roleContent = { role: 'user', content: userRequest };
 		const response: any = await openai.createChatCompletion({
 			model,
+			temperature,
 			messages: [userRoleContent]
 		});
 		const responseContent = response.data.choices[0].message.content;
+		await insertToMessages(userRoleContent);
 		await insertToMessages({ role: 'assistant', content: responseContent });
 		return response.data.choices[0].message.content;
 	} catch (error: any) {
