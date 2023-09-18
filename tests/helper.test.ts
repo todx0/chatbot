@@ -1,7 +1,7 @@
 import {
-	expect, test, describe, jest
+	expect, test, describe, jest,
 } from 'bun:test';
-import { roleContent } from '../app/types';
+import { RoleContent } from '../app/types';
 import { maxHistoryLength } from '../app/config';
 import {
 	retry,
@@ -15,7 +15,7 @@ import {
 	splitMessageInChunks,
 	shouldTranscribeMedia,
 	approximateTokenLength,
-	readRoleContentFromDatabase
+	readRoleContentFromDatabase,
 } from '../app/helper';
 
 describe('helper functions', async () => {
@@ -31,7 +31,7 @@ describe('helper functions', async () => {
 	describe('sqlite db tests', async () => {
 		test('create and trim records', async () => {
 			const trimAmount = 10;
-			const testData: roleContent = { role: 'user', content: 'test string' };
+			const testData: RoleContent = { role: 'user', content: 'test string' };
 			const promises = Array(maxHistoryLength).fill(0).map(() => insertToMessages(testData));
 			await Promise.all(promises);
 			const dbRequest = { limit: 100 };
@@ -40,7 +40,6 @@ describe('helper functions', async () => {
 			const queryResAfterTrim = await readRoleContentFromDatabase(dbRequest);
 			await clearMessagesTable();
 			const dbQueryAfterClear = await readRoleContentFromDatabase(dbRequest);
-
 			expect(dbQueryRes).toBeArrayOfSize(maxHistoryLength);
 			expect(queryResAfterTrim.length).toEqual(dbQueryRes.length - trimAmount);
 			expect(dbQueryAfterClear.length).toEqual(0);

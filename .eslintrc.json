@@ -1,108 +1,34 @@
 {
-	"root": true,
 	"parser": "@typescript-eslint/parser",
 	"plugins": [
 		"@typescript-eslint"
 	],
 	"extends": [
-		"airbnb",
-		"plugin:@typescript-eslint/recommended"
+		"airbnb-base",
+		"airbnb-typescript/base"
 	],
+	"parserOptions": {
+		"project": "./tsconfig.json"
+	},
 	"rules": {
-		"@typescript-eslint/ban-ts-comment": "off",
-		"@typescript-eslint/no-explicit-any": "off",
+		"@typescript-eslint/indent": [
+			"error",
+			"tab",
+			{
+				"SwitchCase": 1
+			}
+		],
 		"@typescript-eslint/no-unused-vars": "off",
-		"import/extensions": "off",
-		"import/no-unresolved": "off",
-		"no-loop-func": "off",
-		"guard-for-in": "off",
-		"linebreak-style": "off",
-		"global-require": "off",
-		"func-names": "off",
-		"no-unused-expressions": "off",
+		"no-tabs": "off",
+		"no-mixed-spaces-and-tabs": "off",
+		"@typescript-eslint/no-unused-expressions": "off",
+		"no-console": "off",
 		"max-len": "off",
 		"no-await-in-loop": "off",
-		"no-restricted-syntax": [
-			"off",
-			"ForStatement"
-		],
+		"no-plusplus": "off",
+		"no-restricted-syntax": "off",
 		"no-underscore-dangle": "off",
-		"no-use-before-define": "off",
-		"no-prototype-builtins": "off",
-		"import/newline-after-import": "off",
-		"one-var": "off",
-		"one-var-declaration-per-line": "off",
-		"no-tabs": "off",
-		"no-console": "off",
-		"object-shorthand": "off",
-		"comma-dangle": "off",
-		"camelcase": "off",
-		"arrow-parens": "off",
-		"spaced-comment": "off",
-		"prefer-const": "warn",
-		"default-case": "warn",
-		"consistent-return": "warn",
-		"eqeqeq": "warn",
-		"prefer-destructuring": [
-			"warn",
-			{
-				"object": true,
-				"array": false
-			}
-		],
-		"no-mixed-spaces-and-tabs": [
-			"warn",
-			"smart-tabs"
-		],
-		"indent": [
-			"warn",
-			"tab"
-		],
-		"no-bitwise": [
-			"warn",
-			{
-				"allow": [
-					"~",
-					"^"
-				]
-			}
-		],
-		"no-plusplus": [
-			"warn",
-			{
-				"allowForLoopAfterthoughts": true
-			}
-		],
-		"radix": [
-			"error",
-			"as-needed"
-		],
-		"default-param-last": "warn",
-		"no-param-reassign": "warn",
-		"padded-blocks": "warn",
-		"no-trailing-spaces": "warn",
-		"no-shadow": "warn",
-		"no-return-assign": "warn",
-		"no-mixed-operators": "warn",
-		"class-methods-use-this": "warn",
-		"new-cap": "warn",
-		"no-return-await": "warn",
-		"no-promise-executor-return": "warn",
-		"no-restricted-globals": "warn",
-		"no-constructor-return": "warn",
-		"no-undef": "off",
-		"no-continue": "warn",
-		"no-useless-concat": "warn",
-		"no-useless-constructor": "warn",
-		"no-multi-spaces": "warn",
-		"eol-last": "warn",
-		"no-else-return": "warn",
-		"space-infix-ops": "warn",
-		"quotes": "warn",
-		"object-curly-spacing": "warn",
-		"no-empty-function": "warn",
-		"keyword-spacing": "warn",
-		"no-empty": "warn",
-		"key-spacing": "warn"
+		"import/extensions": "off",
+		"radix": "off"
 	}
 }

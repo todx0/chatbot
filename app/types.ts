@@ -1,6 +1,6 @@
-import { MessageIDLike, } from 'telegram/define';
+import { MessageIDLike } from 'telegram/define';
 
-export interface roleContent {
+export interface RoleContent {
 	role: 'user' | 'assistant' | 'system';
 	content: string;
 }
@@ -17,7 +17,7 @@ export interface GetMessagesParams {
 	limit: number;
 	groupId: string;
 }
-export interface mediaObject {
+export interface MediaObject {
 	document: {
 		mimeType: string
 	}
@@ -29,6 +29,6 @@ export interface RetryFn {
 	<T>(fn: () => Promise<T>, maxAttempts: number): Promise<T>;
 }
 export interface DatabaseOptions {
-    limit?: number;
-    dbsqlite?: string;
+	limit?: number;
+	dbsqlite?: string;
 }

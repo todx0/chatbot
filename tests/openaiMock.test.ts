@@ -1,5 +1,5 @@
 import {
-	expect, test, describe, jest, mock, spyOn, beforeAll, afterAll
+	expect, test, describe, jest, mock, spyOn, beforeAll, afterAll,
 } from 'bun:test';
 import { openai } from '../app/config';
 import {
@@ -19,9 +19,9 @@ import {
 
 describe('main functions', () => {
 	beforeAll(async () => {
-		//@ts-ignore
+		// @ts-ignore
 		spyOn(openai, 'createChatCompletion').mockImplementation(() => mockChatCompletionResponse);
-		//@ts-ignore
+		// @ts-ignore
 		spyOn(openai, 'createImage').mockImplementation(() => mockCreateImage);
 	});
 	afterAll(async () => {
@@ -41,11 +41,11 @@ describe('main functions', () => {
 
 	test('mock generateGptResponses', async () => {
 		mock(() => ({
-			generateGptResponse: jest.fn(() => mockResponseContent)
+			generateGptResponse: jest.fn(() => mockResponseContent),
 		}));
 		const response = await generateGptResponses(mockRequestContent, mockArrayOfMessages);
 		expect(response).toBeArrayOfSize(3);
-		response.forEach(res => {
+		response.forEach((res) => {
 			expect(res).toEqual(mockResponseContent);
 		});
 	});

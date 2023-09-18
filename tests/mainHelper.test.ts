@@ -1,5 +1,5 @@
 import {
-	expect, test, describe, beforeEach, spyOn
+	expect, test, describe, beforeEach, spyOn,
 } from 'bun:test';
 import {
 	clearMessagesTable,
@@ -8,13 +8,13 @@ import {
 import TelegramBot from '../app/mainHelper';
 import client from '../app/main';
 import {
-	longMockArrayOfMessages
+	longMockArrayOfMessages,
 } from './testData/testDataForMocks';
 
 describe('main helper functions', async () => {
 	const bot = new TelegramBot(client);
 	beforeEach(async () => {
-		//@ts-ignore
+		// @ts-ignore
 		spyOn(bot, 'getMessages').mockResolvedValue(longMockArrayOfMessages);
 	});
 

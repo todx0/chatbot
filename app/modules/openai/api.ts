@@ -1,12 +1,12 @@
 import {
-	openai, model, systemContent, temperature
+	openai, model, systemContent, temperature,
 } from '../../config';
-import { roleContent } from '../../types';
+import { RoleContent } from '../../types';
 import { readRoleContentFromDatabase, insertToMessages } from '../../helper';
 
 export async function generateGptRespWithHistory(userRequest: string): Promise<string> {
 	try {
-		const userRoleContent: roleContent = { role: 'user', content: userRequest };
+		const userRoleContent: RoleContent = { role: 'user', content: userRequest };
 		await insertToMessages(userRoleContent);
 		const currentHistory = await readRoleContentFromDatabase();
 		currentHistory.unshift(systemContent);
@@ -14,7 +14,7 @@ export async function generateGptRespWithHistory(userRequest: string): Promise<s
 		const response: any = await openai.createChatCompletion({
 			model,
 			temperature,
-			messages: currentHistory
+			messages: currentHistory,
 		});
 		const responseContent = response.data.choices[0].message.content;
 		await insertToMessages({ role: 'assistant', content: responseContent });
@@ -26,11 +26,11 @@ export async function generateGptRespWithHistory(userRequest: string): Promise<s
 
 export async function generateGptResponse(userRequest: string): Promise<string> {
 	try {
-		const userRoleContent: roleContent = { role: 'user', content: userRequest };
+		const userRoleContent: RoleContent = { role: 'user', content: userRequest };
 		const response: any = await openai.createChatCompletion({
 			model,
 			temperature,
-			messages: [userRoleContent]
+			messages: [userRoleContent],
 		});
 		const responseContent = response.data.choices[0].message.content;
 		await insertToMessages(userRoleContent);
@@ -44,7 +44,7 @@ export async function generateGptResponse(userRequest: string): Promise<string> 
 export async function generateGptResponses(requestText: string, messages: string[]): Promise<string[]> {
 	try {
 		const promises = messages.map((innerArr) => generateGptResponse(`${requestText} ${innerArr}`));
-		return Promise.all(promises);
+		return await Promise.all(promises);
 	} catch (error: any) {
 		return error?.response?.data?.error?.message;
 	}

@@ -31,7 +31,7 @@ export const chatCommands = {
 	'/q': true,
 	'/clear': true,
 	'/img': true,
-	'/imagine': true
+	'/imagine': true,
 };
 // random reply
 export const randomReply = true;
@@ -45,20 +45,19 @@ export const model = 'gpt-4-0613';
 export const botBehavior = `You are a chatbot. Provide a concise reply based on the message you receive. Act like annoyed pseudopsychologist and reply in ${language} but always provide an answer.`;
 export const systemContent = {
 	role: 'system',
-	content: botBehavior
+	content: botBehavior,
 };
 export const recapTextRequest = `Parse conversation. Generate detailed summary in ${language} language. Ignore profanity but keep context: `;
 export const toxicRecapRequest = `There are few recaps of the conversation. Combine them and do a detailed recap in ${language} language (answer should be less than 4096 characters):`;
 
 // func
 function checkRequiredEnvVariables(requiredEnvVariables: string[]): void {
-	for (const variable of requiredEnvVariables) {
+	requiredEnvVariables.forEach((variable) => {
 		if (!Bun.env[variable]) {
 			throw new Error(`Missing environment variable: ${variable}`);
 		}
-	}
+	});
 }
-
 export function loadConfig(): void {
 	const requiredEnvVariables = [
 		'BOT_ID',

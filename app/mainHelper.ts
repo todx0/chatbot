@@ -50,13 +50,13 @@ export default class TelegramBot {
 
 	async sendMessage(obj: SendMessageParams): Promise<Api.TypeUpdates | undefined> {
 		const {
-			peer, message, replyToMsgId, silent
+			peer, message, replyToMsgId, silent,
 		} = obj;
 		const sendMsg = new Api.messages.SendMessage({
 			peer,
 			message,
 			replyToMsgId,
-			silent
+			silent,
 		});
 		const result = await this.client.invoke(sendMsg);
 		return result;
@@ -129,12 +129,12 @@ export default class TelegramBot {
 			const response = await generateGptResponse(requestText);
 			await this.sendMessage({
 				peer: this.groupId,
-				message: response
+				message: response,
 			});
 		} catch (error) {
 			await this.sendMessage({
 				peer: this.groupId,
-				message: String(error)
+				message: String(error),
 			});
 			throw error;
 		}
@@ -146,7 +146,7 @@ export default class TelegramBot {
 		if (!requestText) {
 			await this.sendMessage({
 				peer: this.groupId,
-				message: '/img command requires a prompt'
+				message: '/img command requires a prompt',
 			});
 			return;
 		}
@@ -157,7 +157,7 @@ export default class TelegramBot {
 		} catch (error) {
 			await this.sendMessage({
 				peer: this.groupId,
-				message: String(error)
+				message: String(error),
 			});
 			throw error;
 		}
@@ -168,14 +168,14 @@ export default class TelegramBot {
 		if (Number.isNaN(msgLimit)) {
 			await this.sendMessage({
 				peer: this.groupId,
-				message: '/imagine command requires a limit: /imagine 50'
+				message: '/imagine command requires a limit: /imagine 50',
 			});
 			return;
 		}
 		if (msgLimit > messageLimit) {
 			await this.sendMessage({
 				peer: this.groupId,
-				message: `Max imagine limit is ${messageLimit}: /imagine ${messageLimit}`
+				message: `Max imagine limit is ${messageLimit}: /imagine ${messageLimit}`,
 			});
 			return;
 		}
@@ -188,7 +188,7 @@ export default class TelegramBot {
 		} catch (error) {
 			await this.sendMessage({
 				peer: this.groupId,
-				message: String(error)
+				message: String(error),
 			});
 			throw error;
 		}
@@ -239,12 +239,12 @@ export default class TelegramBot {
 			peer: this.groupId,
 			message,
 			replyToMsgId: messageId,
-			silent: true
+			silent: true,
 		});
 	}
 
 	async fetchAndInsertMessages(limit: number): Promise<void> {
 		const messages = await this.getMessages(limit);
-		messages.forEach(message => insertToMessages({ role: 'user', content: message }));
+		messages.forEach((message) => insertToMessages({ role: 'user', content: message }));
 	}
 }

@@ -17,27 +17,27 @@ export const mockChatCompletionResponse: AxiosResponse<CreateChatCompletionRespo
 			{
 				message: {
 					role: 'assistant',
-					content: mockResponseContent
-				}
-			}
-	  ]
+					content: mockResponseContent,
+				},
+			},
+		],
 	},
 	status: 200,
 	statusText: 'OK',
 	headers: {},
-	config: { headers }
+	config: { headers },
 };
 export const mockCreateImage: AxiosResponse<ImagesResponse, any> = {
 	data: {
 		created: 69,
 		data: [
 		  {
-				url: mockImage
-		  }
-		]
-	  },
+				url: mockImage,
+		  },
+		],
+	},
 	status: 200,
 	statusText: 'OK',
 	headers: {},
-	config: { headers }
+	config: { headers },
 };

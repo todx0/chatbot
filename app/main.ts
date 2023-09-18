@@ -1,10 +1,10 @@
 import { TelegramClient } from 'telegram';
-import { StringSession } from 'telegram/sessions/index.js';
+import { StringSession } from 'telegram/sessions/index';
 import TelegramBot, {
 } from './mainHelper';
 import {
 	botUsername,
-	loadConfig
+	loadConfig,
 } from './config';
 import {
 	messageNotSeen,

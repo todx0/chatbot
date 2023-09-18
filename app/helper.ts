@@ -4,10 +4,10 @@ import { unlink } from 'node:fs/promises';
 import { Database } from 'bun:sqlite';
 import * as fs from 'node:fs';
 import {
-	roleContent,
-	mediaObject,
+	RoleContent,
+	MediaObject,
 	ChatCommands,
-	DatabaseOptions
+	DatabaseOptions,
 } from './types';
 import {
 	randomReply,
@@ -57,7 +57,9 @@ export async function filterMessages(messages: string[]): Promise<string[]> {
 }
 
 export async function approximateTokenLength(messages: string[]): Promise<number> {
-	const totalLength = messages.map((str) => str.length).reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+	const totalLength = messages
+		.map((str) => str.length)
+		.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
 	return totalLength;
 }
 
@@ -93,7 +95,7 @@ export function getCommand(messageText: string, commands: ChatCommands): string 
 	return '';
 }
 
-export async function insertToMessages(object: roleContent, dbsqlite?: string): Promise<void> {
+export async function insertToMessages(object: RoleContent, dbsqlite?: string): Promise<void> {
 	const dbName = dbsqlite || Bun.env.DB_NAME;
 	const db = new Database(dbName);
 	const { role, content } = object;
@@ -146,12 +148,13 @@ export async function deleteDatabase(dbsqlite?: string): Promise<void> {
 }
 
 export async function processCommands(messageText: string, handlers: object): Promise<void> {
-	for (const [command, handler] of Object.entries(handlers)) {
+	let result = Promise.resolve();
+	Object.entries(handlers).forEach(([command, handler]) => {
 		if (messageText.includes(command)) {
-			return handler(messageText);
+			result = handler(messageText);
 		}
-	}
-	return Promise.resolve();
+	});
+	return result;
 }
 
 export async function checkDatabaseExist(): Promise<boolean> {
@@ -166,6 +169,6 @@ export async function checkDatabaseExist(): Promise<boolean> {
 
 export const messageNotSeen = (message: Api.Message): boolean => !message.reactions && !message.editDate;
 export const shouldRandomReply = (message: Api.Message): boolean => randomReply && Math.random() * 100 < randomReplyPercent && messageNotSeen(message) && message.message.length > replyThreshold;
+export const canTranscribeMedia = (media: MediaObject): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
 export const shouldTranscribeMedia = (message: any): boolean => isTelegramPremium && message.mediaUnread && canTranscribeMedia(message.media);
 export const somebodyMentioned = (message: Api.Message): boolean => message.originalArgs.mentioned;
-export const canTranscribeMedia = (media: mediaObject): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
