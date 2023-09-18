@@ -30,10 +30,10 @@ bun start
 
 Customize the bot's behavior by editing the `app/config.ts` file. Key configuration options include:
 
-`botBehavior`: Define your desired bot behavior.
-`isTelegramPremium`: Enable automatic transcription of media messages if your bot account has Telegram premium.
-`chatCommands`: Enable or disable specific commands by setting them to true or false.
-`maxHistoryLength`: Set the maximum length of chat history passed to the bot. Longer histories result in more expensive API calls.
+- `botBehavior`: Define your desired bot behavior.
+- `isTelegramPremium`: Enable automatic transcription of media messages if your bot account has Telegram premium.
+- `chatCommands`: Enable or disable specific commands by setting them to true or false.
+- `maxHistoryLength`: Set the maximum length of chat history passed to the bot. Longer histories result in more expensive API calls.
 
 ### Random Reply
 
