@@ -17,7 +17,7 @@ import {
 	randomReplyPercent,
 } from './config';
 
-const dbname = config.DB_NAME;
+const dbname = Bun.env.DB_NAME;
 
 export async function retry<T>(
 	fn: (...args: any[]) => Promise<T>,
@@ -95,34 +95,39 @@ export function getCommand(messageText: string, commands: ChatCommands): string 
 	return '';
 }
 
-export async function insertToMessages(object: roleContent, dbsqlite = dbname): Promise<void> {
-	const db = new Database(dbsqlite);
+export async function insertToMessages(object: roleContent, dbsqlite?: string): Promise<void> {
+	const dbName = dbsqlite || Bun.env.DB_NAME;
+	const db = new Database(dbName);
 	const { role, content } = object;
 	db.run('INSERT INTO messages (role, content) VALUES (?, ?)', [role, content]);
 }
 
 export async function readRoleContentFromDatabase(options: DatabaseOptions = {}): Promise<any[]> {
-	const { limit = maxHistoryLength, dbsqlite = dbname } = options;
-	const db = new Database(dbsqlite);
+	const { limit = maxHistoryLength, dbsqlite } = options;
+	const dbName = dbsqlite || Bun.env.DB_NAME;
+	const db = new Database(dbName);
 	const query = `SELECT role, content FROM messages ORDER BY id DESC LIMIT ${limit}`;
 	const rows = db.query(query).all();
 	return rows;
 }
 
-export async function clearMessagesTable(dbsqlite = dbname): Promise<void> {
-	const db = new Database(dbsqlite);
+export async function clearMessagesTable(dbsqlite?: string): Promise<void> {
+	const dbName = dbsqlite || Bun.env.DB_NAME;
+	const db = new Database(dbName);
 	db.run('DELETE FROM messages');
 }
 
 export async function trimMessagesTable(options: DatabaseOptions = {}): Promise<void> {
-	const { limit = maxHistoryLength, dbsqlite = dbname } = options;
-	const db = new Database(dbsqlite);
+	const { limit = maxHistoryLength, dbsqlite } = options;
+	const dbName = dbsqlite || Bun.env.DB_NAME;
+	const db = new Database(dbName);
 	const queryRemove = `DELETE FROM messages ORDER BY ID ASC LIMIT ${limit};`;
 	db.run(queryRemove);
 }
 
-export async function createMessagesTable(dbsqlite = dbname): Promise<void> {
-	const db = new Database(dbsqlite);
+export async function createMessagesTable(dbsqlite?: string): Promise<void> {
+	const dbName = dbsqlite || Bun.env.DB_NAME;
+	const db = new Database(dbName);
 	db.run(`
 		CREATE TABLE IF NOT EXISTS messages (
 		  id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -132,12 +137,13 @@ export async function createMessagesTable(dbsqlite = dbname): Promise<void> {
 	  `);
 }
 
-export async function deleteDatabase(dbsqlite = dbname): Promise<void> {
+export async function deleteDatabase(dbsqlite?: string): Promise<void> {
 	try {
-		await unlink(dbsqlite);
-		console.log(`Deleted the database file '${dbsqlite}'.`);
+		const dbName = dbsqlite || Bun.env.DB_NAME;
+		if (dbName) await unlink(dbName);
+		console.log(`Deleted the database file '${dbName}'.`);
 	} catch (error) {
-		console.log();
+		console.log('Error deleting the database file:', error);
 	}
 }
 

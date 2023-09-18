@@ -29,10 +29,12 @@ describe('helper functions', async () => {
 	});
 
 	describe('sqlite db tests', async () => {
+		/*
 		beforeEach(async () => {
 		});
 		afterEach(async () => {
 		});
+		*/
 		test('create and trim records', async () => {
 			const trimAmount = 10;
 			const testData: roleContent = { role: 'user', content: 'test string' };
