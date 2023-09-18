@@ -39,7 +39,7 @@ export const botWorkflow: (event: any) => Promise<void> = async (event: any) => 
 	const groupId = message._chatPeer.channelId;
 	const messageText = message.message;
 
-	await bot.setGroupId(groupId);
+	bot.setGroupId(groupId);
 
 	const commandMappings: Record<string, (msgText: string) => Promise<void>> = {
 		'/recap': (msgText) => bot.handleRecapCommand(msgText),

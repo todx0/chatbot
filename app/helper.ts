@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Api } from 'telegram';
 import { unlink } from 'node:fs/promises';
 import { Database } from 'bun:sqlite';
+import * as fs from 'node:fs';
 import {
 	roleContent,
 	mediaObject,
@@ -151,6 +152,16 @@ export async function processCommands(messageText: string, handlers: object): Pr
 		}
 	}
 	return Promise.resolve();
+}
+
+export async function checkDatabaseExist(): Promise<boolean> {
+	const dbName = Bun.env.DB_NAME!;
+	try {
+		await fs.promises.access(dbName, fs.constants.F_OK);
+		return true;
+	} catch (err) {
+		return false;
+	}
 }
 
 export const messageNotSeen = (message: Api.Message): boolean => !message.reactions && !message.editDate;

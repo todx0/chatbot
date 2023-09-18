@@ -25,4 +25,12 @@ describe('main helper functions', async () => {
 		const len = longMockArrayOfMessages.length;
 		expect(dbResponse).toBeArrayOfSize(len);
 	});
+
+	test('get and set group Id', async () => {
+		const groupIdBefore = bot.getGroupId();
+		bot.setGroupId(1);
+		const groupIdAfter = bot.getGroupId();
+		expect(groupIdBefore).toEqual(0);
+		expect(groupIdAfter).toEqual(1);
+	});
 });
