@@ -106,7 +106,7 @@ export async function readRoleContentFromDatabase(options: DatabaseOptions = {})
 	const db = new Database(dbName);
 	const query = `SELECT role, content FROM messages ORDER BY id ASC LIMIT ${limit}`;
 	const rows = db.query(query).all();
-	return rows; // reverse?
+	return rows;
 }
 
 export async function clearMessagesTable(dbsqlite?: string): Promise<void> {
