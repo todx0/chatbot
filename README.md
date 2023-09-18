@@ -28,7 +28,7 @@ bun start
 
 ## Configuration
 
-Customize the bot's behavior by editing the app/config.ts file. Key configuration options include:
+Customize the bot's behavior by editing the `app/config.ts` file. Key configuration options include:
 
 `botBehavior`: Define your desired bot behavior.
 `isTelegramPremium`: Enable automatic transcription of media messages if your bot account has Telegram premium.
