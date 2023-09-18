@@ -20,6 +20,7 @@ export async function generateGptRespWithHistory(userRequest: string): Promise<s
 		return error?.response?.data?.error?.message;
 	}
 }
+
 export async function generateGptResponse(userRequest: string): Promise<string> {
 	// Only response from openai is written to database.
 	try {
@@ -35,6 +36,7 @@ export async function generateGptResponse(userRequest: string): Promise<string> 
 		return error?.response?.data?.error?.message;
 	}
 }
+
 export async function generateGptResponses(requestText: string, messages: string[]): Promise<string[]> {
 	try {
 		const promises = messages.map((innerArr) => generateGptResponse(`${requestText} ${innerArr}`));
@@ -43,6 +45,7 @@ export async function generateGptResponses(requestText: string, messages: string
 		return error?.response?.data?.error?.message;
 	}
 }
+
 export async function createImageFromPrompt(text: string): Promise<string> {
 	try {
 		const response: any = await openai.createImage({
@@ -55,6 +58,7 @@ export async function createImageFromPrompt(text: string): Promise<string> {
 		return error?.response?.data?.error?.message;
 	}
 }
+
 export async function combineAnswers(answers: string[]): Promise<string> {
 	const combinedAnswer = await generateGptResponse(`Combine array of answers to one. \n ${answers}`);
 	return combinedAnswer;

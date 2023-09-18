@@ -138,7 +138,7 @@ export async function deleteDatabase(dbsqlite?: string): Promise<void> {
 	try {
 		const dbName = dbsqlite || Bun.env.DB_NAME;
 		if (dbName) await unlink(dbName);
-		console.log(`Deleted the database file '${dbName}'.`);
+		console.log(`Deleted the database file '${dbName}'`);
 	} catch (error) {
 		console.log('Error deleting the database file:', error);
 	}
