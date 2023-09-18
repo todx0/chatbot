@@ -4,6 +4,7 @@ import TelegramBot, {
 } from './mainHelper';
 import {
 	botUsername,
+	loadConfig
 } from './config';
 import {
 	messageNotSeen,
@@ -16,13 +17,13 @@ import {
 // use this workaround instead destructuring config because 'bun test' fails otherwise.
 const { SESSION, API_ID, API_HASH } = Bun.env;
 
-if (API_ID === undefined) {
-	throw new Error('API_ID is not defined in the environment variables');
+try {
+	loadConfig();
+} catch (error) {
+	console.error(error);
+	process.exit(1);
 }
-if (API_HASH === undefined) {
-	throw new Error('API_HASH is not defined in the environment variables');
-}
-const client = new TelegramClient(new StringSession(SESSION), +API_ID, API_HASH, {
+const client = new TelegramClient(new StringSession(SESSION), +API_ID!, API_HASH!, {
 	connectionRetries: 5,
 });
 export default client;

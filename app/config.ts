@@ -48,3 +48,27 @@ export const systemContent = {
 };
 export const recapTextRequest = `Parse conversation. Generate detailed summary in ${language} language. Ignore profanity but keep context: `;
 export const toxicRecapRequest = `There are few recaps of the conversation. Combine them and do a detailed recap in ${language} language (answer should be less than 4096 characters):`;
+
+// func
+function checkRequiredEnvVariables(requiredEnvVariables: string[]): void {
+	for (const variable of requiredEnvVariables) {
+	  if (!Bun.env[variable]) {
+			throw new Error(`Missing environment variable: ${variable}`);
+	  }
+	}
+}
+
+export function loadConfig(): void {
+	const requiredEnvVariables = [
+		'BOT_ID',
+		'API_ID',
+		'SESSION',
+		'DB_NAME',
+		'LANGUAGE',
+		'API_HASH',
+		'BOT_USERNAME',
+		'OPENAI_API_KEY',
+		'ORGANIZATION_ID',
+	];
+	checkRequiredEnvVariables(requiredEnvVariables);
+}
