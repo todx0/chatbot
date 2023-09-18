@@ -50,7 +50,7 @@ When you reply to the bot's message, it will always respond.
 If you reply to a person's message and tag the bot, it will reply to that person.
 
 ### Mentioning the Bot:
-Mentioning the bot will trigger a reply. This is similar to using the /q command, but the bot also understands the recent context.
+Mentioning the bot will trigger a reply. This is similar to using the `/q` command, but the bot also understands the recent context.
 
 ### Commands
 - `/q` - Allows the user to ask the bot a question. Example: `/q how to avoid taxes?`
