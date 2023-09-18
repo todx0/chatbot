@@ -9,15 +9,12 @@ import {
 	DatabaseOptions
 } from './types';
 import {
-	config,
 	randomReply,
 	replyThreshold,
 	maxHistoryLength,
 	isTelegramPremium,
 	randomReplyPercent,
 } from './config';
-
-const dbname = Bun.env.DB_NAME;
 
 export async function retry<T>(
 	fn: (...args: any[]) => Promise<T>,
@@ -149,9 +146,9 @@ export async function deleteDatabase(dbsqlite?: string): Promise<void> {
 
 export async function processCommands(messageText: string, handlers: object): Promise<void> {
 	for (const [command, handler] of Object.entries(handlers)) {
-	  if (messageText.includes(command)) {
+		if (messageText.includes(command)) {
 			return handler(messageText);
-	  }
+		}
 	}
 	return Promise.resolve();
 }

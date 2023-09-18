@@ -1,5 +1,5 @@
 import {
-	expect, test, describe, jest, afterEach, beforeEach,
+	expect, test, describe, jest
 } from 'bun:test';
 import { roleContent } from '../app/types';
 import { maxHistoryLength } from '../app/config';
@@ -29,12 +29,6 @@ describe('helper functions', async () => {
 	});
 
 	describe('sqlite db tests', async () => {
-		/*
-		beforeEach(async () => {
-		});
-		afterEach(async () => {
-		});
-		*/
 		test('create and trim records', async () => {
 			const trimAmount = 10;
 			const testData: roleContent = { role: 'user', content: 'test string' };

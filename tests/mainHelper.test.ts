@@ -1,5 +1,5 @@
 import {
-	expect, test, describe, afterEach, beforeEach, spyOn
+	expect, test, describe, beforeEach, spyOn
 } from 'bun:test';
 import {
 	clearMessagesTable,
@@ -16,9 +16,6 @@ describe('main helper functions', async () => {
 	beforeEach(async () => {
 		//@ts-ignore
 		spyOn(bot, 'getMessages').mockResolvedValue(longMockArrayOfMessages);
-	});
-
-	afterEach(async () => {
 	});
 
 	test('fetchAndInsertMessages adding messages to db', async () => {
