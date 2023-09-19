@@ -174,6 +174,13 @@ export async function checkDatabaseExist(): Promise<boolean> {
 	}
 }
 
+export async function checkAndUpdateDatabase({ readLimit = 1000, trimLimit = maxHistoryLength } = {}): Promise<void> {
+	const db = await readRoleContentFromDatabase({ limit: readLimit });
+	if (db.length > maxHistoryLength) {
+		await trimMessagesTable({ limit: trimLimit });
+	}
+}
+
 export const messageNotSeen = (message: Api.Message): boolean => !message.reactions && !message.editDate;
 export const shouldRandomReply = (message: Api.Message): boolean => randomReply && Math.random() * 100 < randomReplyPercent && messageNotSeen(message) && message.message.length > replyThreshold;
 export const canTranscribeMedia = (media: MediaObject): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');

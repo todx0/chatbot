@@ -12,6 +12,7 @@ import {
 	somebodyMentioned,
 	createMessagesTable,
 	shouldTranscribeMedia,
+	checkAndUpdateDatabase,
 } from './helper';
 
 // use this workaround instead destructuring config because 'bun test' fails otherwise.
@@ -58,6 +59,7 @@ export const botWorkflow: (event: any) => Promise<void> = async (event: any) => 
 	if (shouldRandomReply(message)) {
 		await bot.fetchAndInsertMessages(10);
 		await bot.processMessage(messageText, message.id);
+		await checkAndUpdateDatabase();
 		return;
 	}
 

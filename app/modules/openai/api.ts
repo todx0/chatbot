@@ -6,10 +6,9 @@ import { readRoleContentFromDatabase, insertToMessages, trimMessagesTable } from
 
 export async function generateGptRespWithHistory(userRequest: string): Promise<string> {
 	try {
-		const historyLimit = { limit: maxHistoryLength };
 		const userRoleContent: RoleContent = { role: 'user', content: userRequest };
 		await insertToMessages(userRoleContent);
-		const currentHistory = await readRoleContentFromDatabase(historyLimit);
+		const currentHistory = await readRoleContentFromDatabase({ limit: maxHistoryLength });
 		currentHistory.unshift(systemContent);
 
 		const response: any = await openai.createChatCompletion({
@@ -19,7 +18,6 @@ export async function generateGptRespWithHistory(userRequest: string): Promise<s
 		});
 		const responseContent = response.data.choices[0].message.content;
 		await insertToMessages({ role: 'assistant', content: responseContent });
-		await trimMessagesTable(historyLimit);
 		return responseContent;
 	} catch (error: any) {
 		return error?.response?.data?.error?.message;
