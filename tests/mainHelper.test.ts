@@ -27,9 +27,9 @@ describe('main helper functions', async () => {
 	});
 
 	test('get and set group Id', async () => {
-		const groupIdBefore = bot.getGroupId();
-		bot.setGroupId(1);
-		const groupIdAfter = bot.getGroupId();
+		const groupIdBefore = await bot.getGroupId();
+		await bot.setGroupId(1);
+		const groupIdAfter = await bot.getGroupId();
 		expect(groupIdBefore).toEqual(0);
 		expect(groupIdAfter).toEqual(1);
 	});

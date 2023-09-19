@@ -18,8 +18,7 @@ FROM base as build
 
 # Install packages needed to build node modules
 RUN apt-get update -qq && \
-    apt-get install -y build-essential pkg-config python-is-python3 && \
-    apt-get install -y sqlite3
+    apt-get install -y build-essential pkg-config python-is-python3
 
 # Install node modules
 COPY --link bun.lockb package.json ./
@@ -34,6 +33,9 @@ FROM base
 
 # Copy built application
 COPY --from=build /app /app
+
+# install sqlite3 for debugging
+RUN apt update && apt install -y sqlite3
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
