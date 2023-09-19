@@ -11,3 +11,4 @@ historyFile.json
 db.sqlite
 testing.sqlite
 .env.local
+access_token
