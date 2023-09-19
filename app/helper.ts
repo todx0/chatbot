@@ -113,15 +113,21 @@ export async function readRoleContentFromDatabase(options: DatabaseOptions = {})
 
 export async function clearMessagesTable(dbsqlite?: string): Promise<void> {
 	const dbName = dbsqlite || Bun.env.DB_NAME;
-	const db = new Database(dbName);
-	console.log('->>', dbName);
-	db.run('DELETE FROM messages');
+	try {
+		const db = new Database(dbName);
+		console.log('->>', dbName);
+		db.run('DELETE FROM messages');
+	  } catch (error) {
+		console.error('Error deleting messages:', error);
+	  }
 }
 
 export async function trimMessagesTable(options: DatabaseOptions = {}): Promise<void> {
 	const { limit = maxHistoryLength, dbsqlite } = options;
 	const dbName = dbsqlite || Bun.env.DB_NAME;
 	const db = new Database(dbName);
+	const result = db.query('SELECT COUNT(*) AS test FROM messages').all();
+	console.log('Result of first query:', result);
 	const queryRemove = `
 		DELETE FROM messages
 		WHERE id IN (SELECT id FROM messages ORDER BY id ASC LIMIT ${limit});
