@@ -114,6 +114,7 @@ export async function readRoleContentFromDatabase(options: DatabaseOptions = {})
 export async function clearMessagesTable(dbsqlite?: string): Promise<void> {
 	const dbName = dbsqlite || Bun.env.DB_NAME;
 	const db = new Database(dbName);
+	console.log('->>', dbName);
 	db.run('DELETE FROM messages');
 }
 
