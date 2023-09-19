@@ -97,7 +97,7 @@ export function getCommand(messageText: string, commands: ChatCommands): string 
 
 export async function insertToMessages(object: RoleContent, dbsqlite?: string): Promise<void> {
 	const dbName = dbsqlite || Bun.env.DB_NAME;
-	const db = new Database(dbName);
+	const db = new Database(dbName, { create: true, readwrite: true });
 	const { role, content } = object;
 	db.run('INSERT INTO messages (role, content) VALUES (?, ?)', [role, content]);
 }
@@ -105,7 +105,7 @@ export async function insertToMessages(object: RoleContent, dbsqlite?: string): 
 export async function readRoleContentFromDatabase(options: DatabaseOptions = {}): Promise<any[]> {
 	const { limit = maxHistoryLength, dbsqlite } = options;
 	const dbName = dbsqlite || Bun.env.DB_NAME;
-	const db = new Database(dbName);
+	const db = new Database(dbName, { create: true, readwrite: true });
 	const query = `SELECT role, content FROM messages ORDER BY id ASC LIMIT ${limit}`;
 	const rows = db.query(query).all();
 	return rows;
@@ -114,7 +114,7 @@ export async function readRoleContentFromDatabase(options: DatabaseOptions = {})
 export async function clearMessagesTable(dbsqlite?: string): Promise<void> {
 	const dbName = dbsqlite || Bun.env.DB_NAME;
 	try {
-		const db = new Database(dbName);
+		const db = new Database(dbName, { create: true, readwrite: true });
 		console.log('->>', dbName);
 		const result1 = db.query('SELECT COUNT(*) AS test FROM messages').all();
 		console.log('Before:', result1[0]);
@@ -129,7 +129,7 @@ export async function clearMessagesTable(dbsqlite?: string): Promise<void> {
 export async function trimMessagesTable(options: DatabaseOptions = {}): Promise<void> {
 	const { limit = maxHistoryLength, dbsqlite } = options;
 	const dbName = dbsqlite || Bun.env.DB_NAME;
-	const db = new Database(dbName);
+	const db = new Database(dbName, { create: true, readwrite: true });
 	const result1 = db.query('SELECT COUNT(*) AS test FROM messages').all();
 	console.log('Before trim:', result1[0]);
 	const queryRemove = `
@@ -143,7 +143,7 @@ export async function trimMessagesTable(options: DatabaseOptions = {}): Promise<
 
 export async function createMessagesTable(dbsqlite?: string): Promise<void> {
 	const dbName = dbsqlite || Bun.env.DB_NAME;
-	const db = new Database(dbName);
+	const db = new Database(dbName, { create: true, readwrite: true });
 	db.run(`
 		CREATE TABLE IF NOT EXISTS messages (
 		  id INTEGER PRIMARY KEY AUTOINCREMENT,
