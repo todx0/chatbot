@@ -121,8 +121,11 @@ export async function trimMessagesTable(options: DatabaseOptions = {}): Promise<
 	const { limit = maxHistoryLength, dbsqlite } = options;
 	const dbName = dbsqlite || Bun.env.DB_NAME;
 	const db = new Database(dbName);
-	const queryRemove = `DELETE FROM messages ORDER BY id ASC LIMIT ${limit};`;
-	db.run(queryRemove);
+	const queryRemove = `
+		DELETE FROM messages
+		WHERE id IN (SELECT id FROM messages ORDER BY id ASC LIMIT ${limit});
+  	`;
+  	db.run(queryRemove);
 }
 
 export async function createMessagesTable(dbsqlite?: string): Promise<void> {
