@@ -130,13 +130,15 @@ export async function trimMessagesTable(options: DatabaseOptions = {}): Promise<
 	const { limit = maxHistoryLength, dbsqlite } = options;
 	const dbName = dbsqlite || Bun.env.DB_NAME;
 	const db = new Database(dbName);
-	const result = db.query('SELECT COUNT(*) AS test FROM messages').all();
-	console.log('Result of first query:', result[0]);
+	const result1 = db.query('SELECT COUNT(*) AS test FROM messages').all();
+	console.log('Before trim:', result1[0]);
 	const queryRemove = `
 		DELETE FROM messages
 		WHERE id IN (SELECT id FROM messages ORDER BY id ASC LIMIT ${limit});
   	`;
   	db.run(queryRemove);
+	const result2 = db.query('SELECT COUNT(*) AS test FROM messages').all();
+	console.log('After trim:', result2[0]);
 }
 
 export async function createMessagesTable(dbsqlite?: string): Promise<void> {
