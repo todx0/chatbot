@@ -28,8 +28,6 @@ const client = new TelegramClient(new StringSession(SESSION), +API_ID!, API_HASH
 });
 export default client;
 
-const bot = new TelegramBot(client);
-
 export const botWorkflow: (event: any) => Promise<void> = async (event: any) => {
 	const { message } = event;
 
@@ -39,6 +37,7 @@ export const botWorkflow: (event: any) => Promise<void> = async (event: any) => 
 	const groupId = message._chatPeer.channelId;
 	const messageText = message.message;
 
+	const bot = new TelegramBot(client);
 	await bot.setGroupId(groupId);
 
 	const commandMappings: Record<string, (msgText: string) => Promise<void>> = {
