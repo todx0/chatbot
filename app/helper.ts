@@ -115,12 +115,7 @@ export async function clearMessagesTable(dbsqlite?: string): Promise<void> {
 	const dbName = dbsqlite || Bun.env.DB_NAME;
 	try {
 		const db = new Database(dbName, { create: true, readwrite: true });
-		console.log('->>', dbName);
-		const result1 = db.query('SELECT COUNT(*) AS test FROM messages').all();
-		console.log('Before:', result1[0]);
 		db.run('DELETE FROM messages');
-		const result2 = db.query('SELECT COUNT(*) AS test FROM messages').all();
-		console.log('After:', result2[0]);
 	  } catch (error) {
 		console.error('Error deleting messages:', error);
 	  }
@@ -130,15 +125,11 @@ export async function trimMessagesTable(options: DatabaseOptions = {}): Promise<
 	const { limit = maxHistoryLength, dbsqlite } = options;
 	const dbName = dbsqlite || Bun.env.DB_NAME;
 	const db = new Database(dbName, { create: true, readwrite: true });
-	const result1 = db.query('SELECT COUNT(*) AS test FROM messages').all();
-	console.log('Before trim:', result1[0]);
 	const queryRemove = `
 		DELETE FROM messages
 		WHERE id IN (SELECT id FROM messages ORDER BY id ASC LIMIT ${limit});
   	`;
   	db.run(queryRemove);
-	const result2 = db.query('SELECT COUNT(*) AS test FROM messages').all();
-	console.log('After trim:', result2[0]);
 }
 
 export async function createMessagesTable(dbsqlite?: string): Promise<void> {
