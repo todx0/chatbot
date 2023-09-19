@@ -40,11 +40,11 @@ export default class TelegramBot {
 		this.groupId = groupId;
 	}
 
-	getGroupId(): number {
+	async getGroupId(): Promise<any> {
 		return this.groupId;
 	}
 
-	setGroupId(newValue: number): void {
+	async setGroupId(newValue: number): Promise<void> {
 		this.groupId = newValue;
 	}
 
