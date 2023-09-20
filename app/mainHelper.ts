@@ -40,11 +40,11 @@ export default class TelegramBot {
 		this.groupId = groupId;
 	}
 
-	async getGroupId(): Promise<any> {
+	getGroupId(): any {
 		return this.groupId;
 	}
 
-	async setGroupId(newValue: number): Promise<void> {
+	setGroupId(newValue: number): void {
 		this.groupId = newValue;
 	}
 
@@ -217,9 +217,37 @@ export default class TelegramBot {
 		return '';
 	}
 
-	async getMessageContentById(messageId: number): Promise<any> {
+	/* 	async getMessageContentById(messageId: number): Promise<any> {
 		const message = await this.client.getMessages(this.groupId, { ids: messageId });
 		return message[0].message;
+	} */
+
+	async getMessageContentById(messageId: number): Promise<string> {
+		const message = await this.client.getMessages(this.groupId, { ids: messageId });
+		let content;
+		if (message[0]?.media?.photo) {
+			content = await this.getImageBuffer(message);
+			content = await convertToImage(content);
+		} else {
+			content = message[0].message;
+		}
+		return content;
+	}
+
+	async getImageBuffer(message: any): Promise<Buffer> {
+		const { photo } = message[0].media;
+		const buffer = await this.client.downloadFile(
+			new Api.InputPhotoFileLocation({
+				id: photo.id,
+				accessHash: photo.accessHash,
+				fileReference: photo.fileReference,
+				thumbSize: 'y',
+			}),
+			{
+				dcId: photo.dcId,
+			},
+		);
+		return buffer;
 	}
 
 	async checkReplyIdIsBotId(messageId: number): Promise<boolean> {
