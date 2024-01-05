@@ -19,15 +19,17 @@ import {
 	splitMessageInChunks,
 	approximateTokenLength,
 } from './helper';
-import {
+/* import {
 	combineAnswers,
 	generateGptResponse,
 	generateGptResponses,
 	createImageFromPrompt,
 	generateGptRespWithHistory,
-} from './modules/openai/api';
+} from './modules/openai/api'; */
+import {
+	generateGenAIResponse,
+} from './modules/google/api';
 
-// use this workaround instead destructuring config because 'bun test' fails otherwise.
 const { BOT_ID } = Bun.env;
 
 export default class TelegramBot {
@@ -49,15 +51,7 @@ export default class TelegramBot {
 	}
 
 	async sendMessage(obj: SendMessageParams): Promise<Api.TypeUpdates | undefined> {
-		const {
-			peer, message, replyToMsgId, silent,
-		} = obj;
-		const sendMsg = new Api.messages.SendMessage({
-			peer,
-			message,
-			replyToMsgId,
-			silent,
-		});
+		const sendMsg = new Api.messages.SendMessage(obj);
 		const result = await this.client.invoke(sendMsg);
 		return result;
 	}
@@ -105,16 +99,18 @@ export default class TelegramBot {
 
 			if (messagesLength <= maxTokenLength) {
 				const messageString = Array.isArray(filteredMessages) ? filteredMessages.join(' ') : filteredMessages;
-				response = await generateGptResponse(`${recapTextRequest} ${messageString}`);
+				response = await generateGenAIResponse(`${recapTextRequest} ${messageString}`);
 			} else {
 				const chunks = await splitMessageInChunks(filteredMessages.toString());
-				if (chunks.length === 1) {
-					response = await generateGptResponse(`${recapTextRequest} ${chunks[0]}`);
+				response = await generateGenAIResponse(`${recapTextRequest} ${chunks[0]}`);
+
+				/* if (chunks.length === 1) {
+					response = await generateGptResponses(`${recapTextRequest} ${chunks[0]}`);
 				} else {
 					const responses = await generateGptResponses(recapTextRequest, chunks);
 					const responsesCombined = await combineAnswers(responses);
 					response = await generateGptResponse(`${toxicRecapRequest} ${responsesCombined}`);
-				}
+				} */
 		  }
 		  await this.sendMessage({ peer: this.groupId, message: response });
 		} catch (error) {
@@ -126,7 +122,7 @@ export default class TelegramBot {
 	async handleQCommand(messageText: string): Promise<void> {
 		const [, requestText] = messageText.split('/q ');
 		try {
-			const response = await generateGptResponse(requestText);
+			const response = await generateGenAIResponse(requestText);
 			await this.sendMessage({
 				peer: this.groupId,
 				message: response,
@@ -140,7 +136,7 @@ export default class TelegramBot {
 		}
 	}
 
-	async handleImgCommand(messageText: string): Promise<void> {
+	/* 	async handleImgCommand(messageText: string): Promise<void> {
 		const [, requestText] = messageText.split('/img ');
 
 		if (!requestText) {
@@ -192,7 +188,7 @@ export default class TelegramBot {
 			});
 			throw error;
 		}
-	}
+	} */
 
 	async downloadAndSendImageFromUrl(url: string): Promise<void> {
 		const buffer = await downloadFile(url);
@@ -260,19 +256,25 @@ export default class TelegramBot {
 		return false;
 	}
 
-	async processMessage(userRequest: string, messageId: number, history = true): Promise<void> {
+	async processMessage(userRequest: string, messageId: any, history = true): Promise<void> {
 		let message = userRequest.replace(botUsername, '');
-		message = history ? await generateGptRespWithHistory(message) : message;
-		await this.sendMessage({
-			peer: this.groupId,
-			message,
-			replyToMsgId: messageId,
-			silent: true,
-		});
+		// message = history ? await generateGptRespWithHistory(message) : message;
+		message = history ? await generateGenAIResponse(message) : message; // wtf is this? why im returning my own if history = false?
+
+		try {
+			await this.sendMessage({
+				peer: this.groupId,
+				message,
+				replyToMsgId: messageId,
+				silent: true,
+			});
+		} catch (e) {
+			throw Error(`Not working. ${e}`);
+		}
 	}
 
 	async fetchAndInsertMessages(limit: number): Promise<void> {
 		const messages = await this.getMessages(limit);
-		messages.forEach((message) => insertToMessages({ role: 'user', content: message }));
+		messages.forEach((message) => insertToMessages({ role: 'user', parts: message }));
 	}
 }

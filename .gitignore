@@ -12,3 +12,5 @@ db.sqlite
 testing.sqlite
 .env.local
 access_token
+test.js
+test.ts

@@ -7,7 +7,7 @@ import { readRoleContentFromDatabase, insertToMessages, trimMessagesTable } from
 export async function generateGptRespWithHistory(userRequest: string): Promise<string> {
 	try {
 		const userRoleContent: RoleContent = { role: 'user', content: userRequest };
-		await insertToMessages(userRoleContent);
+		// await insertToMessages(userRoleContent);
 		const currentHistory = await readRoleContentFromDatabase({ limit: maxHistoryLength });
 		currentHistory.unshift(systemContent);
 
@@ -17,7 +17,7 @@ export async function generateGptRespWithHistory(userRequest: string): Promise<s
 			messages: currentHistory,
 		});
 		const responseContent = response.data.choices[0].message.content;
-		await insertToMessages({ role: 'assistant', content: responseContent });
+		// await insertToMessages({ role: 'assistant', content: responseContent });
 		return responseContent;
 	} catch (error: any) {
 		return error?.response?.data?.error?.message;
@@ -33,8 +33,8 @@ export async function generateGptResponse(userRequest: string): Promise<string> 
 			messages: [userRoleContent],
 		});
 		const responseContent = response.data.choices[0].message.content;
-		await insertToMessages(userRoleContent);
-		await insertToMessages({ role: 'assistant', content: responseContent });
+		// await insertToMessages(userRoleContent);
+		//	await insertToMessages({ role: 'assistant', content: responseContent });
 		return response.data.choices[0].message.content;
 	} catch (error: any) {
 		return error?.response?.data?.error?.message;

@@ -1,4 +1,5 @@
 import { Configuration, OpenAIApi } from 'openai';
+import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
 import { ProcessEnv } from './types';
 
 // system
@@ -12,14 +13,16 @@ export const config = {
 	BOT_USERNAME: Bun.env.BOT_USERNAME,
 	OPENAI_API_KEY: Bun.env.OPENAI_API_KEY,
 	ORGANIZATION_ID: Bun.env.ORGANIZATION_ID,
+	GAPI: Bun.env.GAPI,
 } as ProcessEnv;
+
 export const configuration = new Configuration({
 	apiKey: config.OPENAI_API_KEY,
 	organization: config.ORGANIZATION_ID,
 });
 
 // app
-export const maxHistoryLength = 15;
+export const maxHistoryLength = 20;
 export const isTelegramPremium = false;
 export const language = config.LANGUAGE;
 export const botUsername = config.BOT_USERNAME;
@@ -38,10 +41,39 @@ export const randomReply = true;
 export const randomReplyPercent = 4;
 export const replyThreshold = 25;
 
+// google
+const genAImodelName = 'gemini-pro';
+export const safetySettings = [
+	{
+		category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+		threshold: HarmBlockThreshold.BLOCK_NONE,
+	},
+	{
+		category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+		threshold: HarmBlockThreshold.BLOCK_NONE,
+	},
+	{
+		category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+		threshold: HarmBlockThreshold.BLOCK_NONE,
+	},
+	{
+		category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+		threshold: HarmBlockThreshold.BLOCK_NONE,
+	},
+];
+const generativeModelOptions = 	{
+	model: genAImodelName,
+	safetySettings,
+	generationConfig: { maxOutputTokens: 256 },
+};
+
+export const genAI = new GoogleGenerativeAI(config.GAPI);
+export const genAImodel = genAI.getGenerativeModel(generativeModelOptions);
+
 // openai
 export const openai = new OpenAIApi(configuration);
 export const temperature = 0.8;
-export const model = 'gpt-4-0613';
+export const gptModel = 'gpt-4-0613';
 export const botBehavior = `You are a chatbot. Provide a concise reply based on the message you receive. Act like annoyed pseudopsychologist and reply in ${language} but always provide an answer.`;
 export const systemContent = {
 	role: 'system',

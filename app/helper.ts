@@ -4,7 +4,7 @@ import { unlink } from 'node:fs/promises';
 import { Database } from 'bun:sqlite';
 import * as fs from 'node:fs';
 import {
-	RoleContent,
+	RoleParts,
 	MediaObject,
 	ChatCommands,
 	DatabaseOptions,
@@ -95,20 +95,20 @@ export function getCommand(messageText: string, commands: ChatCommands): string 
 	return '';
 }
 
-export async function insertToMessages(object: RoleContent, dbsqlite?: string): Promise<void> {
+export async function insertToMessages(object: RoleParts, dbsqlite?: string): Promise<void> {
 	const dbName = dbsqlite || Bun.env.DB_NAME;
 	const db = new Database(dbName, { create: true, readwrite: true });
-	const { role, content } = object;
-	db.run('INSERT INTO messages (role, content) VALUES (?, ?)', [role, content]);
+	const { role, parts } = object;
+	db.run('INSERT INTO messages (role, parts) VALUES (?, ?)', [role, parts]);
 }
 
-export async function readRoleContentFromDatabase(options: DatabaseOptions = {}): Promise<any[]> {
+export async function readRolePartsFromDatabase(options: DatabaseOptions = {}): Promise<any[]> {
 	const { limit = maxHistoryLength, dbsqlite } = options;
 	const dbName = dbsqlite || Bun.env.DB_NAME;
 	const db = new Database(dbName, { create: true, readwrite: true });
-	const query = `SELECT role, content FROM messages ORDER BY id ASC LIMIT ${limit}`;
+	const query = `SELECT role, parts FROM messages ORDER BY id ASC LIMIT ${limit}`;
 	const rows = db.query(query).all();
-	return rows;
+	return rows.length ? rows : [];
 }
 
 export async function clearMessagesTable(dbsqlite?: string): Promise<void> {
@@ -139,7 +139,7 @@ export async function createMessagesTable(dbsqlite?: string): Promise<void> {
 		CREATE TABLE IF NOT EXISTS messages (
 		  id INTEGER PRIMARY KEY AUTOINCREMENT,
 		  role TEXT,
-		  content TEXT
+		  parts TEXT
 		)
 	  `);
 }
@@ -175,7 +175,7 @@ export async function checkDatabaseExist(): Promise<boolean> {
 }
 
 export async function checkAndUpdateDatabase({ readLimit = 1000, trimLimit = maxHistoryLength } = {}): Promise<void> {
-	const db = await readRoleContentFromDatabase({ limit: readLimit });
+	const db = await readRolePartsFromDatabase({ limit: readLimit });
 	if (db.length > maxHistoryLength) {
 		await trimMessagesTable({ limit: trimLimit });
 	}
@@ -185,4 +185,4 @@ export const messageNotSeen = (message: Api.Message): boolean => !message.reacti
 export const shouldRandomReply = (message: Api.Message): boolean => randomReply && Math.random() * 100 < randomReplyPercent && messageNotSeen(message) && message.message.length > replyThreshold;
 export const canTranscribeMedia = (media: MediaObject): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
 export const shouldTranscribeMedia = (message: any): boolean => isTelegramPremium && message.mediaUnread && canTranscribeMedia(message.media);
-export const somebodyMentioned = (message: Api.Message): boolean => message.originalArgs.mentioned;
+export const somebodyMentioned = (message: Api.Message): boolean => (message.mentioned ? message.mentioned : false);

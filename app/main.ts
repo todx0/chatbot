@@ -15,7 +15,6 @@ import {
 	checkAndUpdateDatabase,
 } from './helper';
 
-// use this workaround instead destructuring config because 'bun test' fails otherwise.
 const { SESSION, API_ID, API_HASH } = Bun.env;
 
 try {
@@ -29,9 +28,8 @@ const client = new TelegramClient(new StringSession(SESSION), +API_ID!, API_HASH
 });
 export default client;
 
-export const botWorkflow: (event: any) => Promise<void> = async (event: any) => {
+export const botWorkflow = async (event: any) => {
 	const { message } = event;
-
 	if (!message) return;
 	if (!messageNotSeen(message)) return;
 
@@ -44,8 +42,8 @@ export const botWorkflow: (event: any) => Promise<void> = async (event: any) => 
 	const commandMappings: Record<string, (msgText: string) => Promise<void>> = {
 		'/recap': (msgText) => bot.handleRecapCommand(msgText),
 		'/q': (msgText) => bot.handleQCommand(msgText),
-		'/img': (msgText) => bot.handleImgCommand(msgText),
-		'/imagine': (msgText) => bot.handleImagineCommand(msgText),
+		/* 		'/img': (msgText) => bot.handleImgCommand(msgText),
+		'/imagine': (msgText) => bot.handleImagineCommand(msgText), */
 		'/clear': () => bot.handleClearCommand(),
 	};
 
