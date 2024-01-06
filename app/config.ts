@@ -16,7 +16,7 @@ export const config = {
 // app
 export const maxHistoryLength = 20;
 export const isTelegramPremium = false;
-export const language = config.LANGUAGE;
+// export const language = config.LANGUAGE;
 export const botUsername = config.BOT_USERNAME;
 export const messageLimit = 700;
 export const maxTokenLength = 4096;
@@ -53,7 +53,7 @@ const generativeModelOptions = 	{
 };
 export const genAI = new GoogleGenerativeAI(config.GAPI);
 export const genAImodel = genAI.getGenerativeModel(generativeModelOptions);
-export const recapTextRequest = `Generate a short recap of the conversation in ${language}: \n`;
+export const recapTextRequest = 'Generate a short recap of the conversation: \n';
 
 // functions
 function checkRequiredEnvVariables(requiredEnvVariables: string[]): void {
