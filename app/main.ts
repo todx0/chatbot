@@ -31,6 +31,7 @@ export const botWorkflow = async (event: any) => {
 	const { message } = event;
 	if (!message) return;
 	if (!messageNotSeen(message)) return;
+	if (!message._chatPeer || !message._chatPeer.channelId) return;
 
 	const groupId = message._chatPeer.channelId;
 	const messageText = message.message;
