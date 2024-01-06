@@ -8,7 +8,6 @@ import {
 } from './config';
 import {
 	messageNotSeen,
-	shouldRandomReply,
 	somebodyMentioned,
 	createMessagesTable,
 	shouldTranscribeMedia,
@@ -41,9 +40,6 @@ export const botWorkflow = async (event: any) => {
 
 	const commandMappings: Record<string, (msgText: string) => Promise<void>> = {
 		'/recap': (msgText) => bot.handleRecapCommand(msgText),
-		'/q': (msgText) => bot.handleQCommand(msgText),
-		/* 		'/img': (msgText) => bot.handleImgCommand(msgText),
-		'/imagine': (msgText) => bot.handleImagineCommand(msgText), */
 		'/clear': () => bot.handleClearCommand(),
 	};
 
@@ -52,13 +48,6 @@ export const botWorkflow = async (event: any) => {
 			await commandMappings[command](messageText);
 			return;
 		}
-	}
-
-	if (shouldRandomReply(message)) {
-		await bot.fetchAndInsertMessages(10);
-		await bot.processMessage(messageText, message.id);
-		await checkAndUpdateDatabase();
-		return;
 	}
 
 	if (somebodyMentioned(message)) {

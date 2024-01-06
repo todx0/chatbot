@@ -1,5 +1,4 @@
 import { MessageIDLike } from 'telegram/define';
-import { Api } from 'telegram';
 
 export interface RoleContent {
 	role: 'user' | 'assistant' | 'system';
@@ -16,7 +15,6 @@ export interface SendMessageParams {
 	peer: string,
 	message: string,
 	replyToMsgId?: MessageIDLike,
-	// replyTo?: Api.TypeInputReplyTo,
 	silent?: boolean,
 }
 export interface GetMessagesParams {

@@ -10,11 +10,8 @@ import {
 	DatabaseOptions,
 } from './types';
 import {
-	randomReply,
-	replyThreshold,
 	maxHistoryLength,
 	isTelegramPremium,
-	randomReplyPercent,
 } from './config';
 
 export async function retry<T>(
@@ -182,7 +179,6 @@ export async function checkAndUpdateDatabase({ readLimit = 1000, trimLimit = max
 }
 
 export const messageNotSeen = (message: Api.Message): boolean => !message.reactions && !message.editDate;
-export const shouldRandomReply = (message: Api.Message): boolean => randomReply && Math.random() * 100 < randomReplyPercent && messageNotSeen(message) && message.message.length > replyThreshold;
 export const canTranscribeMedia = (media: MediaObject): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
 export const shouldTranscribeMedia = (message: any): boolean => isTelegramPremium && message.mediaUnread && canTranscribeMedia(message.media);
 export const somebodyMentioned = (message: Api.Message): boolean => (message.mentioned ? message.mentioned : false);

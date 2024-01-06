@@ -4,7 +4,7 @@ import {
 import { RoleParts } from '../../types';
 import { readRolePartsFromDatabase, insertToMessages } from '../../helper';
 
-export async function generateGenAIResponse(userRequest: string): Promise<string> {
+export default async function generateGenAIResponse(userRequest: string): Promise<string> {
 	try {
 		const userRoleContent: RoleParts = { role: 'user', parts: userRequest };
 		const history = await readRolePartsFromDatabase({ limit: maxHistoryLength });
@@ -25,5 +25,3 @@ export async function generateGenAIResponse(userRequest: string): Promise<string
 		return error.message;
 	}
 }
-
-export async function test() { return true; }

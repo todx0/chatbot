@@ -7,7 +7,6 @@ import {
 	messageLimit,
 	maxTokenLength,
 	recapTextRequest,
-	toxicRecapRequest,
 } from './config';
 import {
 	retry,
@@ -19,16 +18,7 @@ import {
 	splitMessageInChunks,
 	approximateTokenLength,
 } from './helper';
-/* import {
-	combineAnswers,
-	generateGptResponse,
-	generateGptResponses,
-	createImageFromPrompt,
-	generateGptRespWithHistory,
-} from './modules/openai/api'; */
-import {
-	generateGenAIResponse,
-} from './modules/google/api';
+import generateGenAIResponse from './modules/google/api';
 
 const { BOT_ID } = Bun.env;
 
@@ -42,7 +32,7 @@ export default class TelegramBot {
 		this.groupId = groupId;
 	}
 
-	getGroupId(): any {
+	getGroupId() {
 		return this.groupId;
 	}
 
@@ -63,7 +53,9 @@ export default class TelegramBot {
 	async getMessages(limit: number): Promise<string[]> {
 		const messages: string[] = [];
 		for await (const message of this.client.iterMessages(`-${this.groupId}`, { limit })) {
-			messages.push(`${message._sender.firstName}: ${message.message}`);
+			if (message._sender?.firstName) {
+				messages.push(`${message._sender.firstName}: ${message.message}`);
+			}
 		}
 		return messages.reverse();
 	}
@@ -100,39 +92,30 @@ export default class TelegramBot {
 			if (messagesLength <= maxTokenLength) {
 				const messageString = Array.isArray(filteredMessages) ? filteredMessages.join(' ') : filteredMessages;
 				response = await generateGenAIResponse(`${recapTextRequest} ${messageString}`);
+				await this.sendMessage({ peer: this.groupId, message: response });
 			} else {
 				const chunks = await splitMessageInChunks(filteredMessages.toString());
-				response = await generateGenAIResponse(`${recapTextRequest} ${chunks[0]}`);
+				chunks.forEach(async (chunk) => {
+					// TODO: refactor it because comment bellow
+					// this is stupid as chunks may cut conversation in half and produce weird results
+					response = await generateGenAIResponse(`${recapTextRequest} ${chunk}`);
+					await this.sendMessage({ peer: this.groupId, message: response });
+				});
+				/*
+				Old code where I combine answers using function to generate multiple responses and them combine them again
 
-				/* if (chunks.length === 1) {
+				if (chunks.length === 1) {
 					response = await generateGptResponses(`${recapTextRequest} ${chunks[0]}`);
 				} else {
 					const responses = await generateGptResponses(recapTextRequest, chunks);
 					const responsesCombined = await combineAnswers(responses);
 					response = await generateGptResponse(`${toxicRecapRequest} ${responsesCombined}`);
-				} */
+				}
+				*/
 		  }
-		  await this.sendMessage({ peer: this.groupId, message: response });
 		} catch (error) {
 		  await this.sendMessage({ peer: this.groupId, message: String(error) });
 		  throw error;
-		}
-	}
-
-	async handleQCommand(messageText: string): Promise<void> {
-		const [, requestText] = messageText.split('/q ');
-		try {
-			const response = await generateGenAIResponse(requestText);
-			await this.sendMessage({
-				peer: this.groupId,
-				message: response,
-			});
-		} catch (error) {
-			await this.sendMessage({
-				peer: this.groupId,
-				message: String(error),
-			});
-			throw error;
 		}
 	}
 
@@ -213,11 +196,6 @@ export default class TelegramBot {
 		return '';
 	}
 
-	/* 	async getMessageContentById(messageId: number): Promise<any> {
-		const message = await this.client.getMessages(this.groupId, { ids: messageId });
-		return message[0].message;
-	} */
-
 	async getMessageContentById(messageId: number): Promise<string> {
 		const message = await this.client.getMessages(this.groupId, { ids: messageId });
 		let content;
@@ -256,11 +234,11 @@ export default class TelegramBot {
 		return false;
 	}
 
-	async processMessage(userRequest: string, messageId: any, history = true): Promise<void> {
-		let message = userRequest.replace(botUsername, '');
-		// message = history ? await generateGptRespWithHistory(message) : message;
-		message = history ? await generateGenAIResponse(message) : message; // wtf is this? why im returning my own if history = false?
-
+	async processMessage(messageText: string, messageId: any, history = true): Promise<void> {
+		let message = messageText.replace(botUsername, '');
+		if (history) {
+			message = await generateGenAIResponse(message);
+		}
 		try {
 			await this.sendMessage({
 				peer: this.groupId,
