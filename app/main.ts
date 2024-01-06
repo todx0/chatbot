@@ -28,13 +28,37 @@ const client = new TelegramClient(new StringSession(SESSION), +API_ID!, API_HASH
 export default client;
 
 export const botWorkflow = async (event: any) => {
-	const { message } = event;
-	if (!message) return;
-	if (!messageNotSeen(message)) return;
-	if (!message._chatPeer || !message._chatPeer.channelId) return;
+	function getDataFromEvent(event: any) {
+		let groupId;
+		let replyToMsgId;
+		let messageText;
+		let message;
+		if (typeof event.message === 'string') {
+			groupId = event.chatId;
+			replyToMsgId = event.replyTo;
+			messageText = event.message;
+			message = event;
+		} else if (typeof event.message === 'object') {
+			// if (!event.message._chatPeer || !event.message._chatPeer.channelId) return;
+			groupId = event.message._chatPeer.channelId;
+			replyToMsgId = event.message.replyTo?.replyToMsgId;
+			messageText = event.message.message;
+			message = event.message;
+		}
+		return {
+			groupId,
+			replyToMsgId,
+			messageText,
+			message,
+		};
+	}
 
-	const groupId = message._chatPeer.channelId;
-	const messageText = message.message;
+	const {
+		groupId, replyToMsgId, messageText, message,
+	} = getDataFromEvent(event);
+
+	if (!groupId || !messageText || !message) return;
+	if (!messageNotSeen(message)) return;
 
 	const bot = new TelegramBot(client);
 	await bot.setGroupId(groupId);
@@ -52,7 +76,6 @@ export const botWorkflow = async (event: any) => {
 	}
 
 	if (somebodyMentioned(message)) {
-		const replyToMsgId = event.message.replyTo?.replyToMsgId;
 		const isBotCalled = messageText.includes(botUsername);
 
 		if (replyToMsgId && (await bot.checkReplyIdIsBotId(replyToMsgId))) {

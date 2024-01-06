@@ -16,6 +16,7 @@ export interface SendMessageParams {
 	message: string,
 	replyToMsgId?: MessageIDLike,
 	silent?: boolean,
+	chatId?: any
 }
 export interface GetMessagesParams {
 	limit: number;

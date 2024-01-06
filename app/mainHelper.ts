@@ -43,7 +43,8 @@ export default class TelegramBot {
 		this.groupId = newValue;
 	}
 
-	async sendMessage(obj: SendMessageParams): Promise<Api.TypeUpdates | undefined> {
+	// obj: SendMessageParams
+	async sendMessage(obj: any): Promise<Api.TypeUpdates | undefined> {
 		const sendMsg = new Api.messages.SendMessage(obj);
 		const result = await this.client.invoke(sendMsg);
 		return result;
@@ -227,12 +228,8 @@ export default class TelegramBot {
 			message = await generateGenAIResponse(message);
 		}
 		try {
-			await this.sendMessage({
-				peer: this.groupId,
-				message,
-				replyToMsgId: messageId,
-				silent: true,
-			});
+			// no idea why my sendMessage is working only for channels but not groups. Using raw function.
+			await this.client.sendMessage(`-${this.groupId}`, { message });
 		} catch (e) {
 			throw Error(`Not working. ${e}`);
 		}
