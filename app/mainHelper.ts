@@ -18,7 +18,10 @@ import {
 	splitMessageInChunks,
 	approximateTokenLength,
 } from './helper';
-import generateGenAIResponse from './modules/google/api';
+import {
+	generateGenAIResponse,
+	returnCombinedAnswerFromMultipleResponses,
+} from './modules/google/api';
 
 const { BOT_ID } = Bun.env;
 
@@ -92,27 +95,11 @@ export default class TelegramBot {
 			if (messagesLength <= maxTokenLength) {
 				const messageString = Array.isArray(filteredMessages) ? filteredMessages.join(' ') : filteredMessages;
 				response = await generateGenAIResponse(`${recapTextRequest} ${messageString}`);
-				await this.sendMessage({ peer: this.groupId, message: response });
 			} else {
 				const chunks = await splitMessageInChunks(filteredMessages.toString());
-				chunks.forEach(async (chunk) => {
-					// TODO: refactor it because comment bellow
-					// this is stupid as chunks may cut conversation in half and produce weird results
-					response = await generateGenAIResponse(`${recapTextRequest} ${chunk}`);
-					await this.sendMessage({ peer: this.groupId, message: response });
-				});
-				/*
-				Old code where I combine answers using function to generate multiple responses and them combine them again
-
-				if (chunks.length === 1) {
-					response = await generateGptResponses(`${recapTextRequest} ${chunks[0]}`);
-				} else {
-					const responses = await generateGptResponses(recapTextRequest, chunks);
-					const responsesCombined = await combineAnswers(responses);
-					response = await generateGptResponse(`${toxicRecapRequest} ${responsesCombined}`);
-				}
-				*/
+				response = await returnCombinedAnswerFromMultipleResponses(chunks);
 		  }
+		  await this.sendMessage({ peer: this.groupId, message: response });
 		} catch (error) {
 		  await this.sendMessage({ peer: this.groupId, message: String(error) });
 		  throw error;
