@@ -21,11 +21,12 @@ export async function generateGenAIResponse(userRequest: string): Promise<string
 		});
 		const result = await chat.sendMessage(userRequest);
 		const response = await result.response;
-		const responseText = response.text();
+		let responseText = response.text();
+
+		if (!responseText) responseText = 'Бля я хуй знает дядя.';
 
 		await insertToMessages(userRoleContent);
 		await insertToMessages({ role: 'model', parts: responseText });
-		if (!responseText.length) throw Error(`Failed to provide message. Response: \n ${JSON.stringify(result)}`);
 		return responseText;
 	} catch (error: any) {
 		return error.message;
