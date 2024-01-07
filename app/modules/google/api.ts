@@ -25,7 +25,7 @@ export async function generateGenAIResponse(userRequest: string): Promise<string
 
 		await insertToMessages(userRoleContent);
 		await insertToMessages({ role: 'model', parts: responseText });
-		if (!responseText.length) throw Error(`Failed to provide message. Response ${JSON.stringify(response)}`);
+		if (!responseText.length) throw Error(`Failed to provide message. Response: \n ${JSON.stringify(result)}`);
 		return responseText;
 	} catch (error: any) {
 		return error.message;
