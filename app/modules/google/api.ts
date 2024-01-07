@@ -15,19 +15,6 @@ export async function generateGenAIResponse(userRequest: string): Promise<string
 		const userRoleContent: RoleParts = { role: 'user', parts: userRequest };
 		const history = await readRolePartsFromDatabase({ limit: maxHistoryLength });
 
-		const systemPromptContext = [
-			{
-				role: 'user',
-				parts: [{ text: 'System prompt: Ты - Ромыч. Крейзи чатбот. Отвечай с иронией.' }],
-			},
-		 	{
-				role: 'model',
-				parts: [{ text: 'Understood.' }],
-			},
-		];
-
-		history.unshift(systemPromptContext);
-
 		const chat = genAImodel.startChat({
 			history,
 			safetySettings,
