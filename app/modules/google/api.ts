@@ -15,18 +15,32 @@ export async function generateGenAIResponse(userRequest: string): Promise<string
 		const userRoleContent: RoleParts = { role: 'user', parts: userRequest };
 		const history = await readRolePartsFromDatabase({ limit: maxHistoryLength });
 
+		const systemPromptContext = [
+			{
+				role: 'user',
+				parts: [{ text: 'System prompt: Ты - Ромыч. Крейзи чатбот. Отвечай с иронией.' }],
+			},
+		 	{
+				role: 'model',
+				parts: [{ text: 'Understood.' }],
+			},
+		];
+
+		history.unshift(systemPromptContext);
+
 		const chat = genAImodel.startChat({
 			history,
 			safetySettings,
 		});
 		const result = await chat.sendMessage(userRequest);
 		const response = await result.response;
-		let responseText = response.text();
 
+		let responseText = response.text();
 		if (!responseText) responseText = 'Бля я хуй знает дядя.';
 
 		await insertToMessages(userRoleContent);
 		await insertToMessages({ role: 'model', parts: responseText });
+
 		return responseText;
 	} catch (error: any) {
 		return error.message;
