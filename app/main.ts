@@ -1,7 +1,7 @@
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions/index';
 import TelegramBot, {
-} from './mainHelper';
+} from './bot';
 import {
 	botUsername,
 	loadConfig,
@@ -66,6 +66,7 @@ export const botWorkflow = async (event: any) => {
 	const commandMappings: Record<string, (msgText: string) => Promise<void>> = {
 		'/recap': (msgText) => bot.handleRecapCommand(msgText),
 		'/clear': () => bot.handleClearCommand(),
+		'/scan': () => bot.removeLurkers(),
 	};
 
 	for (const command in commandMappings) {

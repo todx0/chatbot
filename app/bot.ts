@@ -72,7 +72,7 @@ export default class TelegramBot {
 		});
 	}
 
-	 async handleRecapCommand(messageText: string): Promise<void> {
+	async handleRecapCommand(messageText: string): Promise<void> {
 		const msgLimit = parseInt(messageText.split(' ')[1]);
 
 		if (Number.isNaN(msgLimit)) {
@@ -233,6 +233,83 @@ export default class TelegramBot {
 		} catch (e) {
 			throw Error(`Not working. ${e}`);
 		}
+	}
+
+	// TODO: remove comments, debug stuff and split
+	async removeLurkers(limit = 3000) {
+		// const debugSenders = new Set();
+		// const debugParticipants = new Set();
+
+		// get people who sent a message to chat
+		const uniqSenders = new Set();
+		for await (const message of this.client.iterMessages(`-${this.groupId}`, { limit })) {
+			if (message._sender?.id?.value) {
+				const value = String(message._sender.id.value);
+				// console.log('Sender entity:', `${message._sender.username.toLowerCase()}: ${value}`);
+				if (message._sender.username !== 'groupanonymousbot') {
+					uniqSenders.add(value);
+					// debugSenders.add(`${message._sender.username.toLowerCase()}: ${value}`);
+				}
+			}
+		}
+		// get all chat participants
+		const uniqUsers = new Set();
+		const userEntities = [];
+		for await (const user of this.client.iterParticipants(`-${this.groupId}`, { limit })) {
+			const userNameId = { user: user.username, id: String(user.id.value) };
+			// console.log(userNameId.user, userNameId.id);
+			userEntities.push(userNameId);
+		}
+		userEntities.forEach((userEntity: any) => {
+			const userId = userEntity.id;
+			const userName = userEntity.user;
+			if (userId && !userId.includes('-') && userName !== 'channel_bot' && userId !== BOT_ID) {
+				// debugParticipants.add(`${userName}: ${userId}`);
+				uniqUsers.add(userId);
+			}
+		});
+
+		const intersection = new Set([...uniqUsers].filter((value) => !uniqSenders.has(value)));
+		const usersIdToDelete = [...intersection];
+
+		// const debugintersection = new Set([...debugParticipants].filter((value) => !debugSenders.has(value)));
+
+		// console.log('debug senders:', debugSenders);
+		// console.log('debug participants:', debugParticipants);
+		// console.log('debug intersection', debugintersection);
+		// console.log('original intersection:', intersection);
+
+		if (usersIdToDelete.length) {
+			await this.sendMessage({
+				peer: this.groupId,
+				message: 'Пошли нахуй:',
+			});
+		}
+		// only deletes if supergroup
+		usersIdToDelete.forEach(async (userId: any) => {
+			try {
+				Bun.sleep(3000);
+				await this.client.invoke(
+					new Api.channels.EditBanned({
+						channel: this.groupId,
+						participant: userId,
+						bannedRights: new Api.ChatBannedRights({
+							untilDate: 0,
+							viewMessages: true,
+							sendMessages: true,
+							sendMedia: true,
+							sendStickers: true,
+							sendGifs: true,
+							sendGames: true,
+							sendInline: true,
+							embedLinks: true,
+						}),
+					}),
+				);
+			} catch (e) {
+				throw Error(`Error deleting users. Error: ${e}`);
+			}
+		});
 	}
 
 	async fetchAndInsertMessages(limit: number): Promise<void> {
