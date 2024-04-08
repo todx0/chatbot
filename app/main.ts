@@ -11,7 +11,6 @@ import {
 	somebodyMentioned,
 	createMessagesTable,
 	shouldTranscribeMedia,
-	checkAndUpdateDatabase,
 } from './helper';
 
 const { SESSION, API_ID, API_HASH } = Bun.env;

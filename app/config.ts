@@ -16,15 +16,9 @@ export const config = {
 // app
 export const maxHistoryLength = 20;
 export const isTelegramPremium = false;
-// export const language = config.LANGUAGE;
 export const botUsername = config.BOT_USERNAME;
 export const messageLimit = 700;
 export const maxTokenLength = 4096;
-
-export const chatCommands = {
-	'/recap': true,
-	'/clear': true,
-};
 
 // google ai
 const genAImodelName = 'gemini-pro';
@@ -53,7 +47,7 @@ const generativeModelOptions = 	{
 };
 export const genAI = new GoogleGenerativeAI(config.GAPI);
 export const genAImodel = genAI.getGenerativeModel(generativeModelOptions);
-export const recapTextRequest = 'Generate a short recap of the conversation: \n';
+export const recapTextRequest = 'Do not use markup. Generate a short recap of the conversation: \n';
 
 // functions
 function checkRequiredEnvVariables(requiredEnvVariables: string[]): void {

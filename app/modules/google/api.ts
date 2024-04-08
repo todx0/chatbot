@@ -20,7 +20,7 @@ export async function generateGenAIResponse(userRequest: string): Promise<string
 			safetySettings,
 		});
 		const result = await chat.sendMessage(userRequest);
-		const response = await result.response;
+		const { response } = result;
 
 		let responseText = response.text();
 		if (!responseText) responseText = 'Бля я хуй знает дядя.';

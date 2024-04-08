@@ -44,7 +44,7 @@ export default class TelegramBot {
 	}
 
 	// obj: SendMessageParams
-	async sendMessage(obj: any): Promise<Api.TypeUpdates | undefined> {
+	async sendMessage(obj: SendMessageParams): Promise<Api.TypeUpdates | undefined> {
 		const sendMsg = new Api.messages.SendMessage(obj);
 		const result = await this.client.invoke(sendMsg);
 		return result;
@@ -106,60 +106,6 @@ export default class TelegramBot {
 		  throw error;
 		}
 	}
-
-	/* 	async handleImgCommand(messageText: string): Promise<void> {
-		const [, requestText] = messageText.split('/img ');
-
-		if (!requestText) {
-			await this.sendMessage({
-				peer: this.groupId,
-				message: '/img command requires a prompt',
-			});
-			return;
-		}
-		try {
-			const url = await createImageFromPrompt(requestText);
-			if (!url.includes('https://')) return;
-			await this.downloadAndSendImageFromUrl(url);
-		} catch (error) {
-			await this.sendMessage({
-				peer: this.groupId,
-				message: String(error),
-			});
-			throw error;
-		}
-	}
-
-	async handleImagineCommand(messageText: string): Promise<void> {
-		const msgLimit = parseInt(messageText.split(' ')[1]);
-		if (Number.isNaN(msgLimit)) {
-			await this.sendMessage({
-				peer: this.groupId,
-				message: '/imagine command requires a limit: /imagine 50',
-			});
-			return;
-		}
-		if (msgLimit > messageLimit) {
-			await this.sendMessage({
-				peer: this.groupId,
-				message: `Max imagine limit is ${messageLimit}: /imagine ${messageLimit}`,
-			});
-			return;
-		}
-		try {
-			const messages = await this.getMessages(msgLimit);
-			const filteredMessages = filterMessages(messages);
-			const recapText = await generateGptResponse(`${recapTextRequest} ${filteredMessages}`);
-			const url = await createImageFromPrompt(recapText);
-			await this.downloadAndSendImageFromUrl(url);
-		} catch (error) {
-			await this.sendMessage({
-				peer: this.groupId,
-				message: String(error),
-			});
-			throw error;
-		}
-	} */
 
 	async downloadAndSendImageFromUrl(url: string): Promise<void> {
 		const buffer = await downloadFile(url);
@@ -237,19 +183,12 @@ export default class TelegramBot {
 
 	// TODO: remove comments, debug stuff and split
 	async removeLurkers(limit = 3000) {
-		// const debugSenders = new Set();
-		// const debugParticipants = new Set();
-
 		// get people who sent a message to chat
 		const uniqSenders = new Set();
 		for await (const message of this.client.iterMessages(`-${this.groupId}`, { limit })) {
 			if (message._sender?.id?.value) {
 				const value = String(message._sender.id.value);
-				// console.log('Sender entity:', `${message._sender.username.toLowerCase()}: ${value}`);
-				if (message._sender.username !== 'groupanonymousbot') {
-					uniqSenders.add(value);
-					// debugSenders.add(`${message._sender.username.toLowerCase()}: ${value}`);
-				}
+				uniqSenders.add(value);
 			}
 		}
 		// get all chat participants
@@ -257,27 +196,18 @@ export default class TelegramBot {
 		const userEntities = [];
 		for await (const user of this.client.iterParticipants(`-${this.groupId}`, { limit })) {
 			const userNameId = { user: user.username, id: String(user.id.value) };
-			// console.log(userNameId.user, userNameId.id);
 			userEntities.push(userNameId);
 		}
 		userEntities.forEach((userEntity: any) => {
 			const userId = userEntity.id;
 			const userName = userEntity.user;
 			if (userId && !userId.includes('-') && userName !== 'channel_bot' && userId !== BOT_ID) {
-				// debugParticipants.add(`${userName}: ${userId}`);
 				uniqUsers.add(userId);
 			}
 		});
 
 		const intersection = new Set([...uniqUsers].filter((value) => !uniqSenders.has(value)));
 		const usersIdToDelete = [...intersection];
-
-		// const debugintersection = new Set([...debugParticipants].filter((value) => !debugSenders.has(value)));
-
-		// console.log('debug senders:', debugSenders);
-		// console.log('debug participants:', debugParticipants);
-		// console.log('debug intersection', debugintersection);
-		// console.log('original intersection:', intersection);
 
 		if (usersIdToDelete.length) {
 			await this.sendMessage({
