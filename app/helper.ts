@@ -125,8 +125,6 @@ export async function readChatRoleFromDatabase(options: DatabaseOptions = {}): P
 			};
 		}
 	};
-
-	console.log();
 	const parsedRows: Content[] = rows.map(parseRow);
 	return parsedRows;
 }
