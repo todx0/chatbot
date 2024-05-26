@@ -1,40 +1,24 @@
 import { MessageIDLike } from 'telegram/define';
 
-interface ChatPart {
-	text: string;
-}
-
-export interface ChatRole {
-	role: 'user' | 'model';
-	parts: ChatPart[];
-}
-
 export interface ProcessEnv {
-	[key: string]: string;
+  [key: string]: string;
 }
 export interface SendMessageParams {
-	peer: string,
-	message: string,
-	replyToMsgId?: MessageIDLike,
-	silent?: boolean,
-	chatId?: any
-}
-export interface GetMessagesParams {
-	limit: number;
-	groupId: string;
+  peer: string;
+  message: string;
+  replyToMsgId?: MessageIDLike;
+  silent?: boolean;
+  chatId?: any;
 }
 export interface MediaObject {
-	document: {
-		mimeType: string
-	}
+  document: {
+    mimeType: string;
+  };
 }
 export interface ChatCommands {
-	[key: string]: boolean;
-}
-export interface RetryFn {
-	<T>(fn: () => Promise<T>, maxAttempts: number): Promise<T>;
+  [key: string]: boolean;
 }
 export interface DatabaseOptions {
-	limit?: number;
-	dbsqlite?: string;
+  limit?: number;
+  dbsqlite?: string;
 }

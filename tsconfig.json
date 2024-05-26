@@ -1,21 +1,21 @@
 {
-	"compilerOptions": {
-		"types": [
-			"bun-types"
-		],
-		"lib": [
-			"esnext"
-		],
-		"module": "esnext",
-		"target": "esnext",
-		"moduleResolution": "bundler",
-		"noEmit": true,
-		"allowImportingTsExtensions": true,
-		"moduleDetection": "force",
-		"allowJs": true,
-		"esModuleInterop": true,
-		"strict": true,
-		"forceConsistentCasingInFileNames": true,
-		"skipLibCheck": true
-	}
+  "compilerOptions": {
+    "types": [
+      "bun-types"
+    ],
+    "lib": [
+      "esnext"
+    ],
+    "module": "esnext",
+    "target": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "moduleDetection": "force",
+    "allowJs": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  }
 }

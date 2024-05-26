@@ -1,105 +1,99 @@
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions/index';
-import TelegramBot, {
-} from './bot';
-import {
-	botUsername,
-	loadConfig,
-} from './config';
-import {
-	messageNotSeen,
-	somebodyMentioned,
-	createMessagesTable,
-	shouldTranscribeMedia,
-} from './helper';
+import TelegramBot, {} from './bot';
+import { botUsername, loadConfig } from './config';
+import { createMessagesTable, messageNotSeen, shouldTranscribeMedia, somebodyMentioned } from './helper';
 
 const { SESSION, API_ID, API_HASH } = Bun.env;
 
 try {
-	loadConfig();
+  loadConfig();
 } catch (error) {
-	console.error(error);
-	process.exit(1);
+  console.error(error);
+  process.exit(1);
 }
 const client = new TelegramClient(new StringSession(SESSION), +API_ID!, API_HASH!, {
-	connectionRetries: 5,
+  connectionRetries: 5,
 });
 export default client;
 
 export const botWorkflow = async (event: any) => {
-	function getDataFromEvent(event: any) {
-		let groupId;
-		let replyToMsgId;
-		let messageText;
-		let message;
-		if (typeof event.message === 'string') {
-			groupId = event.chatId;
-			replyToMsgId = event.replyTo;
-			messageText = event.message;
-			message = event;
-		} else if (typeof event.message === 'object') {
-			// if (!event.message._chatPeer || !event.message._chatPeer.channelId) return;
-			groupId = event.message._chatPeer.channelId;
-			replyToMsgId = event.message.replyTo?.replyToMsgId;
-			messageText = event.message.message;
-			message = event.message;
-		}
-		return {
-			groupId,
-			replyToMsgId,
-			messageText,
-			message,
-		};
-	}
+  function getDataFromEvent(event: any) {
+    let groupId;
+    let replyToMsgId;
+    let messageText;
+    let message;
+    if (typeof event.message === 'string') {
+      groupId = event.chatId;
+      replyToMsgId = event.replyTo;
+      messageText = event.message;
+      message = event;
+    } else if (typeof event.message === 'object') {
+      // if (!event.message._chatPeer || !event.message._chatPeer.channelId) return;
+      groupId = event.message._chatPeer.channelId;
+      replyToMsgId = event.message.replyTo?.replyToMsgId;
+      messageText = event.message.message;
+      message = event.message;
+    }
+    return {
+      groupId,
+      replyToMsgId,
+      messageText,
+      message,
+    };
+  }
 
-	const {
-		groupId, replyToMsgId, messageText, message,
-	} = getDataFromEvent(event);
+  const {
+    groupId,
+    replyToMsgId,
+    messageText,
+    message,
+  } = getDataFromEvent(event);
 
-	if (!groupId || !messageText || !message) return;
-	if (!messageNotSeen(message)) return;
+  if (!groupId || !messageText || !message) return;
+  if (!messageNotSeen(message)) return;
 
-	const bot = new TelegramBot(client);
-	bot.setGroupId(groupId);
+  const bot = new TelegramBot(client);
+  bot.setGroupId(groupId);
 
-	const commandMappings: Record<string, (msgText: string) => Promise<void>> = {
-		'/recap': (msgText) => bot.handleRecapCommand(msgText),
-		'/clear': () => bot.handleClearCommand(),
-		'/scan': () => bot.removeLurkers(),
-	};
+  const commandMappings: Record<string, (msgText: string) => Promise<void>> = {
+    '/recap': (msgText) => bot.handleRecapCommand(msgText),
+    '/clear': () => bot.handleClearCommand(),
+    '/scan': () => bot.removeLurkers(),
+  };
 
-	for (const command in commandMappings) {
-		if (messageText.includes(command)) {
-			await commandMappings[command](messageText);
-			return;
-		}
-	}
+  for (const command in commandMappings) {
+    if (messageText.includes(command)) {
+      await commandMappings[command](messageText);
+      return;
+    }
+  }
 
-	if (somebodyMentioned(message)) {
-		const isBotCalled = messageText.includes(botUsername);
+  if (somebodyMentioned(message)) {
+    const isBotCalled = messageText.includes(botUsername);
 
-		if (replyToMsgId && (await bot.checkReplyIdIsBotId(replyToMsgId))) {
-			await bot.processMessage(messageText, message.id);
-			return;
-		}
+    if (replyToMsgId && (await bot.checkReplyIdIsBotId(replyToMsgId))) {
+      await bot.processMessage(messageText, message.id);
+      return;
+    }
 
-		if (isBotCalled) {
-			const messageContentWithoutBotName = messageText.replace(botUsername, '');
-			await bot.processMessage(messageContentWithoutBotName, message.id);
-			return;
-		}
-	}
+    if (isBotCalled) {
+      const messageContentWithoutBotName = messageText.replace(botUsername, '');
+      await bot.processMessage(messageContentWithoutBotName, message.id);
+      return;
+    }
+  }
 
-	if (shouldTranscribeMedia(message)) {
-		const transcribedAudio = await bot.waitForTranscription(message.id);
-		if (transcribedAudio) {
-			await bot.processMessage(transcribedAudio, false);
-		}
-	}
+  if (shouldTranscribeMedia(message)) {
+    const transcribedAudio = await bot.waitForTranscription(message.id);
+    if (transcribedAudio) {
+      await bot.processMessage(transcribedAudio, false);
+    }
+  }
 };
 
 (async () => {
-	await createMessagesTable();
-	await client.connect();
-	client.addEventHandler(botWorkflow);
+  await createMessagesTable();
+  await client.connect();
+  client.addEventHandler(botWorkflow);
 })();
