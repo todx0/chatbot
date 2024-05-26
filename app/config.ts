@@ -1,7 +1,6 @@
 import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
 import { ProcessEnv } from './types';
 
-// system
 export const config = {
 	API_ID: Bun.env.API_ID,
 	BOT_ID: Bun.env.BOT_ID,
@@ -13,15 +12,13 @@ export const config = {
 	GAPI: Bun.env.GAPI,
 } as ProcessEnv;
 
-// app
 export const maxHistoryLength = 20;
 export const isTelegramPremium = false;
 export const botUsername = config.BOT_USERNAME;
 export const messageLimit = 700;
 export const maxTokenLength = 4096;
 
-// google ai
-const genAImodelName = 'gemini-pro';
+const genAImodelName = 'gemini-1.5-flash-latest';
 export const safetySettings = [
 	{
 		category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
@@ -43,13 +40,12 @@ export const safetySettings = [
 const generativeModelOptions = 	{
 	model: genAImodelName,
 	safetySettings,
-	generationConfig: { maxOutputTokens: 256 },
+	// generationConfig: { maxOutputTokens: 256 },
 };
 export const genAI = new GoogleGenerativeAI(config.GAPI);
 export const genAImodel = genAI.getGenerativeModel(generativeModelOptions);
-export const recapTextRequest = 'Do not use markup. Generate a short recap of the conversation: \n';
+export const recapTextRequest = `Mandatory options: Do not use markup; Use only ${Bun.env.LANGUAGE}; ${Bun.env.SECRET_OPTIONS} \n Generate a short recap of the following conversation: \n`;
 
-// functions
 function checkRequiredEnvVariables(requiredEnvVariables: string[]): void {
 	requiredEnvVariables.forEach((variable) => {
 		if (!Bun.env[variable]) {

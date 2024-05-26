@@ -1,19 +1,19 @@
+import { Content } from '@google/generative-ai';
 import {
 	genAImodel,
 	maxHistoryLength,
 	safetySettings,
 	recapTextRequest,
 } from '../../config';
-import { RoleParts } from '../../types';
 import {
-	readRolePartsFromDatabase,
+	readChatRoleFromDatabase,
 	 insertToMessages,
 } from '../../helper';
 
 export async function generateGenAIResponse(userRequest: string): Promise<string> {
 	try {
-		const userRoleContent: RoleParts = { role: 'user', parts: userRequest };
-		const history = await readRolePartsFromDatabase({ limit: maxHistoryLength });
+		const userRoleContent: Content = { role: 'user', parts: [{ text: userRequest }] };
+		const history: Content[] = await readChatRoleFromDatabase({ limit: maxHistoryLength });
 
 		const chat = genAImodel.startChat({
 			history,
@@ -26,7 +26,7 @@ export async function generateGenAIResponse(userRequest: string): Promise<string
 		if (!responseText) responseText = 'Бля я хуй знает дядя.';
 
 		await insertToMessages(userRoleContent);
-		await insertToMessages({ role: 'model', parts: responseText });
+		await insertToMessages({ role: 'model', parts: [{ text: responseText }] });
 
 		return responseText;
 	} catch (error: any) {

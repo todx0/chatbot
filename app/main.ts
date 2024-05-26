@@ -60,7 +60,7 @@ export const botWorkflow = async (event: any) => {
 	if (!messageNotSeen(message)) return;
 
 	const bot = new TelegramBot(client);
-	await bot.setGroupId(groupId);
+	bot.setGroupId(groupId);
 
 	const commandMappings: Record<string, (msgText: string) => Promise<void>> = {
 		'/recap': (msgText) => bot.handleRecapCommand(msgText),
@@ -93,7 +93,7 @@ export const botWorkflow = async (event: any) => {
 	if (shouldTranscribeMedia(message)) {
 		const transcribedAudio = await bot.waitForTranscription(message.id);
 		if (transcribedAudio) {
-			await bot.processMessage(transcribedAudio, message.id, false);
+			await bot.processMessage(transcribedAudio, false);
 		}
 	}
 };

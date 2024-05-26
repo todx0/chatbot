@@ -3,8 +3,8 @@ import { Api } from 'telegram';
 import { unlink } from 'node:fs/promises';
 import { Database } from 'bun:sqlite';
 import * as fs from 'node:fs';
+import { Content } from '@google/generative-ai';
 import {
-	RoleParts,
 	MediaObject,
 	ChatCommands,
 	DatabaseOptions,
@@ -92,20 +92,43 @@ export function getCommand(messageText: string, commands: ChatCommands): string 
 	return '';
 }
 
-export async function insertToMessages(object: RoleParts, dbsqlite?: string): Promise<void> {
+export async function insertToMessages(object: Content, dbsqlite?: string): Promise<void> {
 	const dbName = dbsqlite || Bun.env.DB_NAME;
 	const db = new Database(dbName, { create: true, readwrite: true });
 	const { role, parts } = object;
-	db.run('INSERT INTO messages (role, parts) VALUES (?, ?)', [role, parts]);
+	db.run('INSERT INTO messages (role, parts) VALUES (?, ?)', [role, JSON.stringify(parts)]);
 }
 
-export async function readRolePartsFromDatabase(options: DatabaseOptions = {}): Promise<any[]> {
+export async function readChatRoleFromDatabase(options: DatabaseOptions = {}): Promise<Content[]> {
 	const { limit = maxHistoryLength, dbsqlite } = options;
 	const dbName = dbsqlite || Bun.env.DB_NAME;
 	const db = new Database(dbName, { create: true, readwrite: true });
 	const query = `SELECT role, parts FROM messages ORDER BY id ASC LIMIT ${limit}`;
-	const rows = db.query(query).all();
-	return rows.length ? rows : [];
+
+	interface Row {
+		role: string;
+		parts: string; // JSON string
+	}
+	const rows = db.query(query).all() as Row[];
+
+	const parseRow = (row: Row): Content => {
+		try {
+			return {
+				role: row.role,
+				parts: JSON.parse(row.parts),
+			};
+		} catch (error) {
+			console.error('Failed to parse parts for row:', row, error);
+			return {
+				role: row.role,
+				parts: [],
+			};
+		}
+	};
+
+	console.log();
+	const parsedRows: Content[] = rows.map(parseRow);
+	return parsedRows;
 }
 
 export async function clearMessagesTable(dbsqlite?: string): Promise<void> {
@@ -138,7 +161,7 @@ export async function createMessagesTable(dbsqlite?: string): Promise<void> {
 		  role TEXT,
 		  parts TEXT
 		)
-	  `);
+	`);
 }
 
 export async function deleteDatabase(dbsqlite?: string): Promise<void> {
@@ -172,7 +195,7 @@ export async function checkDatabaseExist(): Promise<boolean> {
 }
 
 export async function checkAndUpdateDatabase({ readLimit = 1000, trimLimit = maxHistoryLength } = {}): Promise<void> {
-	const db = await readRolePartsFromDatabase({ limit: readLimit });
+	const db = await readChatRoleFromDatabase({ limit: readLimit });
 	if (db.length > maxHistoryLength) {
 		await trimMessagesTable({ limit: trimLimit });
 	}

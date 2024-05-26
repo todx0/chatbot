@@ -1,13 +1,14 @@
 import { MessageIDLike } from 'telegram/define';
 
-export interface RoleContent {
-	role: 'user' | 'assistant' | 'system';
-	content: string;
+interface ChatPart {
+	text: string;
 }
-export interface RoleParts {
+
+export interface ChatRole {
 	role: 'user' | 'model';
-	parts: string;
+	parts: ChatPart[];
 }
+
 export interface ProcessEnv {
 	[key: string]: string;
 }

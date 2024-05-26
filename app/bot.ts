@@ -43,7 +43,6 @@ export default class TelegramBot {
 		this.groupId = newValue;
 	}
 
-	// obj: SendMessageParams
 	async sendMessage(obj: SendMessageParams): Promise<Api.TypeUpdates | undefined> {
 		const sendMsg = new Api.messages.SendMessage(obj);
 		const result = await this.client.invoke(sendMsg);
@@ -168,7 +167,7 @@ export default class TelegramBot {
 		return false;
 	}
 
-	async processMessage(messageText: string, messageId: any, history = true): Promise<void> {
+	async processMessage(messageText: string, history = true): Promise<void> {
 		let message = messageText.replace(botUsername, '');
 		if (history) {
 			message = await generateGenAIResponse(message);
@@ -244,6 +243,6 @@ export default class TelegramBot {
 
 	async fetchAndInsertMessages(limit: number): Promise<void> {
 		const messages = await this.getMessages(limit);
-		messages.forEach((message) => insertToMessages({ role: 'user', parts: message }));
+		messages.forEach((message) => insertToMessages({ role: 'user', parts: [{ text: message }] }));
 	}
 }
