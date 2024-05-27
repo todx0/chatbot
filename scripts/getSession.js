@@ -2,7 +2,6 @@
 
 const { TelegramClient } = require('telegram');
 const { StringSession } = require('telegram/sessions');
-const input = require('input');
 import readline from 'readline';
 
 const rl = readline.createInterface({

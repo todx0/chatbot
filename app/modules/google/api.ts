@@ -1,5 +1,6 @@
 import { Content } from '@google/generative-ai';
 import { genAImodel, maxHistoryLength, recapTextRequest, safetySettings } from '../../config';
+import { ErrorHandler } from '../../errors/ErrorHandler';
 import { insertToMessages, readChatRoleFromDatabase } from '../../helper';
 
 export async function generateGenAIResponse(userRequest: string): Promise<string> {
@@ -22,7 +23,7 @@ export async function generateGenAIResponse(userRequest: string): Promise<string
 
     return responseText;
   } catch (error: any) {
-    return error.message;
+    return ErrorHandler.handleError(error);
   }
 }
 

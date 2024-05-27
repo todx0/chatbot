@@ -5,6 +5,7 @@ import * as fs from 'node:fs';
 import { unlink } from 'node:fs/promises';
 import { Api } from 'telegram';
 import { isTelegramPremium, maxHistoryLength } from './config';
+import { ErrorHandler } from './errors/ErrorHandler';
 import { DatabaseOptions, MediaObject } from './types';
 
 export async function retry<T>(
@@ -105,13 +106,14 @@ export async function readChatRoleFromDatabase(options: DatabaseOptions = {}): P
   return parsedRows;
 }
 
-export async function clearMessagesTable(dbsqlite?: string): Promise<void> {
+export async function clearMessagesTable(dbsqlite?: string): Promise<void | string> {
   const dbName = dbsqlite || Bun.env.DB_NAME;
   try {
     const db = new Database(dbName, { create: true, readwrite: true });
     db.run('DELETE FROM messages');
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting messages:', error);
+    return ErrorHandler.handleError(error, true);
   }
 }
 
@@ -138,13 +140,14 @@ export async function createMessagesTable(dbsqlite?: string): Promise<void> {
 	`);
 }
 
-export async function deleteDatabase(dbsqlite?: string): Promise<void> {
+export async function deleteDatabase(dbsqlite?: string): Promise<void | string> {
   try {
     const dbName = dbsqlite || Bun.env.DB_NAME;
     if (dbName) await unlink(dbName);
     console.log(`Deleted the database file '${dbName}'`);
-  } catch (error) {
-    console.log('Error deleting the database file:', error);
+  } catch (error: any) {
+    console.error('Error deleting the database file:', error);
+    return ErrorHandler.handleError(error, false);
   }
 }
 

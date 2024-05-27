@@ -56,7 +56,7 @@ export const botWorkflow = async (event: any) => {
   const bot = new TelegramBot(client);
   bot.setGroupId(groupId);
 
-  const commandMappings: Record<string, (msgText: string) => Promise<void>> = {
+  const commandMappings: Record<string, (msgText: string) => Promise<void | string>> = {
     '/recap': (msgText) => bot.handleRecapCommand(msgText),
     '/clear': () => bot.handleClearCommand(),
     '/scan': () => bot.removeLurkers(),

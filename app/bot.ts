@@ -1,5 +1,6 @@
 import { Api } from 'telegram';
 import { botUsername, maxTokenLength, messageLimit, recapTextRequest } from './config';
+import { ErrorHandler } from './errors/ErrorHandler';
 import {
   approximateTokenLength,
   clearMessagesTable,
@@ -61,7 +62,7 @@ export default class TelegramBot {
     });
   }
 
-  async handleRecapCommand(messageText: string): Promise<void> {
+  async handleRecapCommand(messageText: string): Promise<void | string> {
     const msgLimit = parseInt(messageText.split(' ')[1]);
 
     if (Number.isNaN(msgLimit)) {
@@ -93,9 +94,9 @@ export default class TelegramBot {
         response = await returnCombinedAnswerFromMultipleResponses(chunks);
       }
       await this.sendMessage({ peer: this.groupId, message: response });
-    } catch (error) {
+    } catch (error: any) {
       await this.sendMessage({ peer: this.groupId, message: String(error) });
-      throw error;
+      return ErrorHandler.handleError(error, true);
     }
   }
 
@@ -160,7 +161,7 @@ export default class TelegramBot {
     return false;
   }
 
-  async processMessage(messageText: string, history = true): Promise<void> {
+  async processMessage(messageText: string, history = true): Promise<void | string> {
     let message = messageText.replace(botUsername, '');
     if (history) {
       message = await generateGenAIResponse(message);
@@ -168,8 +169,8 @@ export default class TelegramBot {
     try {
       // no idea why my sendMessage is working only for channels but not groups. Using raw function.
       await this.client.sendMessage(`-${this.groupId}`, { message });
-    } catch (e) {
-      throw Error(`Not working. ${e}`);
+    } catch (error: any) {
+      return ErrorHandler.handleError(error, true);
     }
   }
 
@@ -228,8 +229,8 @@ export default class TelegramBot {
             }),
           }),
         );
-      } catch (e) {
-        throw Error(`Error deleting users. Error: ${e}`);
+      } catch (error: any) {
+        return ErrorHandler.handleError(error, true);
       }
     });
   }

@@ -14,14 +14,22 @@ export class CustomError extends Error {
 }
 
 export class ErrorHandler {
-  public static handleError(error: Error): void {
+  public static handleError(error: Error, throwError: boolean = false): string {
+    let errorMessage = '';
+
     if (error instanceof CustomError) {
-      console.error(`Custom error occurred: ${error.message}`);
+      errorMessage = `Custom error occurred: ${error.message}`;
       if (error.details) {
-        console.error(`Error details: ${JSON.stringify(error.details)}`);
+        errorMessage += `\nError details: ${JSON.stringify(error.details)}`;
       }
     } else {
-      console.error(`Unexpected error: ${error.message}`);
+      errorMessage = `Unexpected error: ${error.message}`;
     }
+
+    if (throwError) {
+      throw error;
+    }
+
+    return errorMessage;
   }
 }
