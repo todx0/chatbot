@@ -36,7 +36,7 @@ export async function generateMultipleResponses(userRequests: string[]): Promise
 export async function combineResponses(responses: string[]): Promise<string> {
   const combinedResponseArray = responses.join(' ____ ');
   const combinedResponse = await generateGenAIResponse(
-    `Combine responses separated with '____' into one: ${combinedResponseArray}`,
+    `Combine responses separated with '____' into one: ${combinedResponseArray}. Do not include separator.`,
   );
   return combinedResponse;
 }

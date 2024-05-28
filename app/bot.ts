@@ -202,7 +202,13 @@ export default class TelegramBot {
     const intersection = new Set([...uniqUsers].filter((value) => !uniqSenders.has(value)));
     const usersIdToDelete = [...intersection];
 
-    if (usersIdToDelete.length) {
+    if (!usersIdToDelete.length) {
+      await this.sendMessage({
+        peer: this.groupId,
+        message: 'Все молодцы',
+      });
+    }
+    else if (usersIdToDelete.length) {
       await this.sendMessage({
         peer: this.groupId,
         message: 'Пошли нахуй:',
