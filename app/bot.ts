@@ -62,43 +62,52 @@ export default class TelegramBot {
     });
   }
 
-  async handleRecapCommand(messageText: string): Promise<void | string> {
-    const msgLimit = parseInt(messageText.split(' ')[1]);
-
-    if (Number.isNaN(msgLimit)) {
-      const obj = { peer: this.groupId, message: '/recap command requires a limit: /recap 50' };
-      await this.sendMessage(obj);
-      return;
-    }
-
-    if (msgLimit > messageLimit) {
-      await this.sendMessage({
-        peer: this.groupId,
-        message: `Max recap limit is ${messageLimit}: /recap ${messageLimit}`,
-      });
-      return;
-    }
-
+  async handleRecapCommand(messageText: string): Promise<void> {
     try {
-      const messages = await this.getMessages(msgLimit);
-      const filteredMessages = await filterMessages(messages);
-      let response: string;
-
-      const messagesLength = await approximateTokenLength(filteredMessages);
-
-      if (messagesLength <= maxTokenLength) {
-        const messageString = Array.isArray(filteredMessages) ? filteredMessages.join(' ') : filteredMessages;
-        response = await generateGenAIResponse(`${recapTextRequest} ${messageString}`);
-      } else {
-        const chunks = await splitMessageInChunks(filteredMessages.toString());
-        response = await returnCombinedAnswerFromMultipleResponses(chunks);
-      }
-      await this.sendMessage({ peer: this.groupId, message: response });
-    } catch (error: any) {
-      await this.sendMessage({ peer: this.groupId, message: String(error) });
-      return ErrorHandler.handleError(error, true);
+      const msgLimit = parseInt(messageText.split(' ')[1]);
+  
+      await this.validateMsgLimit(msgLimit);
+      const messages = await this.retrieveAndFilterMessages(msgLimit);
+      const response = await this.generateRecapResponse(messages);
+  
+      await this.sendMessage({peer: this.groupId, message: response});
+    } catch (error) {
+      await this.handleError(this.groupId, error);
     }
   }
+  
+  async validateMsgLimit(msgLimit: number): Promise<void> {
+    if (Number.isNaN(msgLimit)) {
+      throw new Error('/recap command requires a limit: /recap 50');
+    }
+  
+    if (msgLimit > messageLimit) {
+      throw new Error(`Max recap limit is ${messageLimit}: /recap ${messageLimit}`);
+    }
+  }
+  
+  async retrieveAndFilterMessages(msgLimit: number): Promise<string[]> {
+    const messages = await this.getMessages(msgLimit);
+    return filterMessages(messages);
+  }
+  
+  async generateRecapResponse(filteredMessages: string[]): Promise<string> {
+    const messagesLength = await approximateTokenLength(filteredMessages);
+  
+    if (messagesLength <= maxTokenLength) {
+      const messageString = filteredMessages.join(' ');
+      return generateGenAIResponse(`${recapTextRequest} ${messageString}`);
+    } else {
+      const chunks = await splitMessageInChunks(filteredMessages.join(' '));
+      return returnCombinedAnswerFromMultipleResponses(chunks);
+    }
+  }
+  
+  async  handleError(peer: string, error: any): Promise<void | string> {
+    await this.sendMessage({ peer, message: String(error) });
+    return ErrorHandler.handleError(error, true);
+  }
+  
 
   async downloadAndSendImageFromUrl(url: string): Promise<void> {
     const buffer = await downloadFile(url);
@@ -174,7 +183,7 @@ export default class TelegramBot {
     }
   }
 
-  // TODO: remove comments, debug stuff and split
+/*   // TODO: remove comments, debug stuff and split
   async removeLurkers(limit = 3000): Promise<void> {
     // get people who sent a message to chat
     const uniqSenders = new Set();
@@ -239,8 +248,84 @@ export default class TelegramBot {
         return ErrorHandler.handleError(error, true);
       }
     });
+  } */
+
+  async getUniqSenders(limit: number): Promise<Set<string>> {
+    const uniqSenders = new Set<string>();
+    for await (const message of this.client.iterMessages(`-${this.groupId}`, { limit })) {
+      if (message._sender?.id?.value) {
+        const value = String(message._sender.id.value);
+        uniqSenders.add(value);
+      }
+    }
+    return uniqSenders;
+  }
+  
+  async getUniqUsers(limit: number): Promise<Set<string>> {
+    const uniqUsers = new Set<string>();
+    const userEntities = [];
+    for await (const user of this.client.iterParticipants(`-${this.groupId}`, { limit })) {
+      const userNameId = { user: user.username, id: String(user.id.value) };
+      userEntities.push(userNameId);
+    }
+    userEntities.forEach((userEntity: any) => {
+      const userId = userEntity.id;
+      const userName = userEntity.user;
+      if (userId && !userId.includes('-') && userName !== 'channel_bot' && userId !== BOT_ID) {
+        uniqUsers.add(userId);
+      }
+    });
+    return uniqUsers;
+  }
+  
+  async banUsers(usersIdToDelete: string[]): Promise<void | string> {
+    for (const userId of usersIdToDelete) {
+      try {
+        await this.client.invoke(
+          new Api.channels.EditBanned({
+            channel: this.groupId,
+            participant: userId,
+            bannedRights: new Api.ChatBannedRights({
+              untilDate: 0,
+              viewMessages: true,
+              sendMessages: true,
+              sendMedia: true,
+              sendStickers: true,
+              sendGifs: true,
+              sendGames: true,
+              sendInline: true,
+              embedLinks: true,
+            }),
+          }),
+        );
+      } catch (error: any) {
+        return ErrorHandler.handleError(error, true);
+      }
+    }
+  }
+  
+  async removeLurkers(limit = 3000): Promise<void> {
+    const uniqSenders = await this.getUniqSenders(limit);
+    const uniqUsers = await this.getUniqUsers(limit);
+  
+    const intersection = new Set([...uniqUsers].filter((value) => !uniqSenders.has(value)));
+    const usersIdToDelete = [...intersection];
+  
+    if (!usersIdToDelete.length) {
+      await this.sendMessage( {
+        peer: this.groupId,
+        message: 'Все молодцы',
+      });
+    } else {
+      await this.sendMessage( {
+        peer: this.groupId,
+        message: 'Пошли нахуй:'
+      });
+      await this.banUsers(usersIdToDelete);
+    }
   }
 
+  
   async fetchAndInsertMessages(limit: number): Promise<void> {
     const messages = await this.getMessages(limit);
     messages.forEach((message) => insertToMessages({ role: 'user', parts: [{ text: message }] }));
