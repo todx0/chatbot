@@ -40,12 +40,12 @@ export const safetySettings = [
 const generativeModelOptions: ModelParams = {
   model: genAImodelName,
   safetySettings,
-  // generationConfig: { maxOutputTokens: 256 },
+  systemInstruction: Bun.env.SECRET_OPTIONS
 };
 export const genAI = new GoogleGenerativeAI(config.GAPI);
 export const genAImodel = genAI.getGenerativeModel(generativeModelOptions);
 export const recapTextRequest =
-  `Mandatory options: Do not use markup; Use only ${Bun.env.LANGUAGE}; ${Bun.env.SECRET_OPTIONS} \n Generate a short recap of the following conversation: \n`;
+  `Mandatory options: Do not use markup; Use only ${Bun.env.LANGUAGE}; \n Generate a short recap of the following conversation: \n`;
 
 function checkRequiredEnvVariables(requiredEnvVariables: string[]): void {
   requiredEnvVariables.forEach((variable) => {
