@@ -2,7 +2,13 @@ import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions/index';
 import TelegramBot, {} from './bot';
 import { botUsername, loadConfig } from './config';
-import { createMessagesTable, messageNotSeen, shouldTranscribeMedia, somebodyMentioned } from './helper';
+import {
+  getDataFromEvent,
+  createMessagesTable,
+  messageNotSeen,
+  shouldTranscribeMedia, 
+  somebodyMentioned
+} from './helper';
 
 const { SESSION, API_ID, API_HASH } = Bun.env;
 
@@ -18,31 +24,6 @@ const client = new TelegramClient(new StringSession(SESSION), +API_ID!, API_HASH
 export default client;
 
 export const botWorkflow = async (event: any) => {
-  function getDataFromEvent(event: any) {
-    let groupId;
-    let replyToMsgId;
-    let messageText;
-    let message;
-    if (typeof event.message === 'string') {
-      groupId = event.chatId;
-      replyToMsgId = event.replyTo;
-      messageText = event.message;
-      message = event;
-    } else if (typeof event.message === 'object') {
-      // if (!event.message._chatPeer || !event.message._chatPeer.channelId) return;
-      groupId = event.message._chatPeer.channelId;
-      replyToMsgId = event.message.replyTo?.replyToMsgId;
-      messageText = event.message.message;
-      message = event.message;
-    }
-    return {
-      groupId,
-      replyToMsgId,
-      messageText,
-      message,
-    };
-  }
-
   const {
     groupId,
     replyToMsgId,

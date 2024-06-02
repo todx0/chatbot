@@ -168,6 +168,30 @@ export async function checkAndUpdateDatabase({ readLimit = 1000, trimLimit = max
   }
 }
 
+export function getDataFromEvent(event: any) {
+  let groupId;
+  let replyToMsgId;
+  let messageText;
+  let message;
+  if (typeof event.message === 'string') {
+    groupId = event.chatId;
+    replyToMsgId = event.replyTo;
+    messageText = event.message;
+    message = event;
+  } else if (typeof event.message === 'object') {
+    groupId = event.message._chatPeer.channelId;
+    replyToMsgId = event.message.replyTo?.replyToMsgId;
+    messageText = event.message.message;
+    message = event.message;
+  }
+  return {
+    groupId,
+    replyToMsgId,
+    messageText,
+    message,
+  };
+}
+
 export const messageNotSeen = (message: Api.Message): boolean => !message.reactions && !message.editDate;
 export const canTranscribeMedia = (
   media: MediaObject,
