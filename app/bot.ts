@@ -359,7 +359,8 @@ export default class TelegramBot {
               message: `Пошел нахуй ${userToKick}!`,
             });
             await this.banUsers([userIdToKick]);
-            await insertToMessages({ role: 'model', parts: [{ text: `User ${userToKick} kicked from the group.` }] });
+            // Unexpected error: [GoogleGenerativeAI Error]: First content should be with role 'user', got model
+            // await insertToMessages({ role: 'model', parts: [{ text: `User ${userToKick} kicked from the group.` }] });
           } else {
             await this.sendMessage({
               peer: this.groupId,
