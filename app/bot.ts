@@ -380,7 +380,7 @@ export default class TelegramBot {
     await getPollResults(pollId);
   }
 
-  async getUserEntities(limit = 3000) {
+  async getUsernameIdIsAdmin(limit = 3000) {
     const userEntities = [];
     for await (const user of this.client.iterParticipants(`-${this.groupId}`, { limit })) {
       const userNameId = {
@@ -393,10 +393,26 @@ export default class TelegramBot {
     return userEntities;
   }
 
+  async printUserEntities(limit = 3000) {
+    const userEntities = [];
+    for await (const user of this.client.iterParticipants(`-${this.groupId}`, { limit })) {
+      const userNameId = {
+        name: user.name,
+        user: user.username,
+        id: String(user.id.value),
+      };
+      userEntities.push(JSON.stringify(userNameId));
+    }
+    await this.sendMessage({
+      peer: this.groupId,
+      message: `${userEntities.join('\n')}`,
+    });
+  }
+
   async findUserIdBasedOnNickname(username: string, limit = 3000) {
     try {
       username = username.split('@')[1];
-      const users = await this.getUserEntities(limit);
+      const users = await this.getUsernameIdIsAdmin(limit);
 
       for (const user of users) {
         if (user.user === username) {

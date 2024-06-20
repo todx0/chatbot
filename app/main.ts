@@ -42,6 +42,7 @@ export const botWorkflow = async (event: any) => {
     '/clear': () => bot.handleClearCommand(),
     '/scan': () => bot.removeLurkers(),
     '/votekick': (msgText) => bot.processVoteKick(msgText),
+    '/users': () => bot.printUserEntities(),
   };
 
   for (const command in commandMappings) {
