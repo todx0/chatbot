@@ -17,6 +17,7 @@ export const isTelegramPremium = false;
 export const botUsername = config.BOT_USERNAME;
 export const messageLimit = 700;
 export const maxTokenLength = 4096;
+export const pollTimeoutMs =  5 * 60 * 1000;
 
 const genAImodelName = 'gemini-1.5-flash-latest';
 export const safetySettings = [

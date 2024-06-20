@@ -3,11 +3,11 @@ import { StringSession } from 'telegram/sessions/index';
 import TelegramBot, {} from './bot';
 import { botUsername, loadConfig } from './config';
 import {
-  getDataFromEvent,
   createMessagesTable,
+  getDataFromEvent,
   messageNotSeen,
-  shouldTranscribeMedia, 
-  somebodyMentioned
+  shouldTranscribeMedia,
+  somebodyMentioned,
 } from './helper';
 
 const { SESSION, API_ID, API_HASH } = Bun.env;
@@ -41,6 +41,7 @@ export const botWorkflow = async (event: any) => {
     '/recap': (msgText) => bot.handleRecapCommand(msgText),
     '/clear': () => bot.handleClearCommand(),
     '/scan': () => bot.removeLurkers(),
+    '/votekick': (msgText) => bot.processVoteKick(msgText),
   };
 
   for (const command in commandMappings) {
