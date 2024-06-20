@@ -354,11 +354,11 @@ export default class TelegramBot {
           const noResults = results.updates[0].results.results[1]?.voters || 0;
 
           if (yesResults > noResults) {
-            await this.banUsers([userIdToKick]);
             await this.sendMessage({
               peer: this.groupId,
               message: `Пошел нахуй ${userToKick}!`,
             });
+            await this.banUsers([userIdToKick]);
             await insertToMessages({ role: 'model', parts: [{ text: `User ${userToKick} kicked from the group.` }] });
           } else {
             await this.sendMessage({
