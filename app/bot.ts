@@ -41,7 +41,7 @@ export default class TelegramBot {
     return this.client.sendMessage(this.groupId, { file: imagePath });
   }
 
-  async sendPolltoKick(user: string) {
+  async sendPollToKick(user: string) {
     const poll = new Api.InputMediaPoll({
       poll: new Api.Poll({
         id: bigInt(Math.floor(Math.random() * 0xFFFFFFFFFFFFFFF)),
@@ -291,7 +291,7 @@ export default class TelegramBot {
 
   async processVoteKick(messageText: string) {
     try {
-      const userToKick = messageText.split(' ')[1];
+      const userToKick = this.extractUserToKick(messageText);
       if (!userToKick) {
         await this.sendMessage({
           peer: this.groupId,
@@ -299,69 +299,85 @@ export default class TelegramBot {
         });
         return;
       }
+
       if (userToKick === botUsername) {
         await this.sendMessage({
           peer: this.groupId,
-          message: 'Хуй тебе гнида',
+          message: 'Хуй тебе в нос!',
         });
         return;
       }
-      const { id: userIdToKick, isAdmin } = await this.findUserIdBasedOnNickname(userToKick);
+
+      const { userIdToKick, isAdmin } = await this.getUserIdAndCheckAdmin(userToKick);
       if (!userIdToKick) {
         await this.sendMessage({
           peer: this.groupId,
-          message: 'Таких нету',
+          message: 'User not found.',
         });
         return;
       }
+
       if (isAdmin) {
         await this.sendMessage({
           peer: this.groupId,
-          message: 'Нельзя удалить админа',
+          message: 'Cannot kick an admin.',
         });
         return;
       }
-      const pollMessage = await this.sendPolltoKick(userToKick);
+
+      const pollMessage = await this.sendPollToKick(userToKick);
       const pollMessageId = pollMessage.updates[0].id;
 
-      const getPollResultsAndSchedule = async (pollId: number) => {
-        try {
-          const results = await this.getPollResults(pollId);
-
-          let pollingActive = true;
-          if (results.updates[0].results?.results) {
-            const yesResults = results.updates[0].results?.results[0]?.voters;
-            const noResults = results.updates[0].results?.results[1]?.voters;
-
-            if (yesResults > noResults) {
-              await this.sendMessage({
-                peer: this.groupId,
-                message: 'Пошел нахуй клоун',
-              });
-              await insertToMessages({ role: 'model', parts: [{ text: `Я удалил ${userToKick} из конференции.` }] });
-              await this.banUsers([userIdToKick]);
-            } else {
-              await this.sendMessage({
-                peer: this.groupId,
-                message: 'Остается',
-              });
-            }
-            pollingActive = false;
-            return;
-          }
-          if (pollingActive) {
-            setTimeout(async () => {
-              await getPollResultsAndSchedule(pollId);
-            }, pollTimeoutMs);
-          }
-        } catch (error) {
-          await this.handleError(this.groupId, error);
-        }
-      };
-      await getPollResultsAndSchedule(pollMessageId);
+      await this.waitForPollResultsAndTakeAction(pollMessageId, userToKick, userIdToKick);
     } catch (error) {
       await this.handleError(this.groupId, error);
     }
+  }
+
+  private extractUserToKick(messageText: string): string | null {
+    const parts = messageText.split(' ');
+    return parts.length > 1 ? parts[1] : null;
+  }
+
+  private async getUserIdAndCheckAdmin(userToKick: string) {
+    const { id: userIdToKick, isAdmin } = await this.findUserIdBasedOnNickname(userToKick);
+    return { userIdToKick: userIdToKick.toString(), isAdmin };
+  }
+
+  private async waitForPollResultsAndTakeAction(pollId: number, userToKick: string, userIdToKick: string) {
+    const getPollResults = async (pollId: number) => {
+      try {
+        const results = await this.getPollResults(pollId);
+
+        if (results.updates[0].results?.results) {
+          const yesResults = results.updates[0].results.results[0]?.voters || 0;
+          const noResults = results.updates[0].results.results[1]?.voters || 0;
+
+          if (yesResults > noResults) {
+            await this.banUsers([userIdToKick]);
+            await this.sendMessage({
+              peer: this.groupId,
+              message: `Пошел нахуй ${userToKick}!`,
+            });
+            await insertToMessages({ role: 'model', parts: [{ text: `User ${userToKick} kicked from the group.` }] });
+          } else {
+            await this.sendMessage({
+              peer: this.groupId,
+              message: `${userToKick} остается.`,
+            });
+          }
+          return;
+        }
+
+        setTimeout(async () => {
+          await getPollResults(pollId);
+        }, pollTimeoutMs);
+      } catch (error) {
+        await this.handleError(this.groupId, error);
+      }
+    };
+
+    await getPollResults(pollId);
   }
 
   async getUserEntities(limit = 3000) {
