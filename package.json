@@ -6,7 +6,7 @@
   "scripts": {
     "ssh": "flyctl ssh console",
     "restart": "flyctl machine start",
-    "depl": "flyctl deploy --ha=false && flyctl scale count 1 -y",
+    "depl": "flyctl deploy --ha=false && flyctl scale count 1 -y && flyctl machine start",
     "stop": "flyctl machine stop",
     "lint": "eslint . --ext .ts",
     "start": "bun ./app/main.ts"
