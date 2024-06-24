@@ -1,5 +1,5 @@
 import { Content } from '@google/generative-ai';
-import { genAImodel, maxHistoryLength, recapTextRequest, safetySettings } from '../../config';
+import { config, featureFlags, genAImodel, maxHistoryLength, recapTextRequest, safetySettings } from '../../config';
 import { ErrorHandler } from '../../errors/ErrorHandler';
 import { insertToMessages, readChatRoleFromDatabase } from '../../helper';
 
@@ -12,10 +12,12 @@ export async function generateGenAIResponse(userRequest: string): Promise<string
       history,
       safetySettings,
     });
+
     const result = await chat.sendMessage(userRequest);
     const { response } = result;
 
     let responseText = response.text();
+
     if (!responseText) responseText = 'Бля я хуй знает дядя.';
 
     await insertToMessages(userRoleContent);

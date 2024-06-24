@@ -10,14 +10,19 @@ export const config = {
   LANGUAGE: Bun.env.LANGUAGE,
   BOT_USERNAME: Bun.env.BOT_USERNAME,
   GAPI: Bun.env.GAPI,
+  SECRET_OPTIONS: Bun.env.SECRET_OPTIONS,
 } as ProcessEnv;
+
+export const featureFlags = {
+  humanize: true,
+};
 
 export const maxHistoryLength = 20;
 export const isTelegramPremium = false;
 export const botUsername = config.BOT_USERNAME;
 export const messageLimit = 700;
 export const maxTokenLength = 4096;
-export const pollTimeoutMs =  5 * 60 * 1000;
+export const pollTimeoutMs = 5 * 60 * 1000;
 
 const genAImodelName = 'gemini-1.5-flash-latest';
 export const safetySettings = [
@@ -41,12 +46,17 @@ export const safetySettings = [
 const generativeModelOptions: ModelParams = {
   model: genAImodelName,
   safetySettings,
-  systemInstruction: Bun.env.SECRET_OPTIONS
+  systemInstruction: `${config.SECRET_OPTIONS}. 
+  ${
+    featureFlags.humanize
+      ? 'Adjust the tone of the reply to be a little bit more noxious, blunt, and impolite.'
+      : ''
+  }`,
 };
 export const genAI = new GoogleGenerativeAI(config.GAPI);
 export const genAImodel = genAI.getGenerativeModel(generativeModelOptions);
 export const recapTextRequest =
-  `Mandatory options: Do not use markup; Use only ${Bun.env.LANGUAGE}; \n Generate a short recap of the following conversation: \n`;
+  `Mandatory options: Do not use markup; Use only ${config.LANGUAGE}; \n Generate a short recap of the following conversation: \n`;
 
 function checkRequiredEnvVariables(requiredEnvVariables: string[]): void {
   requiredEnvVariables.forEach((variable) => {
@@ -64,6 +74,8 @@ export function loadConfig(): void {
     'LANGUAGE',
     'API_HASH',
     'BOT_USERNAME',
+    'GAPI',
+    'SECRET_OPTIONS',
   ];
   checkRequiredEnvVariables(requiredEnvVariables);
 }
