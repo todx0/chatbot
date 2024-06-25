@@ -35,7 +35,7 @@ Customize the bot's behavior by editing the `app/config.ts` file. Key configurat
 - `pollTimeoutMs`: Poll timeout before kick. In milliseconds, so change only first value. e.g. 5 * 60 * 1000 is 5 minutes.
 - `maxHistoryLength`: Conversation length for the bot to know context. Longer histories result in more expensive API calls.
 - `genAImodelName`: Gemini api model to use.
-- `safetySettings`: [Safety, always off.](https://www.youtube.com/watch?v=47Yxa9IeJEc). See [safety settings.](https://ai.google.dev/gemini-api/docs/safety-settings)
+- `safetySettings`: [Safety, always off](https://www.youtube.com/watch?v=47Yxa9IeJEc). See [safety settings](https://ai.google.dev/gemini-api/docs/safety-settings).
 - `generativeModelOptions.systemInstruction`: Default bot behavior. Modify as you want.
 
 ## Usage
