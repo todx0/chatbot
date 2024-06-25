@@ -30,8 +30,13 @@ bun start
 Customize the bot's behavior by editing the `app/config.ts` file. Key configuration options include:
 
 - `isTelegramPremium`: Enable automatic transcription of media messages if your bot account has Telegram premium.
-- `chatCommands`: Enable or disable specific commands by setting them to true or false.
 - `maxHistoryLength`: Set the maximum length of chat history passed to the bot. Longer histories result in more expensive API calls.
+- `featureFlags`: Enable/disable feature flags.
+- `pollTimeoutMs`: Poll timeout before kick. In milliseconds, so change only first value. e.g. 5 * 60 * 1000 is 5 minutes.
+- `maxHistoryLength`: Conversation length for the bot to know context. Longer histories result in more expensive API calls.
+- `genAImodelName`: Gemini api model to use.
+- `safetySettings`: [Safety, always off.](https://www.youtube.com/watch?v=47Yxa9IeJEc). See [safety settings.](https://ai.google.dev/gemini-api/docs/safety-settings)
+- `generativeModelOptions.systemInstruction`: Default bot behavior. Modify as you want.
 
 ## Usage
 
