@@ -1,6 +1,5 @@
 import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory, ModelParams } from '@google/generative-ai';
 import { ProcessEnv } from './types';
-
 export const config = {
   API_ID: Bun.env.API_ID,
   BOT_ID: Bun.env.BOT_ID,

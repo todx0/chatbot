@@ -1,0 +1,18 @@
+{
+  "kick": "Выгнать",
+  "yes": "да",
+  "no": "нет",
+  "historyCleared": "История очищена.",
+  "recapWarning": "Команда /recap требует ограничения: /recap 50",
+  "recapLimit": "Максимальное ограничение для recap ",
+  "transcriptionError": "Ошибка при транскрипции.",
+  "lurkersAllGood": "Все в порядке!",
+  "lurkersBye": "Пошли нахуй!",
+  "specifyUserToKick": "Укажи пользователя которого хочешь выгнать.",
+  "cantKickThisBot": "Хуй тебе в нос!",
+  "cantKickAdmin": "Вы не можете выгнать администратора.",
+  "userNotFound": "Пользователь не найден.",
+  "votekickPass": "Пошел нахуй!",
+  "votekickFailed": "остается!",
+  "botHasNoIdea": "Бля я хуй знает дядя."
+}

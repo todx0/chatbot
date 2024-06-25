@@ -1,23 +1,26 @@
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions/index';
-import TelegramBot, {} from './bot';
-import { botUsername, loadConfig } from './config';
+import TelegramBot from './bot';
+import { botUsername, config, loadConfig } from './config';
 import {
   createMessagesTable,
   getDataFromEvent,
   messageNotSeen,
   shouldTranscribeMedia,
   somebodyMentioned,
-} from './helper';
+} from './utils/helper';
+import { initializeTranslations } from './utils/translation';
 
-const { SESSION, API_ID, API_HASH } = Bun.env;
+// const { SESSION, API_ID, API_HASH } = Bun.env;
 
 try {
   loadConfig();
+  // await initializeTranslations(config.LANGUAGE);
 } catch (error) {
   console.error(error);
   process.exit(1);
 }
+const { SESSION, API_ID, API_HASH } = config;
 const client = new TelegramClient(new StringSession(SESSION), +API_ID!, API_HASH!, {
   connectionRetries: 5,
 });
@@ -30,7 +33,6 @@ export const botWorkflow = async (event: any) => {
     messageText,
     message,
   } = getDataFromEvent(event);
-
 
   if (!groupId || !messageText || !message) return;
   if (!messageNotSeen(message)) return;

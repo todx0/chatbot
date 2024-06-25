@@ -1,9 +1,11 @@
 import { Content } from '@google/generative-ai';
 import { config, genAImodel, maxHistoryLength, recapTextRequest, safetySettings } from '../../config';
 import { ErrorHandler } from '../../errors/ErrorHandler';
-import { insertToMessages, readChatRoleFromDatabase, replaceDoubleSpaces, retry } from '../../helper';
+import { insertToMessages, readChatRoleFromDatabase, replaceDoubleSpaces, retry } from '../../utils/helper';
+import { getTranslations } from '../../utils/translation';
 
 export async function generateGenAIResponse(userRequest: string): Promise<string> {
+  const translations = getTranslations();
   let retryCount = 0;
   let retryRequestDisclaimer = [
     ``,
@@ -34,7 +36,7 @@ export async function generateGenAIResponse(userRequest: string): Promise<string
       const { response } = result;
       let responseText = response.text();
 
-      if (!responseText) responseText = 'Бля я хуй знает дядя.';
+      if (!responseText) responseText = translations['botHasNoIdea'];
 
       await insertToMessages(userRoleContent);
       await insertToMessages({ role: 'model', parts: [{ text: responseText }] });

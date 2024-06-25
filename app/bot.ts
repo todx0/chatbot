@@ -2,6 +2,8 @@ import bigInt from 'big-integer';
 import { Api } from 'telegram';
 import { botUsername, maxTokenLength, messageLimit, pollTimeoutMs, recapTextRequest } from './config';
 import { ErrorHandler } from './errors/ErrorHandler';
+import { generateGenAIResponse, returnCombinedAnswerFromMultipleResponses } from './modules/google/api';
+import { SendMessageParams } from './types';
 import {
   approximateTokenLength,
   clearMessagesTable,
@@ -11,9 +13,8 @@ import {
   insertToMessages,
   retry,
   splitMessageInChunks,
-} from './helper';
-import { generateGenAIResponse, returnCombinedAnswerFromMultipleResponses } from './modules/google/api';
-import { SendMessageParams } from './types';
+} from './utils/helper';
+import translations from './utils/translation';
 
 const { BOT_ID } = Bun.env;
 
@@ -45,14 +46,14 @@ export default class TelegramBot {
     const poll = new Api.InputMediaPoll({
       poll: new Api.Poll({
         id: bigInt(Math.floor(Math.random() * 0xFFFFFFFFFFFFFFF)),
-        question: `Kick ${user}?`,
+        question: `${translations['kick']} ${user}?`,
         answers: [
           new Api.PollAnswer({
-            text: 'yes',
+            text: translations['yes'],
             option: Buffer.from('1'),
           }),
           new Api.PollAnswer({
-            text: 'no',
+            text: translations['no'],
             option: Buffer.from('2'),
           }),
         ],
@@ -90,7 +91,7 @@ export default class TelegramBot {
     await clearMessagesTable();
     await this.sendMessage({
       peer: this.groupId,
-      message: 'History cleared',
+      message: translations['historyCleared'],
     });
   }
 
@@ -110,11 +111,11 @@ export default class TelegramBot {
 
   async validateMsgLimit(msgLimit: number): Promise<void> {
     if (Number.isNaN(msgLimit)) {
-      throw new Error('/recap command requires a limit: /recap 50');
+      throw new Error(translations['recapWarning']);
     }
 
     if (msgLimit > messageLimit) {
-      throw new Error(`Max recap limit is ${messageLimit}: /recap ${messageLimit}`);
+      throw new Error(`${translations['recapLimit']} ${messageLimit}: /recap ${messageLimit}`);
     }
   }
 
@@ -157,7 +158,7 @@ export default class TelegramBot {
 
   async waitForTranscription(messageId: number): Promise<string> {
     const response = await retry(() => this.transcribeAudioMessage(messageId), 3);
-    if (response.text !== 'Error during transcription.') {
+    if (response.text !== translations['transcriptionError']) {
       return response.text;
     }
     return '';
@@ -278,12 +279,12 @@ export default class TelegramBot {
     if (!usersIdToDelete.length) {
       await this.sendMessage({
         peer: this.groupId,
-        message: 'Все молодцы',
+        message: translations['lurkersAllGood'],
       });
     } else {
       await this.sendMessage({
         peer: this.groupId,
-        message: 'Пошли нахуй:',
+        message: translations['lurkersBye'],
       });
       await this.banUsers(usersIdToDelete);
     }
@@ -295,7 +296,7 @@ export default class TelegramBot {
       if (!userToKick) {
         await this.sendMessage({
           peer: this.groupId,
-          message: 'Please specify user to kick.',
+          message: translations['specifyUserToKick'],
         });
         return;
       }
@@ -303,7 +304,7 @@ export default class TelegramBot {
       if (userToKick === botUsername) {
         await this.sendMessage({
           peer: this.groupId,
-          message: 'Хуй тебе в нос!',
+          message: translations['cantKickThisBot'],
         });
         return;
       }
@@ -312,7 +313,7 @@ export default class TelegramBot {
       if (!userIdToKick) {
         await this.sendMessage({
           peer: this.groupId,
-          message: 'User not found.',
+          message: translations['userNotFound'],
         });
         return;
       }
@@ -320,7 +321,7 @@ export default class TelegramBot {
       if (isAdmin) {
         await this.sendMessage({
           peer: this.groupId,
-          message: 'Cannot kick an admin.',
+          message: translations['cantKickAdmin'],
         });
         return;
       }
@@ -356,7 +357,7 @@ export default class TelegramBot {
           if (yesResults > noResults) {
             await this.sendMessage({
               peer: this.groupId,
-              message: `Пошел нахуй ${userToKick}!`,
+              message: `${translations['votekickPass']} ${userToKick}!`,
             });
             await this.banUsers([userIdToKick]);
             // Unexpected error: [GoogleGenerativeAI Error]: First content should be with role 'user', got model
@@ -364,7 +365,7 @@ export default class TelegramBot {
           } else {
             await this.sendMessage({
               peer: this.groupId,
-              message: `${userToKick} остается.`,
+              message: `${userToKick} ${translations['votekickFailed']}`,
             });
           }
           return;

@@ -4,9 +4,9 @@ import { Database } from 'bun:sqlite';
 import * as fs from 'node:fs';
 import { unlink } from 'node:fs/promises';
 import { Api } from 'telegram';
-import { isTelegramPremium, maxHistoryLength } from './config';
-import { ErrorHandler } from './errors/ErrorHandler';
-import { DatabaseOptions, MediaObject } from './types';
+import { isTelegramPremium, maxHistoryLength } from '../config';
+import { ErrorHandler } from '../errors/ErrorHandler';
+import { DatabaseOptions, MediaObject } from '../types';
 
 export async function retry<T>(
   fn: (...args: any[]) => Promise<T>,
@@ -41,6 +41,12 @@ export async function convertToImage(buffer: Buffer): Promise<string> {
   if (!file.size) Bun.write(filepath, '');
   await Bun.write(file, buffer);
   return filepath;
+}
+
+export async function readAndParseJson(filePath: string): Promise<any> {
+  const file = Bun.file(filePath, { type: 'application/json' });
+  const contents = await file.json();
+  return contents;
 }
 
 export async function filterMessages(messages: string[]): Promise<string[]> {

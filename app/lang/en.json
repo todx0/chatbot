@@ -1,0 +1,18 @@
+{
+  "kick": "Kick",
+  "yes": "yes",
+  "no": "no",
+  "historyCleared": "History cleared.",
+  "recapWarning": "/recap command requires a limit: /recap 50",
+  "recapLimit": "Max recap limit is ",
+  "transcriptionError": "Error during transcription.",
+  "lurkersAllGood": "Everyone doing great!",
+  "lurkersBye": "Get out!",
+  "specifyUserToKick": "Please specify user to kick.",
+  "cantKickThisBot": "You can not kick me",
+  "cantKickAdmin": "You can not kick an admin.",
+  "userNotFound": "User not found.",
+  "votekickPass": "Bye!",
+  "votekickFailed": "is staying!",
+  "botHasNoIdea": "I have no idea."
+}
