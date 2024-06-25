@@ -9,13 +9,9 @@ import {
   shouldTranscribeMedia,
   somebodyMentioned,
 } from './utils/helper';
-import { initializeTranslations } from './utils/translation';
-
-// const { SESSION, API_ID, API_HASH } = Bun.env;
 
 try {
   loadConfig();
-  // await initializeTranslations(config.LANGUAGE);
 } catch (error) {
   console.error(error);
   process.exit(1);
