@@ -12,7 +12,7 @@
   "cantKickThisBot": "You can not kick me",
   "cantKickAdmin": "You can not kick an admin.",
   "userNotFound": "User not found.",
-  "votekickPass": "Bye!",
+  "votekickPass": "Bye",
   "votekickFailed": "is staying!",
   "botHasNoIdea": "I have no idea."
 }
