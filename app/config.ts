@@ -46,7 +46,7 @@ export const safetySettings = [
 const generativeModelOptions: ModelParams = {
   model: genAImodelName,
   safetySettings,
-  systemInstruction: `${config.SECRET_OPTIONS}. 
+  systemInstruction: `Use telegram markup. ${config.SECRET_OPTIONS}. 
   ${
     featureFlags.humanize
       ? 'Adjust the tone of the reply to be a little bit more noxious, blunt, and impolite.'
