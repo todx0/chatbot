@@ -46,7 +46,7 @@ export const safetySettings = [
 const generativeModelOptions: ModelParams = {
   model: genAImodelName,
   safetySettings,
-  systemInstruction: `Use telegram markup. ${config.SECRET_OPTIONS}. 
+  systemInstruction: `Use telegram markdown. ${config.SECRET_OPTIONS}. 
   ${
     featureFlags.humanize
       ? 'Adjust the tone of the reply to be a little bit more noxious, blunt, and impolite.'
@@ -56,7 +56,7 @@ const generativeModelOptions: ModelParams = {
 export const genAI = new GoogleGenerativeAI(config.GAPI);
 export const genAImodel = genAI.getGenerativeModel(generativeModelOptions);
 export const recapTextRequest =
-  `Mandatory options: Do not use markup; Use only ${config.LANGUAGE}; \n Generate a short recap of the following conversation: \n`;
+  `Mandatory options: Use only ${config.LANGUAGE}; \n Generate a short recap of the following conversation: \n`;
 
 function checkRequiredEnvVariables(requiredEnvVariables: string[]): void {
   requiredEnvVariables.forEach((variable) => {
