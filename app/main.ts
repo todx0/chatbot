@@ -31,6 +31,7 @@ export const botWorkflow = async (event: any) => {
     message,
   } = getDataFromEvent(event);
 
+
   if (!groupId || !messageText || !message) return;
   if (!messageNotSeen(message)) return;
 

@@ -192,6 +192,11 @@ export function getDataFromEvent(event: any) {
   };
 }
 
+export function replaceDoubleSpaces(str: string): string {
+  const regex = /\s{2,}/g;
+  return str.replace(regex, ' ');
+}
+
 export const messageNotSeen = (message: Api.Message): boolean => !message.reactions && !message.editDate;
 export const canTranscribeMedia = (
   media: MediaObject,

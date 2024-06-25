@@ -1,33 +1,7 @@
 import { Content } from '@google/generative-ai';
 import { config, genAImodel, maxHistoryLength, recapTextRequest, safetySettings } from '../../config';
 import { ErrorHandler } from '../../errors/ErrorHandler';
-import { insertToMessages, readChatRoleFromDatabase, retry } from '../../helper';
-
-/* export async function generateGenAIResponse(userRequest: string): Promise<string> {
-  try {
-    const userRoleContent: Content = { role: 'user', parts: [{ text: userRequest }] };
-    const history: Content[] = await readChatRoleFromDatabase({ limit: maxHistoryLength });
-
-    const chat = genAImodel.startChat({
-      history,
-      safetySettings,
-    });
-
-    const result = await chat.sendMessage(userRequest);
-    const { response } = result;
-
-    let responseText = response.text();
-
-    if (!responseText) responseText = 'Бля я хуй знает дядя.';
-
-    await insertToMessages(userRoleContent);
-    await insertToMessages({ role: 'model', parts: [{ text: responseText }] });
-
-    return responseText;
-  } catch (error: any) {
-    return ErrorHandler.handleError(error);
-  }
-} */
+import { insertToMessages, readChatRoleFromDatabase, replaceDoubleSpaces, retry } from '../../helper';
 
 export async function generateGenAIResponse(userRequest: string): Promise<string> {
   let retryCount = 0;
@@ -73,7 +47,8 @@ export async function generateGenAIResponse(userRequest: string): Promise<string
 
   try {
     const responseText = await retry(fetchGenAIResponse, retryRequestDisclaimer.length);
-    return responseText;
+    const formatedText = replaceDoubleSpaces(responseText);
+    return formatedText;
   } catch (error: any) {
     return ErrorHandler.handleError(error);
   }
