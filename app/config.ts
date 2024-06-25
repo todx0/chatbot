@@ -46,7 +46,7 @@ export const safetySettings = [
 const generativeModelOptions: ModelParams = {
   model: genAImodelName,
   safetySettings,
-  systemInstruction: `Use telegram markdown. ${config.SECRET_OPTIONS}. 
+  systemInstruction: `Use telegram markdown. Do not use double space between words. ${config.SECRET_OPTIONS}. 
   ${
     featureFlags.humanize
       ? 'Adjust the tone of the reply to be a little bit more noxious, blunt, and impolite.'
