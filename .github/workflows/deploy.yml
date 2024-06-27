@@ -18,14 +18,21 @@ jobs:
         curl -L https://fly.io/install.sh | sh
         echo 'export FLYCTL_INSTALL="$HOME/.fly"' >> $GITHUB_ENV
         echo 'export PATH="$FLYCTL_INSTALL/bin:$PATH"' >> $GITHUB_ENV
-        echo 'FLYCTL_INSTALL="$HOME/.fly"' >> $GITHUB_ENV
-        echo 'PATH="$FLYCTL_INSTALL/bin:$PATH"' >> $GITHUB_ENV
+
+    - name: Load environment variables
+      run: |
         source $GITHUB_ENV
+        flyctl --version  # Verify installation
 
     - name: Authenticate with Fly.io
       run: flyctl auth login -t ${{ secrets.FLY_API_TOKEN }}
+      env:
+        FLYCTL_INSTALL: ${{ env.FLYCTL_INSTALL }}
+        PATH: ${{ env.PATH }}
 
     - name: Run deploy script
       run: ./deploy.sh
       env:
         FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        FLYCTL_INSTALL: ${{ env.FLYCTL_INSTALL }}
+        PATH: ${{ env.PATH }}
