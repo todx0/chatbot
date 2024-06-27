@@ -1,9 +1,9 @@
-name: Deploy to fly.io
+name: Deploy to Fly.io
 
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   deploy:
@@ -16,8 +16,11 @@ jobs:
     - name: Set up Flyctl
       run: |
         curl -L https://fly.io/install.sh | sh
-        export FLYCTL_INSTALL="/home/runner/.fly"
-        export PATH="$FLYCTL_INSTALL/bin:$PATH"
+        echo 'export FLYCTL_INSTALL="$HOME/.fly"' >> $GITHUB_ENV
+        echo 'export PATH="$FLYCTL_INSTALL/bin:$PATH"' >> $GITHUB_ENV
+        echo 'FLYCTL_INSTALL="$HOME/.fly"' >> $GITHUB_ENV
+        echo 'PATH="$FLYCTL_INSTALL/bin:$PATH"' >> $GITHUB_ENV
+        source $GITHUB_ENV
 
     - name: Authenticate with Fly.io
       run: flyctl auth login -t ${{ secrets.FLY_API_TOKEN }}
