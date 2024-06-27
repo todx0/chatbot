@@ -54,7 +54,8 @@ const generativeModelOptions: ModelParams = {
 };
 export const genAI = new GoogleGenerativeAI(config.GAPI);
 export const genAImodel = genAI.getGenerativeModel(generativeModelOptions);
-export const recapTextRequest = `Generate a short recap of the following conversation: \n. Total `;
+export const recapTextRequest =
+  `Generate a short recap of the following conversation: \n. Total message length should exceed ${maxTokenLength} symbols.`;
 
 function checkRequiredEnvVariables(requiredEnvVariables: string[]): void {
   requiredEnvVariables.forEach((variable) => {
