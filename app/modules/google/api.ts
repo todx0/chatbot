@@ -1,54 +1,69 @@
 import { Content } from '@google/generative-ai';
 import { config, genAImodel, maxHistoryLength, recapTextRequest, safetySettings } from '../../config';
 import { ErrorHandler } from '../../errors/ErrorHandler';
-import { insertToMessages, readChatRoleFromDatabase, replaceDoubleSpaces, retry } from '../../utils/helper';
+import { insertToMessages, readChatRoleFromDatabase, replaceDoubleSpaces } from '../../utils/helper';
 import { getTranslations } from '../../utils/translation';
 
 export async function generateGenAIResponse(userRequest: string): Promise<string> {
   const translations = getTranslations();
   let retryCount = 0;
-  let retryRequestDisclaimer = [
+  const retryRequestDisclaimer = [
     ``,
     `Provide a concise counterpoint to the message's viewpoint:`,
     `Offer a surprising twist on the message's underlying theme:`,
     `Generate a brief thought experiment related to the message's concept:`,
     `Offer an alternative perspective on the topic of the message:`,
   ];
-  const disclaimer = `This message is for informational purposes only and does not promote violence,
-  hate speech, or illegal activities.`;
+  const disclaimer =
+    `This message is for informational purposes only and does not promote violence, hate speech, or illegal activities.`;
+
   async function fetchGenAIResponse(): Promise<string> {
+    const userRoleContent: Content = { role: 'user', parts: [{ text: userRequest }] };
+    const history: Content[] = await readChatRoleFromDatabase({ limit: maxHistoryLength });
+
+    const chat = genAImodel.startChat({
+      history,
+      safetySettings,
+    });
+
+    const request = retryCount === 0
+      ? userRequest
+      : `${disclaimer} ${retryRequestDisclaimer[retryCount]} ${userRequest}`;
+    retryCount += 1;
+
+    const result = await chat.sendMessage(request);
+    const responseText = result?.response?.text() || translations['botHasNoIdea'];
+
+    await insertToMessages(userRoleContent);
+    await insertToMessages({ role: 'model', parts: [{ text: responseText }] });
+
+    return responseText;
+  }
+
+  async function retryHandler(): Promise<string> {
     try {
-      const userRoleContent: Content = { role: 'user', parts: [{ text: userRequest }] };
-      const history: Content[] = await readChatRoleFromDatabase({ limit: maxHistoryLength });
-
-      const chat = genAImodel.startChat({
-        history,
-        safetySettings,
-      });
-
-      const request = !retryCount
-        ? userRequest
-        : `${disclaimer} ${retryRequestDisclaimer[retryCount]} ${userRequest} \n Reply in ${config.LANGUAGE}`;
-
-      retryCount += 1;
-      const result = await chat.sendMessage(request);
-
-      const { response } = result;
-      let responseText = response.text();
-
-      if (!responseText) responseText = translations['botHasNoIdea'];
-
-      await insertToMessages(userRoleContent);
-      await insertToMessages({ role: 'model', parts: [{ text: responseText }] });
-
-      return responseText;
+      return await fetchGenAIResponse();
     } catch (error: any) {
-      throw new Error(error.message);
+      if (error.message.includes('Response was blocked due to OTHER')) {
+        if (retryCount < retryRequestDisclaimer.length) {
+          return retryHandler();
+        } else {
+          console.error('Maximum retries reached with disclaimer');
+          return translations['botHasNoIdea'];
+        }
+      } else {
+        if (retryCount < retryRequestDisclaimer.length) {
+          return retryHandler();
+        } else {
+          console.error('Maximum retries reached');
+          return translations['botHasNoIdea'];
+        }
+      }
     }
   }
 
   try {
-    const responseText = await retry(fetchGenAIResponse, retryRequestDisclaimer.length);
+    const responseText = await retryHandler();
     const formatedText = replaceDoubleSpaces(responseText);
     return formatedText;
   } catch (error: any) {
@@ -65,7 +80,7 @@ export async function generateMultipleResponses(userRequests: string[]): Promise
 export async function combineResponses(responses: string[]): Promise<string> {
   const combinedResponseArray = responses.join(' ^^^ ');
   const combinedResponse = await generateGenAIResponse(
-    `Combine responses separated with ' ^^^ ' into one: ${combinedResponseArray}. Do not include separator in combined response. Do not duplicate topics.`,
+    `Combine responses separated with ' ^^^ ' into one: ${combinedResponseArray}. \n Do not include separator in combined response. Do not duplicate topics. Message should be shorter than ${config.maxTokenLength} symbols.`,
   );
   return combinedResponse;
 }

@@ -19,7 +19,7 @@ export function getTranslations(): Translations {
   }
   return translationsCache;
 }
-
-await initializeTranslations(config.LANGUAGE);
+const getLanguageCode = (language: string) => language.toLowerCase().slice(0, 2);
+await initializeTranslations(getLanguageCode(config.LANGUAGE));
 
 export default translationsCache as Translations;
