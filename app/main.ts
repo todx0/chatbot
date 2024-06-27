@@ -21,6 +21,7 @@ const client = new TelegramClient(new StringSession(SESSION), +API_ID!, API_HASH
   connectionRetries: 5,
 });
 export default client;
+const bot = new TelegramBot(client);
 
 export const botWorkflow = async (event: any) => {
   const {
@@ -30,10 +31,8 @@ export const botWorkflow = async (event: any) => {
     message,
   } = getDataFromEvent(event);
 
-  if (!groupId || !messageText || !message) return;
-  if (!messageNotSeen(message)) return;
+  if (!groupId || !messageText || !message || !messageNotSeen(message)) return;
 
-  const bot = new TelegramBot(client);
   bot.setGroupId(groupId);
 
   const commandMappings: Record<string, (msgText: string) => Promise<void | string>> = {
@@ -44,14 +43,19 @@ export const botWorkflow = async (event: any) => {
     '/users': () => bot.printUserEntities(),
   };
 
-  for (const command in commandMappings) {
-    if (messageText.includes(command)) {
-      await commandMappings[command](messageText);
-      return;
+  const executeCommand = async (messageText: string) => {
+    for (const command in commandMappings) {
+      if (messageText.includes(command)) {
+        await commandMappings[command](messageText);
+        return true;
+      }
     }
-  }
+    return false;
+  };
 
-  if (somebodyMentioned(message)) {
+  if (await executeCommand(messageText)) return;
+
+  const processMention = async () => {
     const isBotCalled = messageText.includes(botUsername);
 
     if (replyToMsgId && (await bot.checkReplyIdIsBotId(replyToMsgId))) {
@@ -60,10 +64,19 @@ export const botWorkflow = async (event: any) => {
     }
 
     if (isBotCalled) {
-      const messageContentWithoutBotName = messageText.replace(botUsername, '');
-      await bot.processMessage(messageContentWithoutBotName, message.id);
-      return;
+      if (replyToMsgId) {
+        const replyMessageContent = await bot.getMessageContentById(replyToMsgId);
+        await bot.processMessage(replyMessageContent, message.id);
+      } else {
+        const messageContentWithoutBotName = messageText.replace(botUsername, '');
+        await bot.processMessage(messageContentWithoutBotName, message.id);
+      }
     }
+  };
+
+  if (somebodyMentioned(message)) {
+    await processMention();
+    return;
   }
 
   if (shouldTranscribeMedia(message)) {
