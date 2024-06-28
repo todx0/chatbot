@@ -1,10 +1,17 @@
 import { Content } from '@google/generative-ai';
-import { config, genAImodel, maxHistoryLength, recapTextRequest, safetySettings } from '../../config';
+import {
+  config,
+  genAImodel,
+  genAImodelWithoutSystemInstructions,
+  maxHistoryLength,
+  recapTextRequest,
+  safetySettings,
+} from '../../config';
 import { ErrorHandler } from '../../errors/ErrorHandler';
 import { insertToMessages, readChatRoleFromDatabase, replaceDoubleSpaces } from '../../utils/helper';
 import { getTranslations } from '../../utils/translation';
 
-export async function generateGenAIResponse(userRequest: string): Promise<string> {
+export async function generateGenAIResponse(userRequest: string, recap = false): Promise<string> {
   const translations = getTranslations();
   let retryCount = 0;
   const retryRequestDisclaimer = [
@@ -21,10 +28,14 @@ export async function generateGenAIResponse(userRequest: string): Promise<string
     const userRoleContent: Content = { role: 'user', parts: [{ text: userRequest }] };
     const history: Content[] = await readChatRoleFromDatabase({ limit: maxHistoryLength });
 
-    const chat = genAImodel.startChat({
-      history,
-      safetySettings,
-    });
+    const chat = recap
+      ? genAImodel.startChat({
+        history,
+        safetySettings,
+      })
+      : genAImodelWithoutSystemInstructions.startChat({
+        safetySettings,
+      });
 
     const request = retryCount === 0
       ? userRequest

@@ -128,7 +128,7 @@ export default class TelegramBot {
 
     if (messagesLength <= maxTokenLength) {
       const messageString = filteredMessages.join(' ');
-      return generateGenAIResponse(`${recapTextRequest} ${messageString}`);
+      return generateGenAIResponse(`${recapTextRequest} ${messageString}`, true);
     } else {
       const chunks = await splitMessageInChunks(filteredMessages.join(' '));
       return returnCombinedAnswerFromMultipleResponses(chunks);
