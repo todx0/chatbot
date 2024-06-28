@@ -33,57 +33,16 @@ export const botWorkflow = async (event: any) => {
 
   if (!groupId || !messageText || !message || !messageNotSeen(message)) return;
 
-  const commandMappings: Record<string, (msgText: string) => Promise<void | string>> = {
-    '/recap': (msgText) => bot.handleRecapCommand(msgText),
-    '/clear': () => bot.handleClearCommand(),
-    '/scan': () => bot.removeLurkers(),
-    '/votekick': (msgText) => bot.processVoteKick(msgText),
-    '/users': () => bot.printUserEntities(),
-  };
-
-  const executeCommand = async (messageText: string) => {
-    bot.setGroupId(groupId);
-    for (const command in commandMappings) {
-      if (messageText.includes(command)) {
-        await commandMappings[command](messageText);
-        return true;
-      }
-    }
-    return false;
-  };
-
-  if (await executeCommand(messageText)) return;
-
-  const processMention = async () => {
-    bot.setGroupId(groupId);
-    const isBotCalled = messageText.includes(botUsername);
-
-    if (replyToMsgId && (await bot.checkReplyIdIsBotId(replyToMsgId))) {
-      await bot.processMessage(messageText, message.id);
-      return;
-    }
-
-    if (isBotCalled) {
-      if (replyToMsgId) {
-        const replyMessageContent = await bot.getMessageContentById(replyToMsgId);
-        await bot.processMessage(replyMessageContent, message.id);
-      } else {
-        const messageContentWithoutBotName = messageText.replace(botUsername, '');
-        await bot.processMessage(messageContentWithoutBotName, message.id);
-      }
-    }
-  };
+  if (await bot.executeCommand(messageText, groupId)) return;
 
   if (somebodyMentioned(message)) {
-    await processMention();
+    await bot.processMention(groupId, replyToMsgId, messageText, message);
     return;
   }
 
   if (shouldTranscribeMedia(message)) {
-    const transcribedAudio = await bot.waitForTranscription(message.id);
-    if (transcribedAudio) {
-      await bot.processMessage(transcribedAudio, false);
-    }
+    bot.transcribeMedia(groupId, message);
+    return;
   }
 };
 

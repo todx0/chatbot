@@ -10,6 +10,7 @@ import {
   convertToImage,
   downloadFile,
   filterMessages,
+  getDataFromEvent,
   insertToMessages,
   retry,
   splitMessageInChunks,
@@ -23,12 +24,11 @@ export default class TelegramBot {
 
   private groupId: any;
 
-  constructor(client: any, groupId: any = 0) {
+  constructor(client: any) {
     this.client = client;
-    this.groupId = groupId;
   }
 
-  setGroupId(newValue: number): void {
+  set currGroupId(newValue: number) {
     this.groupId = newValue;
   }
 
@@ -441,5 +441,52 @@ export default class TelegramBot {
   async fetchAndInsertMessages(limit: number): Promise<void> {
     const messages = await this.getMessages(limit);
     messages.forEach((message) => insertToMessages({ role: 'user', parts: [{ text: message }] }));
+  }
+
+  async executeCommand(messageText: string, groupId: number): Promise<boolean> {
+    this.currGroupId = groupId;
+
+    const commandMappings: Record<string, (msgText: string) => Promise<void | string>> = {
+      '/recap': (msgText) => this.handleRecapCommand(msgText),
+      '/clear': () => this.handleClearCommand(),
+      '/scan': () => this.removeLurkers(),
+      '/votekick': (msgText) => this.processVoteKick(msgText),
+      '/users': () => this.printUserEntities(),
+    };
+
+    for (const command in commandMappings) {
+      if (messageText.includes(command)) {
+        await commandMappings[command](messageText);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  async processMention(groupId: number, replyToMsgId: number, messageText: string, message: any) {
+    this.currGroupId = groupId;
+
+    if (replyToMsgId && (await this.checkReplyIdIsBotId(replyToMsgId))) {
+      await this.processMessage(messageText, message.id);
+      return;
+    }
+
+    const isBotCalled = messageText.includes(botUsername);
+    if (isBotCalled) {
+      if (replyToMsgId) {
+        const replyMessageContent = await this.getMessageContentById(replyToMsgId);
+        await this.processMessage(replyMessageContent, message.id);
+      } else {
+        const messageContentWithoutBotName = messageText.replace(botUsername, '');
+        await this.processMessage(messageContentWithoutBotName, message.id);
+      }
+    }
+  }
+  async transcribeMedia(groupId: number, message: any) {
+    this.currGroupId = groupId;
+    const transcribedAudio = await this.waitForTranscription(message.id);
+    if (transcribedAudio) {
+      await this.processMessage(transcribedAudio, false);
+    }
   }
 }
