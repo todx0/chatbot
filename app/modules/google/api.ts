@@ -28,7 +28,7 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
     const userRoleContent: Content = { role: 'user', parts: [{ text: userRequest }] };
     const history: Content[] = await readChatRoleFromDatabase({ limit: maxHistoryLength });
 
-    const chat = recap
+    const chat = !recap
       ? genAImodel.startChat({
         history,
         safetySettings,
