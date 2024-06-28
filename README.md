@@ -9,11 +9,11 @@ The bot requires a real Telegram account and is not managed by BotFather. See ho
 1. Install [Bun](https://bun.sh/docs/installation)
 2. Clone the repository
 3. Rename `.env.example` to `.env`
-4. Generate API_ID and API_HASH [here](https://gram.js.org/getting-started/authorization#getting-api-id-and-api-hash).
+4. Generate API_ID and API_HASH [here](https://gram.js.org/getting-started/authorization#getting-api-id-and-api-hash)
 5. Generate SESSION key [Learn how](https://gram.js.org/getting-started/authorization) or run `bun scripts/getSession.js`
-6. Get your GAPI key [here](https://makersuite.google.com/app/apikey).
-7. Login as a bot and send a message to @RawDataBot. Use `message.from.id` as BOT_ID.
-8. In .env set your BOT_USERNAME to your bot username including @.
+6. Get your GAPI key [here](https://makersuite.google.com/app/apikey)
+7. Login as a bot and send a message to @RawDataBot. Use `message.from.id` as BOT_ID
+8. In .env set your BOT_USERNAME to your bot username including @
 
 After completing the above steps, you can proceed with the following commands:
 
