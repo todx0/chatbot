@@ -51,9 +51,13 @@ const generativeModelOptions: ModelParams = {
       : ''
   }`,
 };
+const generativeModelOptionsForRecap: ModelParams = {
+  model: genAImodelName,
+  systemInstruction: `Use telegram markdown. Always reply in ${config.LANGUAGE}. ${config.SECRET_OPTIONS}.`,
+};
 export const genAI = new GoogleGenerativeAI(config.GAPI);
 export const genAImodel = genAI.getGenerativeModel(generativeModelOptions);
-export const genAImodelWithoutSystemInstructions = genAI.getGenerativeModel({ model: genAImodelName });
+export const genAImodelForRecap = genAI.getGenerativeModel(generativeModelOptionsForRecap);
 export const recapTextRequest =
   `Generate a short recap of the following conversation: \n. Total message length should exceed ${maxTokenLength} symbols.`;
 
