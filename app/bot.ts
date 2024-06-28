@@ -10,7 +10,6 @@ import {
   convertToImage,
   downloadFile,
   filterMessages,
-  getDataFromEvent,
   insertToMessages,
   retry,
   splitMessageInChunks,
@@ -202,13 +201,11 @@ export default class TelegramBot {
     return false;
   }
 
-  async processMessage(messageText: string, history = true): Promise<void | string> {
+  async processMessage(messageText: string, replyTo?: number): Promise<void | string> {
     let message = messageText.replace(botUsername, '');
-    if (history) {
-      message = await generateGenAIResponse(message);
-    }
+    message = await generateGenAIResponse(message);
     try {
-      await this.client.sendMessage(`-${this.groupId}`, { message });
+      await this.client.sendMessage(`-${this.groupId}`, { message, replyTo });
     } catch (error: any) {
       return ErrorHandler.handleError(error, true);
     }
@@ -462,11 +459,11 @@ export default class TelegramBot {
     return false;
   }
 
-  async processMention(groupId: number, replyToMsgId: number, messageText: string, message: any) {
+  async processMention(groupId: number, replyToMsgId: number, messageText: string, messageId: number) {
     this.currGroupId = groupId;
 
     if (replyToMsgId && (await this.checkReplyIdIsBotId(replyToMsgId))) {
-      await this.processMessage(messageText, message.id);
+      await this.processMessage(messageText, messageId);
       return;
     }
 
@@ -474,18 +471,18 @@ export default class TelegramBot {
     if (isBotCalled) {
       if (replyToMsgId) {
         const replyMessageContent = await this.getMessageContentById(replyToMsgId);
-        await this.processMessage(replyMessageContent, message.id);
+        await this.processMessage(replyMessageContent, messageId);
       } else {
         const messageContentWithoutBotName = messageText.replace(botUsername, '');
-        await this.processMessage(messageContentWithoutBotName, message.id);
+        await this.processMessage(messageContentWithoutBotName, messageId);
       }
     }
   }
-  async transcribeMedia(groupId: number, message: any) {
+  async transcribeMedia(groupId: number, messageId: number) {
     this.currGroupId = groupId;
-    const transcribedAudio = await this.waitForTranscription(message.id);
+    const transcribedAudio = await this.waitForTranscription(messageId);
     if (transcribedAudio) {
-      await this.processMessage(transcribedAudio, false);
+      await this.processMessage(transcribedAudio);
     }
   }
 }

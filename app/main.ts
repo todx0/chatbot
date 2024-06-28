@@ -36,7 +36,7 @@ export const botWorkflow = async (event: any) => {
   if (await bot.executeCommand(messageText, groupId)) return;
 
   if (somebodyMentioned(message)) {
-    await bot.processMention(groupId, replyToMsgId, messageText, message);
+    await bot.processMention(groupId, replyToMsgId, messageText, message.id);
     return;
   }
 
