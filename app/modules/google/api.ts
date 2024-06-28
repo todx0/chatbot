@@ -84,7 +84,7 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
 
 export async function generateMultipleResponses(userRequests: string[]): Promise<string[]> {
   return Promise.all(
-    userRequests.map(async (chunk) => generateGenAIResponse(`${recapTextRequest} ${chunk}`)),
+    userRequests.map(async (chunk) => generateGenAIResponse(`${recapTextRequest} ${chunk}`, true)),
   );
 }
 
@@ -92,6 +92,7 @@ export async function combineResponses(responses: string[]): Promise<string> {
   const combinedResponseArray = responses.join(' ^^^ ');
   const combinedResponse = await generateGenAIResponse(
     `Combine responses separated with ' ^^^ ' into one: ${combinedResponseArray}. \n Do not include separator in combined response. Do not duplicate topics. Message should be shorter than ${config.maxTokenLength} symbols.`,
+    true,
   );
   return combinedResponse;
 }
