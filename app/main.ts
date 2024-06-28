@@ -33,8 +33,6 @@ export const botWorkflow = async (event: any) => {
 
   if (!groupId || !messageText || !message || !messageNotSeen(message)) return;
 
-  bot.setGroupId(groupId);
-
   const commandMappings: Record<string, (msgText: string) => Promise<void | string>> = {
     '/recap': (msgText) => bot.handleRecapCommand(msgText),
     '/clear': () => bot.handleClearCommand(),
@@ -44,6 +42,7 @@ export const botWorkflow = async (event: any) => {
   };
 
   const executeCommand = async (messageText: string) => {
+    bot.setGroupId(groupId);
     for (const command in commandMappings) {
       if (messageText.includes(command)) {
         await commandMappings[command](messageText);
@@ -56,6 +55,7 @@ export const botWorkflow = async (event: any) => {
   if (await executeCommand(messageText)) return;
 
   const processMention = async () => {
+    bot.setGroupId(groupId);
     const isBotCalled = messageText.includes(botUsername);
 
     if (replyToMsgId && (await bot.checkReplyIdIsBotId(replyToMsgId))) {
