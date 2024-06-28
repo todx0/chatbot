@@ -208,7 +208,6 @@ export default class TelegramBot {
       message = await generateGenAIResponse(message);
     }
     try {
-      // no idea why my sendMessage is working only for channels but not groups. Using raw function.
       await this.client.sendMessage(`-${this.groupId}`, { message });
     } catch (error: any) {
       return ErrorHandler.handleError(error, true);

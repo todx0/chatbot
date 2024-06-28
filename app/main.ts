@@ -1,7 +1,7 @@
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions/index';
 import TelegramBot from './bot';
-import { botUsername, config, loadConfig } from './config';
+import { config, loadConfig } from './config';
 import {
   createMessagesTable,
   getDataFromEvent,
