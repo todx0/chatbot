@@ -2,7 +2,7 @@ import { Content } from '@google/generative-ai';
 import {
   config,
   genAImodel,
-  generativeModelOptionsForRecap,
+  genAImodelForRecap,
   maxHistoryLength,
   recapTextRequest,
   safetySettings,
@@ -33,7 +33,7 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
         history,
         safetySettings,
       })
-      : generativeModelOptionsForRecap.startChat({
+      : genAImodelForRecap.startChat({
         safetySettings,
       });
 
