@@ -390,9 +390,9 @@ export default class TelegramBot {
   }
 
   async printUserEntities(groupId: string, limit = 3000) {
-    const userEntities = [];
+    const userEntities = ['Name; Username; ID; Telegram Premium'];
     for await (const user of this.client.iterParticipants(`-${groupId}`, { limit })) {
-      const userString = `${user.firstName}; ${user.username}; ${user.id}; premium: ${user.premium};`;
+      const userString = `${user.firstName}; ${user.username}; ${user.id}; ${user.premium};`;
       userEntities.push(userString);
     }
     await this.sendMessage({
