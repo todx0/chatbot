@@ -1,4 +1,6 @@
 import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory, ModelParams } from '@google/generative-ai';
+import { TelegramClient } from 'telegram';
+import { StringSession } from 'telegram/sessions/index';
 import { ProcessEnv } from './types';
 export const config = {
   API_ID: Bun.env.API_ID,
@@ -15,6 +17,15 @@ export const config = {
 export const featureFlags = {
   humanize: true,
 };
+
+export const client = new TelegramClient(
+  new StringSession(config.SESSION),
+  +config.API_ID,
+  config.API_HASH,
+  {
+    connectionRetries: 5,
+  },
+);
 
 export const maxHistoryLength = 20;
 export const isTelegramPremium = false;
@@ -81,4 +92,13 @@ export function loadConfig(): void {
     'SECRET_OPTIONS',
   ];
   checkRequiredEnvVariables(requiredEnvVariables);
+}
+
+export function initConfig(): void {
+  try {
+    loadConfig();
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  }
 }
