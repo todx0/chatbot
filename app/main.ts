@@ -8,10 +8,9 @@ import {
   somebodyMentioned,
 } from './utils/helper';
 
-initConfig();
 const bot = new TelegramBot(client);
 
-export const botWorkflow = async (event: any) => {
+const botWorkflow = async (event: any) => {
   const { groupId, replyToMsgId, messageText, message } = getDataFromEvent(event);
 
   if (!groupId || !messageText || !message || !messageNotSeen(message)) return;
@@ -30,6 +29,7 @@ export const botWorkflow = async (event: any) => {
 };
 
 (async () => {
+  initConfig();
   await createMessagesTable();
   await client.connect();
   client.addEventHandler(botWorkflow);
