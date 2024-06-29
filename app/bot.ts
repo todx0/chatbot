@@ -1,9 +1,10 @@
 import bigInt from 'big-integer';
 import { Api } from 'telegram';
-import { botUsername, maxTokenLength, messageLimit, pollTimeoutMs, recapTextRequest } from './config';
+import { TelegramClient } from 'telegram';
+import { botUsername, client, maxTokenLength, messageLimit, pollTimeoutMs, recapTextRequest } from './config';
 import { ErrorHandler } from './errors/ErrorHandler';
 import { generateGenAIResponse, returnCombinedAnswerFromMultipleResponses } from './modules/google/api';
-import { SendMessageParams } from './types';
+import { PollMessage, PollResults, SendMessageParams } from './types';
 import {
   approximateTokenLength,
   clearMessagesTable,
@@ -19,9 +20,9 @@ import translations from './utils/translation';
 const { BOT_ID } = Bun.env;
 
 export default class TelegramBot {
-  private readonly client: any;
+  private readonly client: TelegramClient;
 
-  constructor(client: any) {
+  constructor() {
     this.client = client;
   }
 
@@ -160,7 +161,9 @@ export default class TelegramBot {
   async getMessageContentById(messageId: number, groupId: string): Promise<string> {
     const message = await this.client.getMessages(groupId, { ids: messageId });
     let content;
-    if (message[0]?.media?.photo) {
+    const media = message[0]?.media as { photo?: any };
+
+    if (media?.photo) {
       content = await this.getImageBuffer(message);
       content = await convertToImage(content);
     } else {
@@ -182,7 +185,7 @@ export default class TelegramBot {
         dcId: photo.dcId,
       },
     );
-    return buffer;
+    return buffer as Buffer;
   }
 
   async checkReplyIdIsBotId(messageId: number, groupId: string): Promise<boolean> {
@@ -218,10 +221,13 @@ export default class TelegramBot {
   async getUniqUsers(limit: number, groupId: string): Promise<Set<string>> {
     const uniqUsers = new Set<string>();
     const userEntities = [];
+
     for await (const user of this.client.iterParticipants(`-${groupId}`, { limit })) {
-      const userNameId = { user: user.username, id: String(user.id.value) };
+      const userId = (user.id as any).value as string;
+      const userNameId = { user: user.username, id: userId };
       userEntities.push(userNameId);
     }
+
     userEntities.forEach((userEntity: any) => {
       const userId = userEntity.id;
       const userName = userEntity.user;
@@ -229,6 +235,7 @@ export default class TelegramBot {
         uniqUsers.add(userId);
       }
     });
+
     return uniqUsers;
   }
 
@@ -315,7 +322,8 @@ export default class TelegramBot {
         return;
       }
 
-      const pollMessage = await this.sendPollToKick(userToKick, groupId);
+      const pollMessage = await this.sendPollToKick(userToKick, groupId) as PollMessage;
+
       const pollMessageId = pollMessage.updates[0].id;
 
       await this.waitForPollResultsAndTakeAction(pollMessageId, userToKick, userIdToKick, groupId);
@@ -342,7 +350,7 @@ export default class TelegramBot {
   ) {
     const getPollResults = async (pollId: number) => {
       try {
-        const results = await this.getPollResults(pollId, groupId);
+        const results = await this.getPollResults(pollId, groupId) as PollResults;
 
         if (results.updates[0].results?.results) {
           const yesResults = results.updates[0].results.results[0]?.voters || 0;
@@ -379,10 +387,11 @@ export default class TelegramBot {
   async getUsernameIdIsAdmin(groupId: string, limit = 3000) {
     const userEntities = [];
     for await (const user of this.client.iterParticipants(`-${groupId}`, { limit })) {
+      const userId = (user.id as any).value as string;
       const userNameId = {
         user: user.username,
-        id: String(user.id.value),
-        isAdmin: user.participant.adminRights ? true : false,
+        id: userId,
+        isAdmin: (user as any).participant?.adminRights ? true : false,
       };
       userEntities.push(userNameId);
     }

@@ -22,3 +22,13 @@ export interface DatabaseOptions {
   limit?: number;
   dbsqlite?: string;
 }
+export interface PollMessage {
+  updates: { id: number }[];
+}
+export interface PollResults {
+  updates: {
+    results?: {
+      results: { voters: number }[];
+    };
+  }[];
+}
