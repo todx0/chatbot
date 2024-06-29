@@ -21,14 +21,8 @@ const { BOT_ID } = Bun.env;
 export default class TelegramBot {
   private readonly client: any;
 
-  private _groupId: any;
-
   constructor(client: any) {
     this.client = client;
-  }
-
-  set groupId(newValue: number) {
-    this._groupId = newValue;
   }
 
   async sendMessage(obj: SendMessageParams): Promise<Api.TypeUpdates | undefined> {
@@ -37,11 +31,11 @@ export default class TelegramBot {
     return result;
   }
 
-  async sendImage(imagePath: string): Promise<Api.Message> {
-    return this.client.sendMessage(this._groupId, { file: imagePath });
+  async sendImage(imagePath: string, groupId: string): Promise<Api.Message> {
+    return this.client.sendMessage(groupId, { file: imagePath });
   }
 
-  async sendPollToKick(user: string) {
+  async sendPollToKick(user: string, groupId: string) {
     const poll = new Api.InputMediaPoll({
       poll: new Api.Poll({
         id: bigInt(Math.floor(Math.random() * 0xFFFFFFFFFFFFFFF)),
@@ -67,7 +61,7 @@ export default class TelegramBot {
 
     const message = await this.client.invoke(
       new Api.messages.SendMedia({
-        peer: this._groupId,
+        peer: groupId,
         media: poll,
         message: '',
         randomId: bigInt(Math.floor(Math.random() * 0xFFFFFFFFFFFFFFF)),
@@ -76,9 +70,9 @@ export default class TelegramBot {
     return message;
   }
 
-  async getMessages(limit: number): Promise<string[]> {
+  async getMessages(limit: number, groupId: string): Promise<string[]> {
     const messages: string[] = [];
-    for await (const message of this.client.iterMessages(`-${this._groupId}`, { limit })) {
+    for await (const message of this.client.iterMessages(`-${groupId}`, { limit })) {
       if (message._sender?.firstName) {
         messages.push(`${message._sender.firstName}: ${message.message}`);
       }
@@ -86,25 +80,25 @@ export default class TelegramBot {
     return messages.reverse();
   }
 
-  async handleClearCommand(): Promise<void> {
+  async handleClearCommand(groupId: string): Promise<void> {
     await clearMessagesTable();
     await this.sendMessage({
-      peer: this._groupId,
+      peer: groupId,
       message: translations['historyCleared'],
     });
   }
 
-  async handleRecapCommand(messageText: string): Promise<void> {
+  async handleRecapCommand(messageText: string, groupId: string): Promise<void> {
     try {
       const msgLimit = parseInt(messageText.split(' ')[1]);
 
       await this.validateMsgLimit(msgLimit);
-      const messages = await this.retrieveAndFilterMessages(msgLimit);
+      const messages = await this.retrieveAndFilterMessages(msgLimit, groupId);
       const response = await this.generateRecapResponse(messages);
 
-      await this.sendMessage({ peer: this._groupId, message: response });
+      await this.sendMessage({ peer: groupId, message: response });
     } catch (error) {
-      await this.handleError(this._groupId, error);
+      await this.handleError(groupId, error);
     }
   }
 
@@ -118,8 +112,8 @@ export default class TelegramBot {
     }
   }
 
-  async retrieveAndFilterMessages(msgLimit: number): Promise<string[]> {
-    const messages = await this.getMessages(msgLimit);
+  async retrieveAndFilterMessages(msgLimit: number, groupId: string): Promise<string[]> {
+    const messages = await this.getMessages(msgLimit, groupId);
     return filterMessages(messages);
   }
 
@@ -140,31 +134,31 @@ export default class TelegramBot {
     return ErrorHandler.handleError(error, true);
   }
 
-  async downloadAndSendImageFromUrl(url: string): Promise<void> {
+  async downloadAndSendImageFromUrl(url: string, groupId: string): Promise<void> {
     const buffer = await downloadFile(url);
     const imagePath = await convertToImage(buffer);
-    await this.sendImage(imagePath);
+    await this.sendImage(imagePath, groupId);
   }
 
-  async transcribeAudioMessage(msgId: number): Promise<Api.messages.TranscribedAudio> {
+  async transcribeAudioMessage(msgId: number, groupId: string): Promise<Api.messages.TranscribedAudio> {
     const transcribeAudio = new Api.messages.TranscribeAudio({
-      peer: this._groupId,
+      peer: groupId,
       msgId,
     });
     const result = await this.client.invoke(transcribeAudio);
     return result;
   }
 
-  async waitForTranscription(messageId: number): Promise<string> {
-    const response = await retry(() => this.transcribeAudioMessage(messageId), 3);
+  async waitForTranscription(messageId: number, groupId: string): Promise<string> {
+    const response = await retry(() => this.transcribeAudioMessage(messageId, groupId), 3);
     if (response.text !== translations['transcriptionError']) {
       return response.text;
     }
     return '';
   }
 
-  async getMessageContentById(messageId: number): Promise<string> {
-    const message = await this.client.getMessages(this._groupId, { ids: messageId });
+  async getMessageContentById(messageId: number, groupId: string): Promise<string> {
+    const message = await this.client.getMessages(groupId, { ids: messageId });
     let content;
     if (message[0]?.media?.photo) {
       content = await this.getImageBuffer(message);
@@ -191,29 +185,28 @@ export default class TelegramBot {
     return buffer;
   }
 
-  async checkReplyIdIsBotId(messageId: number): Promise<boolean> {
+  async checkReplyIdIsBotId(messageId: number, groupId: string): Promise<boolean> {
     if (!messageId) return false;
-    const messages = await this.client.getMessages(this._groupId, { ids: messageId });
-    const senderId = String(messages[0]._senderId);
-    if (senderId === String(BOT_ID)) {
+    const messages = await this.client.getMessages(groupId, { ids: messageId });
+    if (String(messages[0]._senderId) === String(BOT_ID)) {
       return true;
     }
     return false;
   }
 
-  async processMessage(messageText: string, replyTo?: number): Promise<void | string> {
+  async processMessage(messageText: string, groupId: string, replyTo?: number): Promise<void | string> {
     let message = messageText.replace(botUsername, '');
     message = await generateGenAIResponse(message);
     try {
-      await this.client.sendMessage(`-${this._groupId}`, { message, replyTo });
+      await this.client.sendMessage(`-${groupId}`, { message, replyTo });
     } catch (error: any) {
       return ErrorHandler.handleError(error, true);
     }
   }
 
-  async getUniqSenders(limit: number): Promise<Set<string>> {
+  async getUniqSenders(limit: number, groupId: string): Promise<Set<string>> {
     const uniqSenders = new Set<string>();
-    for await (const message of this.client.iterMessages(`-${this._groupId}`, { limit })) {
+    for await (const message of this.client.iterMessages(`-${groupId}`, { limit })) {
       if (message._sender?.id?.value) {
         const value = String(message._sender.id.value);
         uniqSenders.add(value);
@@ -222,10 +215,10 @@ export default class TelegramBot {
     return uniqSenders;
   }
 
-  async getUniqUsers(limit: number): Promise<Set<string>> {
+  async getUniqUsers(limit: number, groupId: string): Promise<Set<string>> {
     const uniqUsers = new Set<string>();
     const userEntities = [];
-    for await (const user of this.client.iterParticipants(`-${this._groupId}`, { limit })) {
+    for await (const user of this.client.iterParticipants(`-${groupId}`, { limit })) {
       const userNameId = { user: user.username, id: String(user.id.value) };
       userEntities.push(userNameId);
     }
@@ -239,12 +232,12 @@ export default class TelegramBot {
     return uniqUsers;
   }
 
-  async banUsers(usersIdToDelete: string[]): Promise<void | string> {
+  async banUsers(usersIdToDelete: string[], groupId: string): Promise<void | string> {
     for (const userId of usersIdToDelete) {
       try {
         await this.client.invoke(
           new Api.channels.EditBanned({
-            channel: this._groupId,
+            channel: groupId,
             participant: userId,
             bannedRights: new Api.ChatBannedRights({
               untilDate: 0,
@@ -265,33 +258,33 @@ export default class TelegramBot {
     }
   }
 
-  async removeLurkers(limit = 3000): Promise<void> {
-    const uniqSenders = await this.getUniqSenders(limit);
-    const uniqUsers = await this.getUniqUsers(limit);
+  async removeLurkers(groupId: string, limit = 3000): Promise<void> {
+    const uniqSenders = await this.getUniqSenders(limit, groupId);
+    const uniqUsers = await this.getUniqUsers(limit, groupId);
 
     const intersection = new Set([...uniqUsers].filter((value) => !uniqSenders.has(value)));
     const usersIdToDelete = [...intersection];
 
     if (!usersIdToDelete.length) {
       await this.sendMessage({
-        peer: this._groupId,
+        peer: groupId,
         message: translations['lurkersAllGood'],
       });
     } else {
       await this.sendMessage({
-        peer: this._groupId,
+        peer: groupId,
         message: translations['lurkersBye'],
       });
-      await this.banUsers(usersIdToDelete);
+      await this.banUsers(usersIdToDelete, groupId);
     }
   }
 
-  async processVoteKick(messageText: string) {
+  async processVoteKick(messageText: string, groupId: string) {
     try {
-      const userToKick = this.extractUserToKick(messageText);
+      const userToKick = this.extractUserToKick(messageText, groupId);
       if (!userToKick) {
         await this.sendMessage({
-          peer: this._groupId,
+          peer: groupId,
           message: translations['specifyUserToKick'],
         });
         return;
@@ -299,16 +292,16 @@ export default class TelegramBot {
 
       if (userToKick === botUsername) {
         await this.sendMessage({
-          peer: this._groupId,
+          peer: groupId,
           message: translations['cantKickThisBot'],
         });
         return;
       }
 
-      const { userIdToKick, isAdmin } = await this.getUserIdAndCheckAdmin(userToKick);
+      const { userIdToKick, isAdmin } = await this.getUserIdAndCheckAdmin(userToKick, groupId);
       if (!userIdToKick) {
         await this.sendMessage({
-          peer: this._groupId,
+          peer: groupId,
           message: translations['userNotFound'],
         });
         return;
@@ -316,35 +309,40 @@ export default class TelegramBot {
 
       if (isAdmin) {
         await this.sendMessage({
-          peer: this._groupId,
+          peer: groupId,
           message: translations['cantKickAdmin'],
         });
         return;
       }
 
-      const pollMessage = await this.sendPollToKick(userToKick);
+      const pollMessage = await this.sendPollToKick(userToKick, groupId);
       const pollMessageId = pollMessage.updates[0].id;
 
-      await this.waitForPollResultsAndTakeAction(pollMessageId, userToKick, userIdToKick);
+      await this.waitForPollResultsAndTakeAction(pollMessageId, userToKick, userIdToKick, groupId);
     } catch (error) {
-      await this.handleError(this._groupId, error);
+      await this.handleError(groupId, error);
     }
   }
 
-  private extractUserToKick(messageText: string): string | null {
+  private extractUserToKick(messageText: string, groupId: string): string | null {
     const parts = messageText.split(' ');
     return parts.length > 1 ? parts[1] : null;
   }
 
-  private async getUserIdAndCheckAdmin(userToKick: string) {
-    const { id: userIdToKick, isAdmin } = await this.findUserIdBasedOnNickname(userToKick);
+  private async getUserIdAndCheckAdmin(userToKick: string, groupId: string) {
+    const { id: userIdToKick, isAdmin } = await this.findUserIdBasedOnNickname(userToKick, groupId);
     return { userIdToKick: userIdToKick.toString(), isAdmin };
   }
 
-  private async waitForPollResultsAndTakeAction(pollId: number, userToKick: string, userIdToKick: string) {
+  private async waitForPollResultsAndTakeAction(
+    pollId: number,
+    userToKick: string,
+    userIdToKick: string,
+    groupId: string,
+  ) {
     const getPollResults = async (pollId: number) => {
       try {
-        const results = await this.getPollResults(pollId);
+        const results = await this.getPollResults(pollId, groupId);
 
         if (results.updates[0].results?.results) {
           const yesResults = results.updates[0].results.results[0]?.voters || 0;
@@ -352,15 +350,15 @@ export default class TelegramBot {
 
           if (yesResults > noResults) {
             await this.sendMessage({
-              peer: this._groupId,
+              peer: groupId,
               message: `${translations['votekickPass']} ${userToKick}!`,
             });
-            await this.banUsers([userIdToKick]);
+            await this.banUsers([userIdToKick], groupId);
             // Unexpected error: [GoogleGenerativeAI Error]: First content should be with role 'user', got model
             // await insertToMessages({ role: 'model', parts: [{ text: `User ${userToKick} kicked from the group.` }] });
           } else {
             await this.sendMessage({
-              peer: this._groupId,
+              peer: groupId,
               message: `${userToKick} ${translations['votekickFailed']}`,
             });
           }
@@ -371,16 +369,16 @@ export default class TelegramBot {
           await getPollResults(pollId);
         }, pollTimeoutMs);
       } catch (error) {
-        await this.handleError(this._groupId, error);
+        await this.handleError(groupId, error);
       }
     };
 
     await getPollResults(pollId);
   }
 
-  async getUsernameIdIsAdmin(limit = 3000) {
+  async getUsernameIdIsAdmin(groupId: string, limit = 3000) {
     const userEntities = [];
-    for await (const user of this.client.iterParticipants(`-${this._groupId}`, { limit })) {
+    for await (const user of this.client.iterParticipants(`-${groupId}`, { limit })) {
       const userNameId = {
         user: user.username,
         id: String(user.id.value),
@@ -391,22 +389,22 @@ export default class TelegramBot {
     return userEntities;
   }
 
-  async printUserEntities(limit = 3000) {
+  async printUserEntities(groupId: string, limit = 3000) {
     const userEntities = [];
-    for await (const user of this.client.iterParticipants(`-${this._groupId}`, { limit })) {
+    for await (const user of this.client.iterParticipants(`-${groupId}`, { limit })) {
       const userString = `${user.firstName}; ${user.username}; ${user.id}; premium: ${user.premium};`;
       userEntities.push(userString);
     }
     await this.sendMessage({
-      peer: this._groupId,
+      peer: groupId,
       message: `${userEntities.join('\n')}`,
     });
   }
 
-  async findUserIdBasedOnNickname(username: string, limit = 3000) {
+  async findUserIdBasedOnNickname(username: string, groupId: string, limit = 3000) {
     try {
       username = username.split('@')[1];
-      const users = await this.getUsernameIdIsAdmin(limit);
+      const users = await this.getUsernameIdIsAdmin(groupId, limit);
 
       for (const user of users) {
         if (user.user === username) {
@@ -419,11 +417,11 @@ export default class TelegramBot {
     }
   }
 
-  async getPollResults(pollMessageId: number) {
+  async getPollResults(pollMessageId: number, groupId: string) {
     try {
       const pollResults = await this.client.invoke(
         new Api.messages.GetPollResults({
-          peer: this._groupId,
+          peer: groupId,
           msgId: pollMessageId,
         }),
       );
@@ -434,20 +432,18 @@ export default class TelegramBot {
     }
   }
 
-  async fetchAndInsertMessages(limit: number): Promise<void> {
-    const messages = await this.getMessages(limit);
+  async fetchAndInsertMessages(limit: number, groupId: string): Promise<void> {
+    const messages = await this.getMessages(limit, groupId);
     messages.forEach((message) => insertToMessages({ role: 'user', parts: [{ text: message }] }));
   }
 
-  async executeCommand(messageText: string, groupId: number): Promise<boolean> {
-    this.groupId = groupId;
-
+  async executeCommand(messageText: string, groupId: string): Promise<boolean> {
     const commandMappings: Record<string, (msgText: string) => Promise<void | string>> = {
-      '/recap': (msgText) => this.handleRecapCommand(msgText),
-      '/clear': () => this.handleClearCommand(),
-      '/scan': () => this.removeLurkers(),
-      '/votekick': (msgText) => this.processVoteKick(msgText),
-      '/users': () => this.printUserEntities(),
+      '/recap': (msgText) => this.handleRecapCommand(msgText, groupId),
+      '/clear': () => this.handleClearCommand(groupId),
+      '/scan': () => this.removeLurkers(groupId),
+      '/votekick': (msgText) => this.processVoteKick(msgText, groupId),
+      '/users': () => this.printUserEntities(groupId),
     };
 
     for (const command in commandMappings) {
@@ -459,30 +455,27 @@ export default class TelegramBot {
     return false;
   }
 
-  async processMention(groupId: number, replyToMsgId: number, messageText: string, messageId: number) {
-    this._groupId = groupId;
-
-    if (replyToMsgId && (await this.checkReplyIdIsBotId(replyToMsgId))) {
-      await this.processMessage(messageText, messageId);
+  async processMention(groupId: string, replyToMsgId: number, messageText: string, messageId?: number) {
+    if (replyToMsgId && (await this.checkReplyIdIsBotId(replyToMsgId, groupId))) {
+      await this.processMessage(messageText, groupId, messageId);
       return;
     }
 
     const isBotCalled = messageText.includes(botUsername);
     if (isBotCalled) {
       if (replyToMsgId) {
-        const replyMessageContent = await this.getMessageContentById(replyToMsgId);
-        await this.processMessage(replyMessageContent, messageId);
+        const replyMessageContent = await this.getMessageContentById(replyToMsgId, groupId);
+        await this.processMessage(replyMessageContent, groupId, messageId);
       } else {
         const messageContentWithoutBotName = messageText.replace(botUsername, '');
-        await this.processMessage(messageContentWithoutBotName, messageId);
+        await this.processMessage(messageContentWithoutBotName, groupId, messageId);
       }
     }
   }
-  async transcribeMedia(groupId: number, messageId: number) {
-    this._groupId = groupId;
-    const transcribedAudio = await this.waitForTranscription(messageId);
+  async transcribeMedia(groupId: string, messageId: number) {
+    const transcribedAudio = await this.waitForTranscription(messageId, groupId);
     if (transcribedAudio) {
-      await this.processMessage(transcribedAudio);
+      await this.processMessage(transcribedAudio, groupId);
     }
   }
 }
