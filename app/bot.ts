@@ -231,7 +231,7 @@ export default class TelegramBot {
     userEntities.forEach((userEntity: any) => {
       const userId = userEntity.id;
       const userName = userEntity.user;
-      if (userId && !userId.includes('-') && userName !== 'channel_bot' && userId !== BOT_ID) {
+      if (userId && !(<string> userId).includes('-') && userName !== 'channel_bot' && userId !== BOT_ID) {
         uniqUsers.add(userId);
       }
     });
