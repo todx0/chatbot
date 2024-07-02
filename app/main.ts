@@ -8,7 +8,7 @@ import {
   somebodyMentioned,
 } from './utils/helper';
 
-const bot = new TelegramBot(client);
+const bot = new TelegramBot();
 
 const botWorkflow = async (event: any) => {
   const { groupId, replyToMsgId, messageText, message } = getDataFromEvent(event);
