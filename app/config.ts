@@ -64,7 +64,7 @@ const generativeModelOptions: ModelParams = {
 };
 const generativeModelOptionsForRecap: ModelParams = {
   model: genAImodelName,
-  systemInstruction: `Use telegram markdown. Always reply in ${config.LANGUAGE}. ${config.SECRET_OPTIONS}.`,
+  systemInstruction: `Use telegram markdown. Always reply in ${config.LANGUAGE}.`,
 };
 export const genAI = new GoogleGenerativeAI(config.GAPI);
 export const genAImodel = genAI.getGenerativeModel(generativeModelOptions);
