@@ -3,7 +3,7 @@ import {
   config,
   genAImodel,
   genAImodelForRecap,
-  maxHistoryLength,
+  MAX_HISTORY_LENGTH,
   recapTextRequest,
   safetySettings,
 } from '../../config';
@@ -26,7 +26,7 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
 
   async function fetchGenAIResponse(): Promise<string> {
     const userRoleContent: Content = { role: 'user', parts: [{ text: userRequest }] };
-    const history: Content[] = await readChatRoleFromDatabase({ limit: maxHistoryLength });
+    const history: Content[] = await readChatRoleFromDatabase({ limit: MAX_HISTORY_LENGTH });
 
     const chat = !recap
       ? genAImodel.startChat({

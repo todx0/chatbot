@@ -27,12 +27,12 @@ export const client = new TelegramClient(
   },
 );
 
-export const maxHistoryLength = 20;
-export const isTelegramPremium = false;
-export const botUsername = config.BOT_USERNAME;
-export const messageLimit = 700;
-export const maxTokenLength = 4096;
-export const pollTimeoutMs = 5 * 60 * 1000;
+export const MAX_HISTORY_LENGTH = 20;
+export const TELEGRAM_PREMIUM = false;
+export const BOT_USERNAME = config.BOT_USERNAME;
+export const MESSAGE_LIMIT = 1000;
+export const MAX_TOKEN_LENGTH = 4096;
+export const POLL_TIMEOUT_MS = 5 * 60 * 1000;
 
 const genAImodelName = 'gemini-1.5-flash-latest';
 export const safetySettings = [
@@ -70,7 +70,7 @@ export const genAI = new GoogleGenerativeAI(config.GAPI);
 export const genAImodel = genAI.getGenerativeModel(generativeModelOptions);
 export const genAImodelForRecap = genAI.getGenerativeModel(generativeModelOptionsForRecap);
 export const recapTextRequest =
-  `Generate a short recap of the following conversation: \n. Total message length should exceed ${maxTokenLength} symbols.`;
+  `Generate a short recap of the following conversation: \n. Total message length should exceed ${MAX_TOKEN_LENGTH} symbols.`;
 
 function checkRequiredEnvVariables(requiredEnvVariables: string[]): void {
   requiredEnvVariables.forEach((variable) => {
