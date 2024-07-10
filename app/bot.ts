@@ -1,7 +1,7 @@
 import bigInt from 'big-integer';
 import { Api } from 'telegram';
 import { TelegramClient } from 'telegram';
-import { botUsername, client, maxTokenLength, messageLimit, pollTimeoutMs, recapTextRequest } from './config';
+import { BOT_USERNAME, client, MESSAGE_LIMIT, POLL_TIMEOUT_MS, recapTextRequest } from './config';
 import { ErrorHandler } from './errors/ErrorHandler';
 import { generateGenAIResponse, returnCombinedAnswerFromMultipleResponses } from './modules/google/api';
 import { PollMessage, PollResults, SendMessageParams } from './types';
@@ -55,8 +55,8 @@ export default class TelegramBot {
         publicVoters: false,
         multipleChoice: false,
         quiz: false,
-        closePeriod: pollTimeoutMs / 1000,
-        closeDate: Math.floor(Date.now() / 1000) + pollTimeoutMs / 1000,
+        closePeriod: POLL_TIMEOUT_MS / 1000,
+        closeDate: Math.floor(Date.now() / 1000) + POLL_TIMEOUT_MS / 1000,
       }),
     });
 
@@ -108,8 +108,8 @@ export default class TelegramBot {
       throw new Error(translations['recapWarning']);
     }
 
-    if (msgLimit > messageLimit) {
-      throw new Error(`${translations['recapLimit']} ${messageLimit}: /recap ${messageLimit}`);
+    if (msgLimit > MESSAGE_LIMIT) {
+      throw new Error(`${translations['recapLimit']} ${MESSAGE_LIMIT}: /recap ${MESSAGE_LIMIT}`);
     }
   }
 
@@ -119,14 +119,31 @@ export default class TelegramBot {
   }
 
   async generateRecapResponse(filteredMessages: string[]): Promise<string> {
-    const messagesLength = await approximateTokenLength(filteredMessages);
+    const MAX_TOKEN_LENGTH = 4096;
+    try {
+      const messagesLength = await approximateTokenLength(filteredMessages);
+      let response: string;
 
-    if (messagesLength <= maxTokenLength) {
-      const messageString = filteredMessages.join(' ');
-      return generateGenAIResponse(`${recapTextRequest} ${messageString}`, true);
-    } else {
-      const chunks = await splitMessageInChunks(filteredMessages.join(' '));
-      return returnCombinedAnswerFromMultipleResponses(chunks);
+      if (messagesLength <= MAX_TOKEN_LENGTH) {
+        const messageString = filteredMessages.join(' ');
+        response = await generateGenAIResponse(`${recapTextRequest} ${messageString}`, true);
+      } else {
+        const messageString = filteredMessages.join(' ');
+        const chunks = await splitMessageInChunks(messageString);
+        response = await returnCombinedAnswerFromMultipleResponses(chunks);
+      }
+
+      if (response.length > MAX_TOKEN_LENGTH) {
+        response = await generateGenAIResponse(
+          `Edit this message to be less than or equal to ${MAX_TOKEN_LENGTH} characters: ${response}`,
+          true,
+        );
+      }
+
+      return response;
+    } catch (error) {
+      console.error('Error generating recap response:', error);
+      throw error;
     }
   }
 
@@ -198,7 +215,7 @@ export default class TelegramBot {
   }
 
   async processMessage(messageText: string, groupId: string, replyTo?: number): Promise<void | string> {
-    let message = messageText.replace(botUsername, '');
+    let message = messageText.replace(BOT_USERNAME, '');
     message = await generateGenAIResponse(message);
     try {
       await this.client.sendMessage(`-${groupId}`, { message, replyTo });
@@ -297,7 +314,7 @@ export default class TelegramBot {
         return;
       }
 
-      if (userToKick === botUsername) {
+      if (userToKick === BOT_USERNAME) {
         await this.sendMessage({
           peer: groupId,
           message: translations['cantKickThisBot'],
@@ -375,7 +392,7 @@ export default class TelegramBot {
 
         setTimeout(async () => {
           await getPollResults(pollId);
-        }, pollTimeoutMs);
+        }, POLL_TIMEOUT_MS);
       } catch (error) {
         await this.handleError(groupId, error);
       }
@@ -470,13 +487,13 @@ export default class TelegramBot {
       return;
     }
 
-    const isBotCalled = messageText.includes(botUsername);
+    const isBotCalled = messageText.includes(BOT_USERNAME);
     if (isBotCalled) {
       if (replyToMsgId) {
         const replyMessageContent = await this.getMessageContentById(replyToMsgId, groupId);
         await this.processMessage(replyMessageContent, groupId, messageId);
       } else {
-        const messageContentWithoutBotName = messageText.replace(botUsername, '');
+        const messageContentWithoutBotName = messageText.replace(BOT_USERNAME, '');
         await this.processMessage(messageContentWithoutBotName, groupId, messageId);
       }
     }
