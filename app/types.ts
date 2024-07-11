@@ -35,3 +35,13 @@ export interface MessageObject {
   photo?: string;
   filePath?: string;
 }
+export interface PollMessage {
+  updates: { id: number }[];
+}
+export interface PollResults {
+  updates: {
+    results?: {
+      results: { voters: number }[];
+    };
+  }[];
+}

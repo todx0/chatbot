@@ -4,7 +4,7 @@ import { Database } from 'bun:sqlite';
 import * as fs from 'node:fs';
 import { unlink } from 'node:fs/promises';
 import { Api } from 'telegram';
-import { isTelegramPremium, maxHistoryLength } from '../config';
+import { MAX_HISTORY_LENGTH, TELEGRAM_PREMIUM } from '../config';
 import { ErrorHandler } from '../errors/ErrorHandler';
 import { DatabaseOptions, MediaObject } from '../types';
 
@@ -83,7 +83,7 @@ export async function insertToMessages(object: Content, dbsqlite?: string): Prom
 }
 
 export async function readChatRoleFromDatabase(options: DatabaseOptions = {}): Promise<Content[]> {
-  const { limit = maxHistoryLength, dbsqlite } = options;
+  const { limit = MAX_HISTORY_LENGTH, dbsqlite } = options;
   const dbName = dbsqlite || Bun.env.DB_NAME;
   const db = new Database(dbName, { create: true, readwrite: true });
   const query = `SELECT role, parts FROM messages ORDER BY id ASC LIMIT ${limit}`;
@@ -124,7 +124,7 @@ export async function clearMessagesTable(dbsqlite?: string): Promise<void | stri
 }
 
 export async function trimMessagesTable(options: DatabaseOptions = {}): Promise<void> {
-  const { limit = maxHistoryLength, dbsqlite } = options;
+  const { limit = MAX_HISTORY_LENGTH, dbsqlite } = options;
   const dbName = dbsqlite || Bun.env.DB_NAME;
   const db = new Database(dbName, { create: true, readwrite: true });
   const queryRemove = `
@@ -167,9 +167,9 @@ export async function checkDatabaseExist(): Promise<boolean> {
   }
 }
 
-export async function checkAndUpdateDatabase({ readLimit = 1000, trimLimit = maxHistoryLength } = {}): Promise<void> {
+export async function checkAndUpdateDatabase({ readLimit = 1000, trimLimit = MAX_HISTORY_LENGTH } = {}): Promise<void> {
   const db = await readChatRoleFromDatabase({ limit: readLimit });
-  if (db.length > maxHistoryLength) {
+  if (db.length > trimLimit) {
     await trimMessagesTable({ limit: trimLimit });
   }
 }
@@ -209,5 +209,5 @@ export const canTranscribeMedia = (
   media: MediaObject,
 ): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
 export const shouldTranscribeMedia = (message: any): boolean =>
-  isTelegramPremium && message.mediaUnread && canTranscribeMedia(message.media);
+  TELEGRAM_PREMIUM && message.mediaUnread && canTranscribeMedia(message.media);
 export const somebodyMentioned = (message: Api.Message): boolean => (message.mentioned ? message.mentioned : false);

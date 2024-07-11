@@ -1,5 +1,6 @@
 import { Content } from '@google/generative-ai';
-import { config, genAImodel, genAImodelForRecap, maxHistoryLength, recapTextRequest } from '../../config';
+import { config, genAImodel, genAImodelForRecap, MAX_HISTORY_LENGTH, recapTextRequest } from '../../config';
+
 import { ErrorHandler } from '../../errors/ErrorHandler';
 import { MessageObject } from '../../types';
 import { insertToMessages, readChatRoleFromDatabase, replaceDoubleSpaces } from '../../utils/helper';
@@ -20,7 +21,7 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
 
   async function fetchGenAIResponse(): Promise<string> {
     const userRoleContent: Content = { role: 'user', parts: [{ text: userRequest }] };
-    const history: Content[] = await readChatRoleFromDatabase({ limit: maxHistoryLength });
+    const history: Content[] = await readChatRoleFromDatabase({ limit: MAX_HISTORY_LENGTH });
 
     const chat = !recap
       ? genAImodel.startChat({ history })

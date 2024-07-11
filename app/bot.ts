@@ -1,15 +1,13 @@
 import bigInt from 'big-integer';
-import { file } from 'bun';
 import { Api, TelegramClient } from 'telegram';
-import { betterConsoleLog } from 'telegram/Helpers';
-import { botUsername, maxTokenLength, messageLimit, pollTimeoutMs, recapTextRequest } from './config';
+import { BOT_USERNAME, MAX_TOKEN_LENGTH, MESSAGE_LIMIT, POLL_TIMEOUT_MS, recapTextRequest } from './config';
 import { ErrorHandler } from './errors/ErrorHandler';
 import {
   generateGenAIResponse,
   generateResponseFromImage,
   returnCombinedAnswerFromMultipleResponses,
 } from './modules/google/api';
-import { MessageData, MessageObject, SendMessageParams } from './types';
+import { MessageData, MessageObject, PollMessage, PollResults, SendMessageParams } from './types';
 import {
   approximateTokenLength,
   clearMessagesTable,
@@ -27,7 +25,7 @@ const { BOT_ID } = Bun.env;
 export default class TelegramBot {
   private readonly client: TelegramClient;
 
-  constructor(client: any) {
+  constructor(client: TelegramClient) {
     this.client = client;
   }
 
@@ -60,8 +58,8 @@ export default class TelegramBot {
         publicVoters: false,
         multipleChoice: false,
         quiz: false,
-        closePeriod: pollTimeoutMs / 1000,
-        closeDate: Math.floor(Date.now() / 1000) + pollTimeoutMs / 1000,
+        closePeriod: POLL_TIMEOUT_MS / 1000,
+        closeDate: Math.floor(Date.now() / 1000) + POLL_TIMEOUT_MS / 1000,
       }),
     });
 
@@ -113,8 +111,8 @@ export default class TelegramBot {
       throw new Error(translations['recapWarning']);
     }
 
-    if (msgLimit > messageLimit) {
-      throw new Error(`${translations['recapLimit']} ${messageLimit}: /recap ${messageLimit}`);
+    if (msgLimit > MESSAGE_LIMIT) {
+      throw new Error(`${translations['recapLimit']} ${MESSAGE_LIMIT}: /recap ${MESSAGE_LIMIT}`);
     }
   }
 
@@ -124,14 +122,31 @@ export default class TelegramBot {
   }
 
   async generateRecapResponse(filteredMessages: string[]): Promise<string> {
-    const messagesLength = await approximateTokenLength(filteredMessages);
+    const MAX_TOKEN_LENGTH = 4096;
+    try {
+      const messagesLength = await approximateTokenLength(filteredMessages);
+      let response: string;
 
-    if (messagesLength <= maxTokenLength) {
-      const messageString = filteredMessages.join(' ');
-      return generateGenAIResponse(`${recapTextRequest} ${messageString}`, true);
-    } else {
-      const chunks = await splitMessageInChunks(filteredMessages.join(' '));
-      return returnCombinedAnswerFromMultipleResponses(chunks);
+      if (messagesLength <= MAX_TOKEN_LENGTH) {
+        const messageString = filteredMessages.join(' ');
+        response = await generateGenAIResponse(`${recapTextRequest} ${messageString}`, true);
+      } else {
+        const messageString = filteredMessages.join(' ');
+        const chunks = await splitMessageInChunks(messageString);
+        response = await returnCombinedAnswerFromMultipleResponses(chunks);
+      }
+
+      if (response.length > MAX_TOKEN_LENGTH) {
+        response = await generateGenAIResponse(
+          `Edit this message to be less than or equal to ${MAX_TOKEN_LENGTH} characters: ${response}`,
+          true,
+        );
+      }
+
+      return response;
+    } catch (error) {
+      console.error('Error generating recap response:', error);
+      throw error;
     }
   }
 
@@ -166,7 +181,9 @@ export default class TelegramBot {
   async getMessageContentById(messageId: number, groupId: string): Promise<string> {
     const message = await this.client.getMessages(groupId, { ids: messageId });
     let content;
-    if (message[0]?.media?.photo) {
+    const media = message[0]?.media as { photo?: any };
+
+    if (media?.photo) {
       content = await this.getImageBuffer(message);
       content = await convertToImage(content);
     } else {
@@ -188,7 +205,7 @@ export default class TelegramBot {
         dcId: photo.dcId,
       },
     );
-    return buffer;
+    return buffer as Buffer;
   }
 
   async checkReplyIdIsBotId(messageId: number, groupId: string): Promise<boolean> {
@@ -224,7 +241,7 @@ export default class TelegramBot {
   }
 
   private stripBotNameFromMessage(message: string): string {
-    return message.replace(botUsername, '');
+    return message.replace(BOT_USERNAME, '');
   }
 
   async getUniqSenders(limit: number, groupId: string): Promise<Set<string>> {
@@ -241,17 +258,21 @@ export default class TelegramBot {
   async getUniqUsers(limit: number, groupId: string): Promise<Set<string>> {
     const uniqUsers = new Set<string>();
     const userEntities = [];
+
     for await (const user of this.client.iterParticipants(`-${groupId}`, { limit })) {
-      const userNameId = { user: user.username, id: String(user.id.value) };
+      const userId = (user.id as any).value as string;
+      const userNameId = { user: user.username, id: userId };
       userEntities.push(userNameId);
     }
+
     userEntities.forEach((userEntity: any) => {
       const userId = userEntity.id;
       const userName = userEntity.user;
-      if (userId && !userId.includes('-') && userName !== 'channel_bot' && userId !== BOT_ID) {
+      if (userId && !(<string> userId).includes('-') && userName !== 'channel_bot' && userId !== BOT_ID) {
         uniqUsers.add(userId);
       }
     });
+
     return uniqUsers;
   }
 
@@ -313,7 +334,7 @@ export default class TelegramBot {
         return;
       }
 
-      if (userToKick === botUsername) {
+      if (userToKick === BOT_USERNAME) {
         await this.sendMessage({
           peer: groupId,
           message: translations['cantKickThisBot'],
@@ -338,7 +359,8 @@ export default class TelegramBot {
         return;
       }
 
-      const pollMessage = await this.sendPollToKick(userToKick, groupId);
+      const pollMessage = await this.sendPollToKick(userToKick, groupId) as PollMessage;
+
       const pollMessageId = pollMessage.updates[0].id;
 
       await this.waitForPollResultsAndTakeAction(pollMessageId, userToKick, userIdToKick, groupId);
@@ -365,7 +387,7 @@ export default class TelegramBot {
   ) {
     const getPollResults = async (pollId: number) => {
       try {
-        const results = await this.getPollResults(pollId, groupId);
+        const results = await this.getPollResults(pollId, groupId) as PollResults;
 
         if (results.updates[0].results?.results) {
           const yesResults = results.updates[0].results.results[0]?.voters || 0;
@@ -390,7 +412,7 @@ export default class TelegramBot {
 
         setTimeout(async () => {
           await getPollResults(pollId);
-        }, pollTimeoutMs);
+        }, POLL_TIMEOUT_MS);
       } catch (error) {
         await this.handleError(groupId, error);
       }
@@ -402,10 +424,11 @@ export default class TelegramBot {
   async getUsernameIdIsAdmin(groupId: string, limit = 3000) {
     const userEntities = [];
     for await (const user of this.client.iterParticipants(`-${groupId}`, { limit })) {
+      const userId = (user.id as any).value as string;
       const userNameId = {
         user: user.username,
-        id: String(user.id.value),
-        isAdmin: user.participant.adminRights ? true : false,
+        id: userId,
+        isAdmin: (user as any).participant?.adminRights ? true : false,
       };
       userEntities.push(userNameId);
     }
@@ -488,7 +511,7 @@ export default class TelegramBot {
       return;
     }
 
-    const isBotCalled = messageText.includes(botUsername);
+    const isBotCalled = messageText.includes(BOT_USERNAME);
     if (isBotCalled) {
       let messageObj: MessageObject = {
         replyMessageContent: messageText,
