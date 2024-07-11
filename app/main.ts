@@ -17,7 +17,6 @@ const botWorkflow = async (event: any) => {
   if (!groupId || !messageText || !message || !messageNotSeen(message)) return;
 
   if (await bot.executeCommand(messageText, groupId)) return;
-
   if (somebodyMentioned(message)) {
     // Make getDataFromEvent return MessageData type to avoid creating messageToProcess
     const messageToProcess: MessageData = {
@@ -25,7 +24,7 @@ const botWorkflow = async (event: any) => {
       messageText,
       replyToMsgId,
       messageId: message.id,
-      photo: !!message?.media?.photo,
+      image: !!message?.media?.photo,
     };
     await bot.processMention(messageToProcess);
     return;

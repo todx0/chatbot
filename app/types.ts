@@ -24,15 +24,15 @@ export interface DatabaseOptions {
 }
 export interface MessageData {
   groupId: string;
-  replyToMsgId: number;
+  replyToMsgId: any;
   messageId: number;
   messageText: string;
   message?: any;
-  photo?: any;
+  image?: boolean;
 }
 export interface MessageObject {
   replyMessageContent: string;
-  photo?: string;
+  image?: boolean;
   filePath?: string;
 }
 export interface PollMessage {
