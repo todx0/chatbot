@@ -22,3 +22,16 @@ export interface DatabaseOptions {
   limit?: number;
   dbsqlite?: string;
 }
+export interface MessageData {
+  groupId: string;
+  replyToMsgId: number;
+  messageId: number;
+  messageText: string;
+  message?: any;
+  photo?: any;
+}
+export interface MessageObject {
+  replyMessageContent: string;
+  photo?: string;
+  filePath?: string;
+}
