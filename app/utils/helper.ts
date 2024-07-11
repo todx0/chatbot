@@ -185,6 +185,7 @@ export function getDataFromEvent(event: any) {
     messageText = event.message;
     message = event;
   } else if (typeof event.message === 'object') {
+    console.log('here!');
     groupId = event.message._chatPeer.channelId || event.message._chatPeer.chatId;
     replyToMsgId = event.message.replyTo?.replyToMsgId;
     messageText = event.message.message;

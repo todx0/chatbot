@@ -19,6 +19,7 @@ const botWorkflow = async (event: any) => {
   if (await bot.executeCommand(messageText, groupId)) return;
 
   if (somebodyMentioned(message)) {
+    // Make getDataFromEvent return MessageData type to avoid creating messageToProcess
     const messageToProcess: MessageData = {
       groupId,
       messageText,

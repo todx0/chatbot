@@ -1,6 +1,7 @@
 import bigInt from 'big-integer';
 import { file } from 'bun';
-import { Api } from 'telegram';
+import { Api, TelegramClient } from 'telegram';
+import { betterConsoleLog } from 'telegram/Helpers';
 import { botUsername, maxTokenLength, messageLimit, pollTimeoutMs, recapTextRequest } from './config';
 import { ErrorHandler } from './errors/ErrorHandler';
 import {
@@ -24,7 +25,7 @@ import translations from './utils/translation';
 const { BOT_ID } = Bun.env;
 
 export default class TelegramBot {
-  private readonly client: any;
+  private readonly client: TelegramClient;
 
   constructor(client: any) {
     this.client = client;
@@ -191,8 +192,15 @@ export default class TelegramBot {
   }
 
   async checkReplyIdIsBotId(messageId: number, groupId: string): Promise<boolean> {
-    if (!messageId) return false;
-    const messages = await this.client.getMessages(groupId, { ids: messageId });
+    if (!messageId || !groupId) return false;
+    console.log('!!! HERE');
+    let messages;
+    try {
+      messages = await this.client.getMessages(groupId, { ids: messageId });
+    } catch (error: any) {
+      throw ErrorHandler.handleError(error);
+    }
+    // const messages = await this.client.getMessages(groupId, { ids: messageId });
     if (String(messages[0]._senderId) === String(BOT_ID)) {
       return true;
     }
@@ -474,7 +482,8 @@ export default class TelegramBot {
     const { replyToMsgId, messageText, groupId, messageId, photo } = msgData;
 
     // Auto reply when replying to bot's message.
-    if (replyToMsgId && (await this.checkReplyIdIsBotId(replyToMsgId, groupId))) {
+    if (replyToMsgId && groupId && (await this.checkReplyIdIsBotId(replyToMsgId, groupId))) {
+      console.log('here replying to reply!!');
       await this.processMessage({ replyMessageContent: messageText }, groupId, messageId);
       return;
     }
@@ -487,13 +496,16 @@ export default class TelegramBot {
       };
       if (replyToMsgId) {
         // ?? Need to figure out when this condition is triggered.
+        console.log('here unknown');
         messageObj.replyMessageContent = await this.getMessageContentById(replyToMsgId, groupId);
         await this.processMessage(messageObj, groupId, messageId);
       } else if (photo) {
+        console.log('here photo');
         messageObj.filePath = await this.getMessageContentById(replyToMsgId, groupId);
         await this.processMessage(messageObj, groupId, messageId);
       } else {
         // Bot mentioned with @
+        console.log('here bot mentioned with @');
         await this.processMessage(messageObj, groupId, messageId);
       }
     }

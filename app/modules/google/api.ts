@@ -1,13 +1,5 @@
 import { Content } from '@google/generative-ai';
-import {
-  config,
-  genAImodel,
-  // genAImodelForImageResponse,
-  genAImodelForRecap,
-  maxHistoryLength,
-  recapTextRequest,
-  safetySettings,
-} from '../../config';
+import { config, genAImodel, genAImodelForRecap, maxHistoryLength, recapTextRequest } from '../../config';
 import { ErrorHandler } from '../../errors/ErrorHandler';
 import { MessageObject } from '../../types';
 import { insertToMessages, readChatRoleFromDatabase, replaceDoubleSpaces } from '../../utils/helper';

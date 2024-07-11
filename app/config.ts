@@ -71,7 +71,6 @@ const generativeModelOptionsForRecap: ModelParams = {
 export const genAI = new GoogleGenerativeAI(config.GAPI);
 export const genAImodel = genAI.getGenerativeModel(generativeModelOptions);
 export const genAImodelForRecap = genAI.getGenerativeModel(generativeModelOptionsForRecap);
-// export const genAImodelForImageResponse = genAI.getGenerativeModel({ model: genAImodelName, safetySettings });
 export const recapTextRequest =
   `Generate a short recap of the following conversation: \n. Total message length should exceed ${maxTokenLength} symbols.`;
 
