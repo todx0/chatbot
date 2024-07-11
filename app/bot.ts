@@ -1,10 +1,13 @@
 import bigInt from 'big-integer';
-import { Api } from 'telegram';
-import { TelegramClient } from 'telegram';
-import { BOT_USERNAME, client, MESSAGE_LIMIT, POLL_TIMEOUT_MS, recapTextRequest } from './config';
+import { Api, TelegramClient } from 'telegram';
+import { BOT_USERNAME, MAX_TOKEN_LENGTH, MESSAGE_LIMIT, POLL_TIMEOUT_MS, recapTextRequest } from './config';
 import { ErrorHandler } from './errors/ErrorHandler';
-import { generateGenAIResponse, returnCombinedAnswerFromMultipleResponses } from './modules/google/api';
-import { PollMessage, PollResults, SendMessageParams } from './types';
+import {
+  generateGenAIResponse,
+  generateResponseFromImage,
+  returnCombinedAnswerFromMultipleResponses,
+} from './modules/google/api';
+import { MessageData, MessageObject, PollMessage, PollResults, SendMessageParams } from './types';
 import {
   approximateTokenLength,
   clearMessagesTable,
@@ -22,7 +25,7 @@ const { BOT_ID } = Bun.env;
 export default class TelegramBot {
   private readonly client: TelegramClient;
 
-  constructor() {
+  constructor(client: TelegramClient) {
     this.client = client;
   }
 
@@ -205,23 +208,38 @@ export default class TelegramBot {
     return buffer as Buffer;
   }
 
-  async checkReplyIdIsBotId(messageId: number, groupId: string): Promise<boolean> {
-    if (!messageId) return false;
-    const messages = await this.client.getMessages(groupId, { ids: messageId });
+  async checkReplyIdIsBotId(messageId: number, groupId: string): Promise<boolean | string> {
+    if (!messageId || !groupId) return false;
+    let messages;
+    try {
+      messages = await this.client.getMessages(groupId, { ids: messageId });
+    } catch (error: any) {
+      return ErrorHandler.handleError(error, true);
+    }
     if (String(messages[0]._senderId) === String(BOT_ID)) {
       return true;
     }
     return false;
   }
 
-  async processMessage(messageText: string, groupId: string, replyTo?: number): Promise<void | string> {
-    let message = messageText.replace(BOT_USERNAME, '');
-    message = await generateGenAIResponse(message);
+  async processMessage(msgObject: MessageObject, groupId: string, replyTo?: number): Promise<void | string> {
+    const { replyMessageContent, filePath } = msgObject;
+    msgObject.replyMessageContent = this.stripBotNameFromMessage(replyMessageContent);
+    let message;
+    if (filePath) {
+      message = await generateResponseFromImage(msgObject);
+    } else {
+      message = await generateGenAIResponse(replyMessageContent);
+    }
     try {
       await this.client.sendMessage(`-${groupId}`, { message, replyTo });
     } catch (error: any) {
       return ErrorHandler.handleError(error, true);
     }
+  }
+
+  private stripBotNameFromMessage(message: string): string {
+    return message.replace(BOT_USERNAME, '');
   }
 
   async getUniqSenders(limit: number, groupId: string): Promise<Set<string>> {
@@ -481,27 +499,41 @@ export default class TelegramBot {
     return false;
   }
 
-  async processMention(groupId: string, replyToMsgId: number, messageText: string, messageId?: number) {
-    if (replyToMsgId && (await this.checkReplyIdIsBotId(replyToMsgId, groupId))) {
-      await this.processMessage(messageText, groupId, messageId);
+  async processMention(msgData: MessageData) {
+    const { replyToMsgId, messageText, groupId, messageId, image } = msgData;
+
+    // Auto reply when replying to bot's message.
+    if (replyToMsgId && groupId && (await this.checkReplyIdIsBotId(replyToMsgId.replyToMsgId, groupId))) {
+      await this.processMessage({ replyMessageContent: messageText }, groupId, messageId);
       return;
     }
 
     const isBotCalled = messageText.includes(BOT_USERNAME);
     if (isBotCalled) {
+      let messageObj: MessageObject = {
+        replyMessageContent: messageText,
+        image: false,
+      };
       if (replyToMsgId) {
-        const replyMessageContent = await this.getMessageContentById(replyToMsgId, groupId);
-        await this.processMessage(replyMessageContent, groupId, messageId);
+        // ?? Need to figure out when this condition is triggered.
+        console.log('here unknown');
+        messageObj.replyMessageContent = await this.getMessageContentById(replyToMsgId, groupId);
+        await this.processMessage(messageObj, groupId, messageId);
+      } else if (image) {
+        // Bot responds to image
+        messageObj.filePath = await this.getMessageContentById(replyToMsgId, groupId);
+        await this.processMessage(messageObj, groupId, messageId);
       } else {
-        const messageContentWithoutBotName = messageText.replace(BOT_USERNAME, '');
-        await this.processMessage(messageContentWithoutBotName, groupId, messageId);
+        // Bot mentioned with @
+        await this.processMessage(messageObj, groupId, messageId);
       }
     }
   }
   async transcribeMedia(groupId: string, messageId: number) {
     const transcribedAudio = await this.waitForTranscription(messageId, groupId);
     if (transcribedAudio) {
-      await this.processMessage(transcribedAudio, groupId);
+      throw Error('Enable and fix line below.');
+      // await this.processMessage(transcribedAudio, groupId);
     }
   }
 }

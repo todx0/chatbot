@@ -22,6 +22,19 @@ export interface DatabaseOptions {
   limit?: number;
   dbsqlite?: string;
 }
+export interface MessageData {
+  groupId: string;
+  replyToMsgId: any;
+  messageId: number;
+  messageText: string;
+  message?: any;
+  image?: boolean;
+}
+export interface MessageObject {
+  replyMessageContent: string;
+  image?: boolean;
+  filePath?: string;
+}
 export interface PollMessage {
   updates: { id: number }[];
 }

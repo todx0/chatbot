@@ -35,7 +35,7 @@ export async function convertToImage(buffer: Buffer): Promise<string> {
   if (!(buffer instanceof Buffer)) {
     throw new Error('Not a buffer');
   }
-  const filepath = './images/image.jpg';
+  const filepath = './images/image.jpeg';
   const file = Bun.file(filepath);
 
   if (!file.size) Bun.write(filepath, '');
@@ -185,7 +185,7 @@ export function getDataFromEvent(event: any) {
     messageText = event.message;
     message = event;
   } else if (typeof event.message === 'object') {
-    groupId = event.message._chatPeer.channelId;
+    groupId = event.message._chatPeer.channelId || event.message._chatPeer.chatId;
     replyToMsgId = event.message.replyTo?.replyToMsgId;
     messageText = event.message.message;
     message = event.message;

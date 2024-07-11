@@ -1,13 +1,8 @@
 import { Content } from '@google/generative-ai';
-import {
-  config,
-  genAImodel,
-  genAImodelForRecap,
-  MAX_HISTORY_LENGTH,
-  recapTextRequest,
-  safetySettings,
-} from '../../config';
+import { config, genAImodel, genAImodelForRecap, MAX_HISTORY_LENGTH, recapTextRequest } from '../../config';
+
 import { ErrorHandler } from '../../errors/ErrorHandler';
+import { MessageObject } from '../../types';
 import { insertToMessages, readChatRoleFromDatabase, replaceDoubleSpaces } from '../../utils/helper';
 import { getTranslations } from '../../utils/translation';
 
@@ -29,13 +24,8 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
     const history: Content[] = await readChatRoleFromDatabase({ limit: MAX_HISTORY_LENGTH });
 
     const chat = !recap
-      ? genAImodel.startChat({
-        history,
-        safetySettings,
-      })
-      : genAImodelForRecap.startChat({
-        safetySettings,
-      });
+      ? genAImodel.startChat({ history })
+      : genAImodelForRecap.startChat();
 
     const request = retryCount === 0
       ? userRequest
@@ -80,6 +70,19 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
   } catch (error: any) {
     return ErrorHandler.handleError(error);
   }
+}
+
+export async function generateResponseFromImage(messageObj: MessageObject): Promise<string> {
+  if (!messageObj.filePath) throw Error('Provide filepath.');
+  const file = await Bun.file(messageObj.filePath).arrayBuffer();
+  const image = {
+    inlineData: {
+      data: Buffer.from(file).toString('base64'),
+      mimeType: 'image/jpeg',
+    },
+  };
+  const result = await genAImodel.generateContent([messageObj.replyMessageContent, image]);
+  return result.response.text();
 }
 
 export async function generateMultipleResponses(userRequests: string[]): Promise<string[]> {

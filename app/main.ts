@@ -1,5 +1,6 @@
 import TelegramBot from './bot';
 import { client, initConfig } from './config';
+import { MessageData } from './types';
 import {
   createMessagesTable,
   getDataFromEvent,
@@ -8,7 +9,7 @@ import {
   somebodyMentioned,
 } from './utils/helper';
 
-const bot = new TelegramBot();
+const bot = new TelegramBot(client);
 
 const botWorkflow = async (event: any) => {
   const { groupId, replyToMsgId, messageText, message } = getDataFromEvent(event);
@@ -16,9 +17,16 @@ const botWorkflow = async (event: any) => {
   if (!groupId || !messageText || !message || !messageNotSeen(message)) return;
 
   if (await bot.executeCommand(messageText, groupId)) return;
-
   if (somebodyMentioned(message)) {
-    await bot.processMention(groupId, replyToMsgId, messageText, message.id);
+    // Make getDataFromEvent return MessageData type to avoid creating messageToProcess
+    const messageToProcess: MessageData = {
+      groupId,
+      messageText,
+      replyToMsgId,
+      messageId: message.id,
+      image: !!message?.media?.photo,
+    };
+    await bot.processMention(messageToProcess);
     return;
   }
 

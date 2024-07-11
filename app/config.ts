@@ -61,10 +61,12 @@ const generativeModelOptions: ModelParams = {
       ? 'Adjust the tone of the reply to be a little bit more noxious, blunt, and impolite.'
       : ''
   }`,
+  safetySettings,
 };
 const generativeModelOptionsForRecap: ModelParams = {
   model: genAImodelName,
   systemInstruction: `Use telegram markdown. Always reply in ${config.LANGUAGE}.`,
+  safetySettings,
 };
 export const genAI = new GoogleGenerativeAI(config.GAPI);
 export const genAImodel = genAI.getGenerativeModel(generativeModelOptions);
