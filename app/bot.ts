@@ -178,18 +178,22 @@ export default class TelegramBot {
     return '';
   }
 
-  async getMessageContentById(messageId: number, groupId: string): Promise<string> {
-    const message = await this.client.getMessages(groupId, { ids: messageId });
-    let content;
+  async getMessageContentById(
+    messageId: number,
+    groupId: string,
+  ): Promise<{ mediaContent: string; textContent: string }> {
+    const message = await this.client.getMessages(groupId, { ids: messageId, limit: 1 });
+
+    let textContent = '', mediaContent = '';
     const media = message[0]?.media as { photo?: any };
 
     if (media?.photo) {
-      content = await this.getImageBuffer(message);
-      content = await convertToImage(content);
-    } else {
-      content = message[0].message;
+      const imageBuffer = await this.getImageBuffer(message);
+      mediaContent = await convertToImage(imageBuffer);
     }
-    return content;
+
+    textContent = message[0].message;
+    return { mediaContent, textContent };
   }
 
   async getImageBuffer(message: any): Promise<Buffer> {
@@ -225,13 +229,16 @@ export default class TelegramBot {
   async processMessage(msgObject: MessageObject, groupId: string, replyTo?: number): Promise<void | string> {
     const { replyMessageContent, filePath } = msgObject;
     msgObject.replyMessageContent = this.stripBotNameFromMessage(replyMessageContent);
-    let message;
-    if (filePath) {
-      message = await generateResponseFromImage(msgObject);
+    let textResponse = '', imageResponse = '';
+    let message = '';
+    // Need to figure out how to process image when tagging bot under image. He doesn't see it.
+    if (filePath?.includes('images')) {
+      imageResponse = await generateResponseFromImage(msgObject);
     } else {
-      message = await generateGenAIResponse(replyMessageContent);
+      textResponse = await generateGenAIResponse(replyMessageContent);
     }
     try {
+      const message = textResponse ? textResponse : imageResponse; // textResponse + imageResponse;
       await this.client.sendMessage(`-${groupId}`, { message, replyTo });
     } catch (error: any) {
       return ErrorHandler.handleError(error, true);
@@ -500,7 +507,7 @@ export default class TelegramBot {
   }
 
   async processMention(msgData: MessageData) {
-    const { replyToMsgId, messageText, groupId, messageId, image } = msgData;
+    const { replyToMsgId, messageText, groupId, messageId, image, message } = msgData;
 
     // Auto reply when replying to bot's message.
     if (replyToMsgId && groupId && (await this.checkReplyIdIsBotId(replyToMsgId.replyToMsgId, groupId))) {
@@ -515,13 +522,16 @@ export default class TelegramBot {
         image: false,
       };
       if (replyToMsgId) {
-        // ?? Need to figure out when this condition is triggered.
-        console.log('here unknown');
-        messageObj.replyMessageContent = await this.getMessageContentById(replyToMsgId, groupId);
+        // Bot mentioned with @ under somebody's message
+        messageObj.replyMessageContent = '';
+        const { textContent, mediaContent } = await this.getMessageContentById(replyToMsgId, groupId);
+        messageObj.replyMessageContent = textContent;
+        messageObj.filePath = mediaContent;
         await this.processMessage(messageObj, groupId, messageId);
       } else if (image) {
         // Bot responds to image
-        messageObj.filePath = await this.getMessageContentById(replyToMsgId, groupId);
+        const { mediaContent } = await this.getMessageContentById(replyToMsgId, groupId);
+        messageObj.filePath = mediaContent;
         await this.processMessage(messageObj, groupId, messageId);
       } else {
         // Bot mentioned with @

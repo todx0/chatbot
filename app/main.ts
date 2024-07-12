@@ -25,6 +25,7 @@ const botWorkflow = async (event: any) => {
       replyToMsgId,
       messageId: message.id,
       image: !!message?.media?.photo,
+      message,
     };
     await bot.processMention(messageToProcess);
     return;

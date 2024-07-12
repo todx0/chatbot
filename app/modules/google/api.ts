@@ -1,6 +1,6 @@
 import { Content } from '@google/generative-ai';
+import { unlink } from 'node:fs/promises';
 import { config, genAImodel, genAImodelForRecap, MAX_HISTORY_LENGTH, recapTextRequest } from '../../config';
-
 import { ErrorHandler } from '../../errors/ErrorHandler';
 import { MessageObject } from '../../types';
 import { insertToMessages, readChatRoleFromDatabase, replaceDoubleSpaces } from '../../utils/helper';
@@ -81,7 +81,9 @@ export async function generateResponseFromImage(messageObj: MessageObject): Prom
       mimeType: 'image/jpeg',
     },
   };
-  const result = await genAImodel.generateContent([messageObj.replyMessageContent, image]);
+  let replyMessageContent = messageObj.replyMessageContent ? messageObj.replyMessageContent : 'Analyze this image.';
+  const result = await genAImodelForRecap.generateContent([replyMessageContent, image]);
+  await unlink(messageObj.filePath);
   return result.response.text();
 }
 

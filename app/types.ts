@@ -34,6 +34,8 @@ export interface MessageObject {
   replyMessageContent: string;
   image?: boolean;
   filePath?: string;
+  mediaContent?: string;
+  textContent?: string;
 }
 export interface PollMessage {
   updates: { id: number }[];
