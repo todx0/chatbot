@@ -1,6 +1,6 @@
 import bigInt from 'big-integer';
 import { Api, TelegramClient } from 'telegram';
-import { BOT_USERNAME, MAX_TOKEN_LENGTH, MESSAGE_LIMIT, POLL_TIMEOUT_MS, recapTextRequest } from './config';
+import { BOT_USERNAME, MESSAGE_LIMIT, POLL_TIMEOUT_MS, recapTextRequest } from './config';
 import { ErrorHandler } from './errors/ErrorHandler';
 import {
   generateGenAIResponse,

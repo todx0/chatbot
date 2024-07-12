@@ -6,7 +6,7 @@ import { unlink } from 'node:fs/promises';
 import { Api } from 'telegram';
 import { MAX_HISTORY_LENGTH, TELEGRAM_PREMIUM } from '../config';
 import { ErrorHandler } from '../errors/ErrorHandler';
-import { DatabaseOptions, MediaObject } from '../types';
+import { DatabaseOptions, MediaObject, MessageData } from '../types';
 
 export async function retry<T>(
   fn: (...args: any[]) => Promise<T>,
@@ -174,7 +174,7 @@ export async function checkAndUpdateDatabase({ readLimit = 1000, trimLimit = MAX
   }
 }
 
-export function getDataFromEvent(event: any) {
+/* export function getDataFromEvent(event: any) {
   let groupId;
   let replyToMsgId;
   let messageText;
@@ -196,8 +196,38 @@ export function getDataFromEvent(event: any) {
     messageText,
     message,
   };
-}
+} */
 
+export function getDataFromEvent(event: any): MessageData {
+  let groupId;
+  let replyToMsgId;
+  let messageText;
+  let message;
+  let messageId;
+
+  if (typeof event.message === 'string') {
+    groupId = event.chatId;
+    replyToMsgId = event.replyTo;
+    messageText = event.message;
+    message = event;
+    messageId = event.id;
+  } else if (typeof event.message === 'object') {
+    groupId = event.message._chatPeer.channelId || event.message._chatPeer.chatId;
+    replyToMsgId = event.message.replyTo?.replyToMsgId;
+    messageText = event.message.message;
+    message = event.message;
+    messageId = event.message.id;
+  }
+
+  return {
+    groupId,
+    messageText,
+    replyToMsgId,
+    messageId,
+    image: !!message?.media?.photo,
+    message,
+  };
+}
 export function replaceDoubleSpaces(str: string): string {
   const regex = /\s{2,}/g;
   return str.replace(regex, ' ');

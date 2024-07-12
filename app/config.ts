@@ -18,7 +18,7 @@ export const featureFlags = {
   humanize: true,
 };
 
-export const client = new TelegramClient(
+export const telegramClient = new TelegramClient(
   new StringSession(config.SESSION),
   +config.API_ID,
   config.API_HASH,

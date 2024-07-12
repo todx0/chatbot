@@ -1,6 +1,6 @@
+import { Api } from 'telegram';
 import TelegramBot from './bot';
-import { client, initConfig } from './config';
-import { MessageData } from './types';
+import { initConfig, telegramClient } from './config';
 import {
   createMessagesTable,
   getDataFromEvent,
@@ -9,28 +9,20 @@ import {
   somebodyMentioned,
 } from './utils/helper';
 
-const bot = new TelegramBot(client);
+const bot = new TelegramBot(telegramClient);
 
-const botWorkflow = async (event: any) => {
-  const { groupId, replyToMsgId, messageText, message } = getDataFromEvent(event);
+const botWorkflow = async (event: Api.TypeUpdate) => {
+  const messageData = getDataFromEvent(event);
+  const { groupId, messageText, message } = messageData;
 
   if (!groupId || !messageText || !message || !messageNotSeen(message)) return;
 
   if (await bot.executeCommand(messageText, groupId)) return;
+
   if (somebodyMentioned(message)) {
-    // Make getDataFromEvent return MessageData type to avoid creating messageToProcess
-    const messageToProcess: MessageData = {
-      groupId,
-      messageText,
-      replyToMsgId,
-      messageId: message.id,
-      image: !!message?.media?.photo,
-      message,
-    };
-    await bot.processMention(messageToProcess);
+    await bot.processMention(messageData);
     return;
   }
-
   if (shouldTranscribeMedia(message)) {
     await bot.transcribeMedia(groupId, message);
     return;
@@ -40,6 +32,6 @@ const botWorkflow = async (event: any) => {
 (async () => {
   initConfig();
   await createMessagesTable();
-  await client.connect();
-  client.addEventHandler(botWorkflow);
+  await telegramClient.connect();
+  telegramClient.addEventHandler(botWorkflow);
 })();

@@ -24,7 +24,7 @@ export interface DatabaseOptions {
 }
 export interface MessageData {
   groupId: string;
-  replyToMsgId: any;
+  replyToMsgId?: any;
   messageId: number;
   messageText: string;
   message?: any;
