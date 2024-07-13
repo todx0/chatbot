@@ -198,36 +198,65 @@ export async function checkAndUpdateDatabase({ readLimit = 1000, trimLimit = MAX
   };
 } */
 
-export function getDataFromEvent(event: any): MessageData {
-  let groupId;
-  let replyToMsgId;
-  let messageText;
-  let message;
-  let messageId;
+export function getDataFromEvent(event: Api.TypeUpdate): MessageData {
 
-  if (typeof event.message === 'string') {
-    groupId = event.chatId;
-    replyToMsgId = event.replyTo;
-    messageText = event.message;
-    message = event;
-    messageId = event.id;
-  } else if (typeof event.message === 'object') {
-    groupId = event.message._chatPeer.channelId || event.message._chatPeer.chatId;
-    replyToMsgId = event.message.replyTo?.replyToMsgId;
-    messageText = event.message.message;
-    message = event.message;
-    messageId = event.message.id;
+  const responseObject: MessageData = {
+    groupId: '',
+    replyToMsgId: undefined,
+    messageText: '',
+    messageId: 0,
+    image: undefined,
+    message: undefined,
+  };
+  if (
+    event instanceof Api.UpdateNewMessage ||
+    event instanceof Api.UpdateNewChannelMessage
+  ) {
+    responseObject.groupId = event.message._chatPeer.channelId || event.message._chatPeer.chatId;
+    responseObject.replyToMsgId = event.message.replyTo?.replyToMsgId;
+    responseObject.messageText = event.message.message;
+    responseObject.messageId = event.message.id;
+    responseObject.message = event.message;
+    responseObject.image = !!responseObject.message?.media?.photo;
+  } else if (event instanceof Api.UpdateShortChatMessage) {
+    responseObject.groupId = event.chatId;
+    responseObject.replyToMsgId = event?.replyTo?.replyToMsgId;
+    responseObject.messageText = event.message;
+    responseObject.messageId = event.id;
+    responseObject.message = event;
+    responseObject.image = !!responseObject.message.message?.media?.photo;
   }
 
-  return {
-    groupId,
-    messageText,
-    replyToMsgId,
-    messageId,
-    image: !!message?.media?.photo,
-    message,
-  };
+  return responseObject;
 }
+
+/* export function getDataFromEvent(event: Api.TypeUpdate): MessageData {
+  let responseObject: MessageData = {
+    groupId: '',
+    messageId: 0,
+    messageText: '',
+  };
+
+  if (
+    event instanceof Api.UpdateNewMessage ||
+    event instanceof Api.UpdateNewChannelMessage ||
+    event instanceof Api.UpdateShortChatMessage
+  ) {
+    const message = 'message' in event ? event.message : event;
+
+    responseObject = {
+      groupId: message._chatPeer?.channelId || message._chatPeer?.chatId || message.chatId,
+      messageId: message.id,
+      messageText: message.message,
+      replyToMsgId: message.replyTo?.replyToMsgId,
+      message: message,
+      image: !!message.media?.photo,
+    };
+  }
+
+  return responseObject;
+} */
+
 export function replaceDoubleSpaces(str: string): string {
   const regex = /\s{2,}/g;
   return str.replace(regex, ' ');

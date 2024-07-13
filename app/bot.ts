@@ -191,7 +191,6 @@ export default class TelegramBot {
       const imageBuffer = await this.getImageBuffer(message);
       mediaContent = await convertToImage(imageBuffer);
     }
-
     textContent = message[0].message;
     return { mediaContent, textContent };
   }
@@ -230,15 +229,13 @@ export default class TelegramBot {
     const { replyMessageContent, filePath } = msgObject;
     msgObject.replyMessageContent = this.stripBotNameFromMessage(replyMessageContent);
     let textResponse = '', imageResponse = '';
-    let message = '';
-    // Need to figure out how to process image when tagging bot under image. He doesn't see it.
     if (filePath?.includes('images')) {
       imageResponse = await generateResponseFromImage(msgObject);
     } else {
       textResponse = await generateGenAIResponse(replyMessageContent);
     }
     try {
-      const message = textResponse ? textResponse : imageResponse; // textResponse + imageResponse;
+      const message = textResponse ? textResponse : imageResponse;
       await this.client.sendMessage(`-${groupId}`, { message, replyTo });
     } catch (error: any) {
       return ErrorHandler.handleError(error, true);
@@ -510,7 +507,7 @@ export default class TelegramBot {
     const { replyToMsgId, messageText, groupId, messageId, image, message } = msgData;
 
     // Auto reply when replying to bot's message.
-    if (replyToMsgId && groupId && (await this.checkReplyIdIsBotId(replyToMsgId.replyToMsgId, groupId))) {
+    if (replyToMsgId && groupId && (await this.checkReplyIdIsBotId(replyToMsgId, groupId))) {
       await this.processMessage({ replyMessageContent: messageText }, groupId, messageId);
       return;
     }
