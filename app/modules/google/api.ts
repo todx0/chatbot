@@ -49,14 +49,14 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
         if (retryCount < retryRequestDisclaimer.length) {
           return retryHandler();
         } else {
-          console.error('Maximum retries reached with disclaimer');
+          console.error('Maximum retries reached with disclaimer', error.message);
           return translations['botHasNoIdea'];
         }
       } else {
         if (retryCount < retryRequestDisclaimer.length) {
           return retryHandler();
         } else {
-          console.error('Maximum retries reached');
+          console.error('Maximum retries reached', error.message);
           return translations['botHasNoIdea'];
         }
       }

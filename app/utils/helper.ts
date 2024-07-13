@@ -4,7 +4,7 @@ import { Database } from 'bun:sqlite';
 import * as fs from 'node:fs';
 import { unlink } from 'node:fs/promises';
 import { Api } from 'telegram';
-import { MAX_HISTORY_LENGTH, TELEGRAM_PREMIUM } from '../config';
+import { featureFlags, getSpecialTreatmentUsers, MAX_HISTORY_LENGTH, TELEGRAM_PREMIUM } from '../config';
 import { ErrorHandler } from '../errors/ErrorHandler';
 import { DatabaseOptions, MediaObject, MessageData } from '../types';
 
@@ -174,50 +174,30 @@ export async function checkAndUpdateDatabase({ readLimit = 1000, trimLimit = MAX
   }
 }
 
-/* export function getDataFromEvent(event: any) {
-  let groupId;
-  let replyToMsgId;
-  let messageText;
-  let message;
-  if (typeof event.message === 'string') {
-    groupId = event.chatId;
-    replyToMsgId = event.replyTo;
-    messageText = event.message;
-    message = event;
-  } else if (typeof event.message === 'object') {
-    groupId = event.message._chatPeer.channelId || event.message._chatPeer.chatId;
-    replyToMsgId = event.message.replyTo?.replyToMsgId;
-    messageText = event.message.message;
-    message = event.message;
-  }
-  return {
-    groupId,
-    replyToMsgId,
-    messageText,
-    message,
-  };
-} */
-
-/** @todo add guard to prevent type errors. */
+/** @todo add guard to prevent type errors. Consider refactoring if adding to much fields.*/
 export function getDataFromEvent(event: Api.TypeUpdate): MessageData {
   const responseObject: any = {};
+
   if (
     event instanceof Api.UpdateNewMessage ||
     event instanceof Api.UpdateNewChannelMessage
   ) {
-    responseObject.groupId = event.message._chatPeer.channelId || event.message._chatPeer.chatId;
-    responseObject.replyToMsgId = event.message.replyTo?.replyToMsgId;
-    responseObject.messageText = event.message.message;
-    responseObject.messageId = event.message.id;
-    responseObject.message = event.message;
-    responseObject.image = !!responseObject.message?.media?.photo;
+    const message = (event as any).message;
+    responseObject.groupId = message?._chatPeer?.channelId || message?._chatPeer?.chatId;
+    responseObject.replyToMsgId = message?.replyTo?.replyToMsgId;
+    responseObject.messageText = message?.message;
+    responseObject.messageId = message?.id;
+    responseObject.message = message;
+    responseObject.image = !!message?.media?.photo;
+    responseObject.userEntity = message?.fromId;
   } else if (event instanceof Api.UpdateShortChatMessage) {
-    responseObject.groupId = event.chatId;
-    responseObject.replyToMsgId = event?.replyTo?.replyToMsgId;
-    responseObject.messageText = event.message;
-    responseObject.messageId = event.id;
+    responseObject.groupId = (event as any).chatId;
+    responseObject.replyToMsgId = (event as any).replyTo?.replyToMsgId;
+    responseObject.messageText = (event as any).message;
+    responseObject.messageId = (event as any).id;
     responseObject.message = event;
-    responseObject.image = !!responseObject.message.message?.media?.photo;
+    responseObject.image = !!(event as any).media?.photo;
+    responseObject.userEntity = (event as any).fromId;
   }
   return responseObject;
 }
@@ -234,3 +214,6 @@ export const canTranscribeMedia = (
 export const shouldTranscribeMedia = (message: any): boolean =>
   TELEGRAM_PREMIUM && message.mediaUnread && canTranscribeMedia(message.media);
 export const somebodyMentioned = (message: Api.Message): boolean => (message.mentioned ? message.mentioned : false);
+export const eligibleForSpecialTreatment = (
+  username: string,
+): boolean => (featureFlags.randomReply && (getSpecialTreatmentUsers()).includes(username));

@@ -2,6 +2,7 @@ import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory, ModelParams } fro
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions/index';
 import { ProcessEnv } from './types';
+
 export const config = {
   API_ID: Bun.env.API_ID,
   BOT_ID: Bun.env.BOT_ID,
@@ -12,10 +13,12 @@ export const config = {
   BOT_USERNAME: Bun.env.BOT_USERNAME,
   GAPI: Bun.env.GAPI,
   SECRET_OPTIONS: Bun.env.SECRET_OPTIONS,
+  SPECIAL_TREATMENT_USERS: Bun.env.SPECIAL_TREATMENT_USERS,
 } as ProcessEnv;
 
 export const featureFlags = {
   humanize: true,
+  randomReply: true,
 };
 
 export const telegramClient = new TelegramClient(
@@ -33,6 +36,7 @@ export const BOT_USERNAME = config.BOT_USERNAME;
 export const MESSAGE_LIMIT = 1000;
 export const MAX_TOKEN_LENGTH = 4096;
 export const POLL_TIMEOUT_MS = 5 * 60 * 1000;
+export const RANDOM_REPLY_PERCENT = 10;
 
 const genAImodelName = 'gemini-1.5-flash-latest';
 export const safetySettings = [
@@ -95,7 +99,9 @@ export function loadConfig(): void {
   ];
   checkRequiredEnvVariables(requiredEnvVariables);
 }
-
+export function getSpecialTreatmentUsers(): string[] {
+  return config.SPECIAL_TREATMENT_USERS.split(',');
+}
 export function initConfig(): void {
   try {
     loadConfig();

@@ -1,8 +1,9 @@
 import { Api } from 'telegram';
 import TelegramBot from './bot';
-import { initConfig, telegramClient } from './config';
+import { config, getSpecialTreatmentUsers, initConfig, telegramClient } from './config';
 import {
   createMessagesTable,
+  eligibleForSpecialTreatment,
   getDataFromEvent,
   messageNotSeen,
   shouldTranscribeMedia,
@@ -11,13 +12,19 @@ import {
 
 const bot = new TelegramBot(telegramClient);
 
-const botWorkflow = async (event: Api.TypeUpdate) => {
+const botWorkflow = async (event: Api.TypeUpdate): Promise<void> => {
   const messageData = getDataFromEvent(event);
-  const { groupId, messageText, message } = messageData;
+  const { groupId, messageText, message, userEntity } = messageData;
 
   if (!groupId || !messageText || !message || !messageNotSeen(message)) return;
 
   if (await bot.executeCommand(messageText, groupId)) return;
+
+  const [username] = await bot.getUsers([userEntity]);
+  if (eligibleForSpecialTreatment(username)) {
+    await bot.processSpecialTreatment(messageData);
+    return;
+  }
 
   if (somebodyMentioned(message)) {
     await bot.processMention(messageData);

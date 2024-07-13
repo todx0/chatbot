@@ -1,6 +1,6 @@
 import bigInt from 'big-integer';
 import { Api, TelegramClient } from 'telegram';
-import { BOT_USERNAME, MESSAGE_LIMIT, POLL_TIMEOUT_MS, recapTextRequest } from './config';
+import { BOT_USERNAME, MESSAGE_LIMIT, POLL_TIMEOUT_MS, RANDOM_REPLY_PERCENT, recapTextRequest } from './config';
 import { ErrorHandler } from './errors/ErrorHandler';
 import {
   generateGenAIResponse,
@@ -504,7 +504,7 @@ export default class TelegramBot {
   }
 
   async processMention(msgData: MessageData) {
-    const { replyToMsgId, messageText, groupId, messageId, image, message } = msgData;
+    const { replyToMsgId, messageText, groupId, messageId, image } = msgData;
 
     // Auto reply when replying to bot's message.
     if (replyToMsgId && groupId && (await this.checkReplyIdIsBotId(replyToMsgId, groupId))) {
@@ -533,6 +533,33 @@ export default class TelegramBot {
       } else {
         // Bot mentioned with @
         await this.processMessage(messageObj, groupId, messageId);
+      }
+    }
+  }
+
+  async getUsers(users: string[]) {
+    try {
+      const response = await this.client.invoke(
+        new Api.users.GetUsers({
+          id: users,
+        }),
+      );
+      const usernames = response.map(entity => (entity as any).username);
+      return usernames;
+    } catch (error: any) {
+      throw Error('Failed to get users.', error);
+    }
+  }
+
+  async processSpecialTreatment(messageData: MessageData) {
+    const randomNumber = Math.random() * 100;
+    if (randomNumber < RANDOM_REPLY_PERCENT) {
+      const { groupId, messageText, messageId } = messageData;
+      const botResponse = await generateGenAIResponse(messageText);
+      try {
+        await this.client.sendMessage(`-${groupId}`, { message: botResponse, replyTo: messageId });
+      } catch (error: any) {
+        throw Error(error);
       }
     }
   }
