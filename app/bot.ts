@@ -514,13 +514,13 @@ export default class TelegramBot {
 
     const isBotCalled = messageText.includes(BOT_USERNAME);
     if (isBotCalled) {
+      /** @todo use MessageData instead of creating MessageObject */
       let messageObj: MessageObject = {
         replyMessageContent: messageText,
         image: false,
       };
       if (replyToMsgId) {
         // Bot mentioned with @ under somebody's message
-        messageObj.replyMessageContent = '';
         const { textContent, mediaContent } = await this.getMessageContentById(replyToMsgId, groupId);
         messageObj.replyMessageContent = textContent;
         messageObj.filePath = mediaContent;

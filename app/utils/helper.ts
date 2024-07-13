@@ -198,16 +198,9 @@ export async function checkAndUpdateDatabase({ readLimit = 1000, trimLimit = MAX
   };
 } */
 
+/** @todo add guard to prevent type errors. */
 export function getDataFromEvent(event: Api.TypeUpdate): MessageData {
-
-  const responseObject: MessageData = {
-    groupId: '',
-    replyToMsgId: undefined,
-    messageText: '',
-    messageId: 0,
-    image: undefined,
-    message: undefined,
-  };
+  const responseObject: any = {};
   if (
     event instanceof Api.UpdateNewMessage ||
     event instanceof Api.UpdateNewChannelMessage
@@ -226,36 +219,8 @@ export function getDataFromEvent(event: Api.TypeUpdate): MessageData {
     responseObject.message = event;
     responseObject.image = !!responseObject.message.message?.media?.photo;
   }
-
   return responseObject;
 }
-
-/* export function getDataFromEvent(event: Api.TypeUpdate): MessageData {
-  let responseObject: MessageData = {
-    groupId: '',
-    messageId: 0,
-    messageText: '',
-  };
-
-  if (
-    event instanceof Api.UpdateNewMessage ||
-    event instanceof Api.UpdateNewChannelMessage ||
-    event instanceof Api.UpdateShortChatMessage
-  ) {
-    const message = 'message' in event ? event.message : event;
-
-    responseObject = {
-      groupId: message._chatPeer?.channelId || message._chatPeer?.chatId || message.chatId,
-      messageId: message.id,
-      messageText: message.message,
-      replyToMsgId: message.replyTo?.replyToMsgId,
-      message: message,
-      image: !!message.media?.photo,
-    };
-  }
-
-  return responseObject;
-} */
 
 export function replaceDoubleSpaces(str: string): string {
   const regex = /\s{2,}/g;
