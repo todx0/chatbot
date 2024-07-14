@@ -34,7 +34,7 @@ export interface MessageData {
 export interface MessageObject {
   replyMessageContent: string;
   image?: boolean;
-  filePath?: string;
+  filepath?: string;
   mediaContent?: string;
   textContent?: string;
 }

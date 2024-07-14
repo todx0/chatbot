@@ -1,7 +1,9 @@
 import { Api } from 'telegram';
 import TelegramBot from './bot';
 import { config, getSpecialTreatmentUsers, initConfig, telegramClient } from './config';
+import { generateResponseFromImage } from './modules/google/api';
 import {
+  convertToImage,
   createMessagesTable,
   eligibleForSpecialTreatment,
   getDataFromEvent,
@@ -16,18 +18,17 @@ const botWorkflow = async (event: Api.TypeUpdate): Promise<void> => {
   const messageData = getDataFromEvent(event);
   const { groupId, messageText, message, userEntity } = messageData;
 
-  if (!groupId || !messageText || !message || !messageNotSeen(message)) return;
+  if (!groupId || !message || !messageNotSeen(message)) return;
 
   if (await bot.executeCommand(messageText, groupId)) return;
 
+  if (somebodyMentioned(message)) {
+    await bot.processMention(messageData);
+    return;
+  }
   const [username] = await bot.getUsers([userEntity]);
   if (eligibleForSpecialTreatment(username)) {
     await bot.processSpecialTreatment(messageData);
-    return;
-  }
-
-  if (somebodyMentioned(message)) {
-    await bot.processMention(messageData);
     return;
   }
   if (shouldTranscribeMedia(message)) {

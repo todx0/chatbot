@@ -73,8 +73,8 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
 }
 
 export async function generateResponseFromImage(messageObj: MessageObject): Promise<string> {
-  if (!messageObj.filePath) throw Error('Provide filepath.');
-  const file = await Bun.file(messageObj.filePath).arrayBuffer();
+  if (!messageObj.filepath) throw Error('Provide filepath.');
+  const file = await Bun.file(messageObj.filepath).arrayBuffer();
   const image = {
     inlineData: {
       data: Buffer.from(file).toString('base64'),
@@ -83,9 +83,25 @@ export async function generateResponseFromImage(messageObj: MessageObject): Prom
   };
   let replyMessageContent = messageObj.replyMessageContent ? messageObj.replyMessageContent : 'Analyze this image.';
   const result = await genAImodelForRecap.generateContent([replyMessageContent, image]);
-  await unlink(messageObj.filePath);
+  await unlink(messageObj.filepath);
   return result.response.text();
 }
+
+/* export async function analyzeSticker(buffer: Buffer): Promise<string> {
+  console.log('1', typeof buffer);
+  if (!Buffer.isBuffer(buffer)) throw Error('Please provide valid Buffer.');
+  const image = {
+    inlineData: {
+      data: buffer.toString('base64'),
+      mimeType: 'image/webp',
+    },
+  };
+  const result = await genAImodelForRecap.generateContent([
+    'This image was addressed to you by user. Analyze and respond.',
+    image,
+  ]);
+  return result.response.text();
+} */
 
 export async function generateMultipleResponses(userRequests: string[]): Promise<string[]> {
   return Promise.all(

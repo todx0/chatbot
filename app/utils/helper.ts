@@ -31,13 +31,11 @@ export async function downloadFile(url: string): Promise<Buffer> {
   return Buffer.from(response.data, 'binary');
 }
 
-export async function convertToImage(buffer: Buffer): Promise<string> {
+export async function convertToImage(buffer: Buffer, filepath = './images/image.jpeg'): Promise<string> {
   if (!(buffer instanceof Buffer)) {
     throw new Error('Not a buffer');
   }
-  const filepath = './images/image.jpeg';
   const file = Bun.file(filepath);
-
   if (!file.size) Bun.write(filepath, '');
   await Bun.write(file, buffer);
   return filepath;
