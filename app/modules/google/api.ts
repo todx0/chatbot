@@ -81,8 +81,12 @@ export async function generateResponseFromImage(messageObj: MessageObject): Prom
       mimeType: 'image/jpeg',
     },
   };
-  let replyMessageContent = messageObj.replyMessageContent ? messageObj.replyMessageContent : 'Analyze this image.';
+  let replyMessageContent = messageObj.replyMessageContent
+    ? messageObj.replyMessageContent
+    : 'Analyze this image.';
+  // const result = await genAImodel.generateContent([replyMessageContent, image]);
   const result = await genAImodelForRecap.generateContent([replyMessageContent, image]);
+
   await unlink(messageObj.filepath);
   return result.response.text();
 }
