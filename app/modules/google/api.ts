@@ -81,11 +81,17 @@ export async function generateResponseFromImage(messageObj: MessageObject): Prom
       mimeType: 'image/jpeg',
     },
   };
-  let replyMessageContent = messageObj.replyMessageContent
-    ? messageObj.replyMessageContent
-    : 'Analyze this image.';
+  let textRequest;
+
+  if (messageObj.textContent) {
+    textRequest = messageObj.textContent;
+  } else if (messageObj.replyMessageContent) {
+    textRequest = messageObj.replyMessageContent;
+  } else {
+    textRequest = 'Analyze this image.';
+  }
   // const result = await genAImodel.generateContent([replyMessageContent, image]);
-  const result = await genAImodelForRecap.generateContent([replyMessageContent, image]);
+  const result = await genAImodelForRecap.generateContent([textRequest, image]);
 
   await unlink(messageObj.filepath);
   return result.response.text();

@@ -185,8 +185,8 @@ export default class TelegramBot {
     const message: any = await this.client.getMessages(groupId, { ids: messageId, limit: 1 });
 
     let textContent = '', mediaContent = '';
-
     const [msg] = message;
+
     mediaContent = await this.checkMessageForMediaReturnFilepath(msg);
     textContent = msg.message;
 
@@ -256,8 +256,11 @@ export default class TelegramBot {
   }
 
   async processMessage(msgObject: MessageObject, groupId: string, replyTo?: number): Promise<void | string> {
-    const { replyMessageContent, filepath } = msgObject;
+
+    const { replyMessageContent, filepath, textContent } = msgObject;
     msgObject.replyMessageContent = this.stripBotNameFromMessage(replyMessageContent);
+    if (msgObject.textContent) msgObject.textContent = this.stripBotNameFromMessage(msgObject.textContent);
+
     let textResponse = '', imageResponse = '';
     if (filepath?.includes('images')) {
       imageResponse = await generateResponseFromImage(msgObject);
@@ -559,14 +562,14 @@ export default class TelegramBot {
   private async handleBotMention(msgData: MessageData) {
     const { replyToMsgId, messageText, groupId, messageId, image } = msgData;
 
-    const messageObj: MessageObject = { replyMessageContent: messageText };
-
+    const msgObject: MessageObject = { replyMessageContent: messageText };
     if (replyToMsgId || image) {
       const { textContent, mediaContent } = await this.getMessageContentById(replyToMsgId, groupId);
-      messageObj.replyMessageContent = textContent;
-      messageObj.filepath = mediaContent;
+      msgObject.replyMessageContent = textContent;
+      msgObject.filepath = mediaContent;
+      msgObject.textContent = messageText;
     }
-    await this.processMessage(messageObj, groupId, messageId);
+    await this.processMessage(msgObject, groupId, messageId);
   }
 
   async getUsers(users: string[]) {
