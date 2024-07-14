@@ -87,22 +87,6 @@ export async function generateResponseFromImage(messageObj: MessageObject): Prom
   return result.response.text();
 }
 
-/* export async function analyzeSticker(buffer: Buffer): Promise<string> {
-  console.log('1', typeof buffer);
-  if (!Buffer.isBuffer(buffer)) throw Error('Please provide valid Buffer.');
-  const image = {
-    inlineData: {
-      data: buffer.toString('base64'),
-      mimeType: 'image/webp',
-    },
-  };
-  const result = await genAImodelForRecap.generateContent([
-    'This image was addressed to you by user. Analyze and respond.',
-    image,
-  ]);
-  return result.response.text();
-} */
-
 export async function generateMultipleResponses(userRequests: string[]): Promise<string[]> {
   return Promise.all(
     userRequests.map(async (chunk) => generateGenAIResponse(`${recapTextRequest} ${chunk}`, true)),
