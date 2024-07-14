@@ -197,26 +197,81 @@ export default class TelegramBot {
     const { messageText, groupId, messageId, message } = msgData;
 
     const messageObj: MessageObject = { replyMessageContent: messageText };
-    messageObj.filepath = await this.checkMessageForMediaReturnFilepath(message);
+    messageObj.filepath = await this.checkMessageForMediaReturnFilepath(message, groupId, messageId);
 
     await this.processMessage(messageObj, groupId, messageId);
   }
 
-  async checkMessageForMediaReturnFilepath(message: any): Promise<string> {
+  async checkMessageForMediaReturnFilepath(message: any, groupId?: string, messageId?: number): Promise<string> {
     let filepath = '';
     if (message.media?.document) {
       const stickerBuffer = await this.getStickerBuffer(message);
       filepath = await convertToImage(stickerBuffer, './images/sticker.jpeg');
     }
     if (message.media?.photo) {
-      const imageBuffer = await this.getImageBuffer(message);
-      filepath = await convertToImage(imageBuffer, './images/image.jpeg');
+      const imageBuffer = await this.getImageBuffer(message, groupId, messageId);
+      filepath = await convertToImage(imageBuffer as Buffer, './images/image.jpeg');
     }
     return filepath;
   }
-  async getImageBuffer(message: any): Promise<Buffer> {
+
+  async refreshFileReference(messageId: number, groupId: string) {
+    const message = await this.client.getMessages(groupId.toString(), { ids: messageId, limit: 1 });
+
+    if (!message || message.length === 0) {
+      throw new Error('Message not found');
+    }
+
+    let newFileInput;
+    if (message[0].photo) {
+      newFileInput = message[0].photo;
+    } else if (message[0].document) {
+      newFileInput = message[0].document;
+    } else if (message[0].video) {
+      newFileInput = message[0].video;
+    } else {
+      throw new Error('Unsupported file type');
+    }
+
+    return newFileInput;
+  }
+
+  async getFileWithRetry(
+    fileInput: any,
+    params: any,
+    messageId: number,
+    groupId: string,
+    maxRetries = 3,
+  ): Promise<Buffer> {
+    let result: Buffer = Buffer.alloc(0);
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        result = await this.client.downloadFile(fileInput, params) as Buffer;
+      } catch (error: any) {
+        if (error.message.includes('FILE_REFERENCE_EXPIRED') && i < maxRetries - 1) {
+          fileInput = await this.refreshFileReference(messageId, groupId);
+        } else {
+          throw error;
+        }
+      }
+    }
+    return result;
+  }
+
+  async getImageBuffer(message: any, groupId?: string, messageId?: number): Promise<Buffer | undefined> {
     const { photo } = message.media;
-    const buffer = await this.client.downloadFile(
+
+    let fileInput = new Api.InputPhotoFileLocation({
+      id: photo.id,
+      accessHash: photo.accessHash,
+      fileReference: photo.fileReference,
+      thumbSize: 'y',
+    });
+    let params = {
+      dcId: photo.dcId,
+    };
+    const buffer = await this.getFileWithRetry(fileInput, params, messageId!, groupId!);
+    /*     const buffer = await this.client.downloadFile(
       new Api.InputPhotoFileLocation({
         id: photo.id,
         accessHash: photo.accessHash,
@@ -226,7 +281,7 @@ export default class TelegramBot {
       {
         dcId: photo.dcId,
       },
-    );
+    ); */
     return buffer as Buffer;
   }
 
@@ -256,7 +311,6 @@ export default class TelegramBot {
   }
 
   async processMessage(msgObject: MessageObject, groupId: string, replyTo?: number): Promise<void | string> {
-
     const { replyMessageContent, filepath, textContent } = msgObject;
     msgObject.replyMessageContent = this.stripBotNameFromMessage(replyMessageContent);
     if (msgObject.textContent) msgObject.textContent = this.stripBotNameFromMessage(msgObject.textContent);
