@@ -182,22 +182,27 @@ export default class TelegramBot {
     messageId: number,
     groupId: string,
   ): Promise<{ mediaContent: string; textContent: string }> {
-    const message = await this.client.getMessages(groupId, { ids: messageId, limit: 1 });
+    const message: any = await this.client.getMessages(groupId, { ids: messageId, limit: 1 });
 
     let textContent = '', mediaContent = '';
-    const media = message[0]?.media as any;
 
-    if (media?.photo) {
-      const imageBuffer = await this.getImageBuffer(message);
-      mediaContent = await convertToImage(imageBuffer);
+    const [msg] = message;
+    if (msg?.media?.photo) {
+      const imageBuffer = await this.getImageBuffer(msg);
+      mediaContent = await convertToImage(imageBuffer, './images/image.jpeg');
     }
 
-    textContent = message[0].message;
+    if (msg?.media.document) {
+      const stickerBuffer = await this.getStickerBuffer(msg);
+      mediaContent = await convertToImage(stickerBuffer, './images/sticker.jpeg');
+    }
+
+    textContent = msg.message;
     return { mediaContent, textContent };
   }
 
   async getImageBuffer(message: any): Promise<Buffer> {
-    const { photo } = message[0].media;
+    const { photo } = message.media;
     const buffer = await this.client.downloadFile(
       new Api.InputPhotoFileLocation({
         id: photo.id,
@@ -213,7 +218,6 @@ export default class TelegramBot {
   }
 
   async getStickerBuffer(message: any): Promise<Buffer> {
-    console.log('->>', message);
     const { document } = message.media;
     const buffer = await this.client.downloadFile(
       new Api.InputDocumentFileLocation({
@@ -231,7 +235,7 @@ export default class TelegramBot {
 
   async checkReplyIdIsBotId(messageId: number, groupId: string): Promise<boolean> {
     if (!messageId || !groupId) return false;
-    const messages = await this.client.getMessages(groupId, { ids: messageId });
+    const messages = await this.client.getMessages(groupId.toString(), { ids: messageId });
     if (String(messages[0]._senderId) === String(BOT_ID)) {
       return true;
     }
@@ -516,48 +520,8 @@ export default class TelegramBot {
     return false;
   }
 
-  /*   async processMention(msgData: MessageData) {
-    const { replyToMsgId, messageText, groupId, messageId, image, message } = msgData;
-    // Auto reply when replying to bot's message.
-    if (replyToMsgId && groupId && (await this.checkReplyIdIsBotId(replyToMsgId, groupId))) {
-      if (messageText) {
-        await this.processMessage({ replyMessageContent: messageText }, groupId, messageId);
-      }
-      if (message.media.document) {
-        console.log('document found');
-        const stickerBuffer = await this.getStickerBuffer(message);
-        const filepath = await convertToImage(stickerBuffer, './images/sticker.jpeg');
-        await this.processMessage({ replyMessageContent: messageText, filepath }, groupId, messageId);
-      }
-      return;
-    }
-
-    const isBotCalled = messageText.includes(BOT_USERNAME);
-    if (isBotCalled) {
-      let messageObj: MessageObject = {
-        replyMessageContent: messageText,
-        image: false,
-      };
-      if (replyToMsgId) {
-        // Bot mentioned with @ under somebody's message
-        const { textContent, mediaContent } = await this.getMessageContentById(replyToMsgId, groupId);
-        messageObj.replyMessageContent = textContent;
-        messageObj.filepath = mediaContent;
-        await this.processMessage(messageObj, groupId, messageId);
-      } else if (image) {
-        // Bot responds to image
-        const { mediaContent } = await this.getMessageContentById(replyToMsgId, groupId);
-        messageObj.filepath = mediaContent;
-        await this.processMessage(messageObj, groupId, messageId);
-      } else {
-        // Bot mentioned with @
-        await this.processMessage(messageObj, groupId, messageId);
-      }
-    }
-  } */
-
   async processMention(msgData: MessageData) {
-    const { replyToMsgId, messageText, groupId, messageId, message } = msgData;
+    const { replyToMsgId, messageText, groupId } = msgData;
 
     if (await this.isReplyToBotMessage(replyToMsgId, groupId)) {
       await this.handleReplyToBotMessage(msgData);
@@ -569,11 +533,10 @@ export default class TelegramBot {
     }
   }
 
-  private async isReplyToBotMessage(replyToMsgId: number | null, groupId: string): Promise<boolean> {
-    if (!replyToMsgId || !groupId) {
-      return false;
-    }
-    return await this.checkReplyIdIsBotId(replyToMsgId, groupId);
+  private async isReplyToBotMessage(replyToMsgId: number, groupId: string): Promise<boolean> {
+    if (!replyToMsgId || !groupId) return false;
+    const isBotId = await this.checkReplyIdIsBotId(replyToMsgId, groupId);
+    return isBotId;
   }
 
   private async handleReplyToBotMessage(msgData: MessageData) {
@@ -582,9 +545,13 @@ export default class TelegramBot {
     const messageObj: MessageObject = { replyMessageContent: messageText, image: false };
 
     if (message.media?.document) {
-      console.log('document found');
       const stickerBuffer = await this.getStickerBuffer(message);
       messageObj.filepath = await convertToImage(stickerBuffer, './images/sticker.jpeg');
+    }
+
+    if (message.media?.photo) {
+      const imageBuffer = await this.getImageBuffer(message);
+      messageObj.filepath = await convertToImage(imageBuffer, './images/image.jpeg');
     }
 
     await this.processMessage(messageObj, groupId, messageId);
@@ -607,7 +574,6 @@ export default class TelegramBot {
       const { mediaContent } = await this.getMessageContentById(messageId, groupId);
       messageObj.filepath = mediaContent;
     }
-
     await this.processMessage(messageObj, groupId, messageId);
   }
 

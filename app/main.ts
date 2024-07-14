@@ -1,9 +1,7 @@
 import { Api } from 'telegram';
 import TelegramBot from './bot';
-import { config, getSpecialTreatmentUsers, initConfig, telegramClient } from './config';
-import { generateResponseFromImage } from './modules/google/api';
+import { initConfig, telegramClient } from './config';
 import {
-  convertToImage,
   createMessagesTable,
   eligibleForSpecialTreatment,
   getDataFromEvent,
