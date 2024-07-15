@@ -24,11 +24,13 @@ const botWorkflow = async (event: Api.TypeUpdate): Promise<void> => {
     await bot.processMention(messageData);
     return;
   }
-  const [username] = await bot.getUsers([userEntity]);
-  if (eligibleForSpecialTreatment(username)) {
-    await bot.processSpecialTreatment(messageData);
+
+  const [user] = await bot.getUsers([userEntity]);
+  if (eligibleForSpecialTreatment(user.username!)) {
+    await bot.processSpecialTreatment(user.firstName!, messageData);
     return;
   }
+
   if (shouldTranscribeMedia(message)) {
     await bot.transcribeMedia(groupId, message);
     return;

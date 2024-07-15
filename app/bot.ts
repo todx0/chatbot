@@ -1,5 +1,6 @@
 import bigInt from 'big-integer';
 import { Api, TelegramClient } from 'telegram';
+import { IterMessagesParams } from 'telegram/client/messages';
 import { BOT_USERNAME, MESSAGE_LIMIT, POLL_TIMEOUT_MS, RANDOM_REPLY_PERCENT, recapTextRequest } from './config';
 import { ErrorHandler } from './errors/ErrorHandler';
 import {
@@ -7,7 +8,14 @@ import {
   generateResponseFromImage,
   returnCombinedAnswerFromMultipleResponses,
 } from './modules/google/api';
-import { MessageData, MessageObject, PollMessage, PollResults, SendMessageParams } from './types';
+import {
+  MessageData,
+  MessageObject,
+  PollMessage,
+  PollResults,
+  QueryDataToGetUserMessages,
+  SendMessageParams,
+} from './types';
 import {
   approximateTokenLength,
   clearMessagesTable,
@@ -77,6 +85,16 @@ export default class TelegramBot {
   async getMessages(limit: number, groupId: string): Promise<string[]> {
     const messages: string[] = [];
     for await (const message of this.client.iterMessages(`-${groupId}`, { limit })) {
+      if (message._sender?.firstName) {
+        messages.push(`${message._sender.firstName}: ${message.message}`);
+      }
+    }
+    return messages.reverse();
+  }
+
+  async getMessagesV2(groupId: string, iterParams: Partial<IterMessagesParams> | undefined): Promise<string[]> {
+    const messages: string[] = [];
+    for await (const message of this.client.iterMessages(`-${groupId}`, iterParams)) {
       if (message._sender?.firstName) {
         messages.push(`${message._sender.firstName}: ${message.message}`);
       }
@@ -626,31 +644,56 @@ export default class TelegramBot {
     await this.processMessage(msgObject, groupId, messageId);
   }
 
-  async getUsers(users: string[]) {
+  async getUsers(users: string[]): Promise<Api.User[]> {
     try {
       const response = await this.client.invoke(
         new Api.users.GetUsers({
           id: users,
         }),
       );
-      const usernames = response.map(entity => (entity as any).username);
-      return usernames;
+      const filteredUsers = response.filter((user): user is Api.User =>
+        user.className === 'User' && 'firstName' in user
+      );
+      return filteredUsers;
     } catch (error: any) {
-      throw Error('Failed to get users.', error);
+      throw new Error('Failed to get users: ' + error.message);
     }
   }
 
-  async processSpecialTreatment(messageData: MessageData) {
+  async processSpecialTreatment(firstName: string, messageData: MessageData) {
     const randomNumber = Math.random() * 100;
     if (randomNumber < RANDOM_REPLY_PERCENT) {
-      const { groupId, messageText, messageId } = messageData;
-      const botResponse = await generateGenAIResponse(messageText);
+      const { groupId, messageId, userEntity } = messageData;
+      const request = await this.getUserRecentMessages({ groupId, userEntity, firstName });
+      const botResponse = await generateGenAIResponse(request);
       try {
         await this.client.sendMessage(`-${groupId}`, { message: botResponse, replyTo: messageId });
       } catch (error: any) {
         throw Error(error);
       }
     }
+  }
+
+  async getUserRecentMessages(data: QueryDataToGetUserMessages) {
+    const { groupId, userEntity, firstName, limit, offsetDate } = data;
+    const lastUserMessages = await this.getMessagesV2(groupId, {
+      limit: limit || 5,
+      offsetDate: offsetDate || Date.now() - 3 * 60 * 1000,
+      fromUser: userEntity,
+    });
+    let messages: string[] | string = this.stripUsernames(lastUserMessages);
+    messages = messages.join(', ');
+    return `${firstName}: ${messages}`;
+  }
+
+  private stripUsernames(messages: string[]): string[] {
+    return messages.map(message => {
+      const colonIndex = message.indexOf(': ');
+      if (colonIndex !== -1) {
+        return message.slice(colonIndex + 2);
+      }
+      return message;
+    });
   }
   async transcribeMedia(groupId: string, messageId: number) {
     const transcribedAudio = await this.waitForTranscription(messageId, groupId);

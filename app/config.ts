@@ -64,7 +64,7 @@ const generativeModelOptions: ModelParams = {
     featureFlags.humanize
       ? 'Adjust the tone of the reply to be a little bit more noxious, blunt, and impolite.'
       : ''
-  }`,
+  } Your username is ${BOT_USERNAME}. Do not type it anywhere. When you see it it means you have been mentioned in conversation.`,
   safetySettings,
 };
 const generativeModelOptionsForRecap: ModelParams = {

@@ -48,3 +48,10 @@ export interface PollResults {
     };
   }[];
 }
+export interface QueryDataToGetUserMessages {
+  groupId: string;
+  firstName: string;
+  userEntity: string;
+  limit?: number;
+  offsetDate?: number;
+}
