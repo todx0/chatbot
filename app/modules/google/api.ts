@@ -2,7 +2,7 @@ import { Content } from '@google/generative-ai';
 import { unlink } from 'node:fs/promises';
 import { config, genAImodel, genAImodelForRecap, MAX_HISTORY_LENGTH, recapTextRequest } from '../../config';
 import { ErrorHandler } from '../../errors/ErrorHandler';
-import { MessageObject } from '../../types';
+import { MessageData, MessageObject } from '../../types';
 import { insertToMessages, readChatRoleFromDatabase, replaceDoubleSpaces } from '../../utils/helper';
 import { getTranslations } from '../../utils/translation';
 
@@ -72,9 +72,10 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
   }
 }
 
-export async function generateResponseFromImage(messageObj: MessageObject): Promise<string> {
-  if (!messageObj.filepath) throw Error('Provide filepath.');
-  const file = await Bun.file(messageObj.filepath).arrayBuffer();
+export async function generateResponseFromImage(msgData: MessageData): Promise<string> {
+  const { filepath } = msgData;
+  if (!filepath) throw Error('Provide filepath.');
+  const file = await Bun.file(filepath!).arrayBuffer();
   const image = {
     inlineData: {
       data: Buffer.from(file).toString('base64'),
@@ -83,17 +84,17 @@ export async function generateResponseFromImage(messageObj: MessageObject): Prom
   };
   let textRequest;
 
-  if (messageObj.textContent) {
-    textRequest = messageObj.textContent;
-  } else if (messageObj.replyMessageContent) {
-    textRequest = messageObj.replyMessageContent;
+  if (msgData.replyMessageText) {
+    textRequest = msgData.replyMessageText;
+  } else if (msgData.replyMessageContent) {
+    textRequest = msgData.replyMessageContent;
   } else {
     textRequest = 'Analyze this image.';
   }
   // const result = await genAImodel.generateContent([replyMessageContent, image]);
   const result = await genAImodelForRecap.generateContent([textRequest, image]);
 
-  await unlink(messageObj.filepath);
+  await unlink(filepath!);
   return result.response.text();
 }
 

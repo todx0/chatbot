@@ -30,13 +30,18 @@ export interface MessageData {
   replyToMsgId?: any;
   message?: any;
   image?: boolean;
+  filepath?: string;
+  mediaContent?: string;
+  replyMessageText?: string;
+  replyMessageContent?: string;
+  dataFromGetMessages?: any;
 }
 export interface MessageObject {
   replyMessageContent: string;
   image?: boolean;
   filepath?: string;
   mediaContent?: string;
-  textContent?: string;
+  replyMessageText?: string;
 }
 export interface PollMessage {
   updates: { id: number }[];
