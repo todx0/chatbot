@@ -36,7 +36,7 @@ export const BOT_USERNAME = config.BOT_USERNAME;
 export const MESSAGE_LIMIT = 1000;
 export const MAX_TOKEN_LENGTH = 4096;
 export const POLL_TIMEOUT_MS = 5 * 60 * 1000;
-export const RANDOM_REPLY_PERCENT = 10;
+export const RANDOM_REPLY_PERCENT = 4;
 
 const genAImodelName = 'gemini-1.5-flash-latest';
 export const safetySettings = [
