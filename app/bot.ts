@@ -22,7 +22,6 @@ import {
   convertToImage,
   downloadFile,
   filterMessages,
-  insertToMessages,
   retry,
   splitMessageInChunks,
 } from './utils/helper';
@@ -626,7 +625,7 @@ export default class TelegramBot {
   }
 
   private async handleBotMention(msgData: MessageData) {
-    const { replyToMsgId, messageText, image } = msgData;
+    const { replyToMsgId, image } = msgData;
     // console.log('handleBotMention', { replyToMsgId, image });
     if (replyToMsgId || image) {
       await this.getMessageContentById(msgData);

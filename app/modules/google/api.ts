@@ -2,7 +2,7 @@ import { Content } from '@google/generative-ai';
 import { unlink } from 'node:fs/promises';
 import { config, genAImodel, genAImodelForRecap, MAX_HISTORY_LENGTH, recapTextRequest } from '../../config';
 import { ErrorHandler } from '../../errors/ErrorHandler';
-import { MessageData, MessageObject } from '../../types';
+import { MessageData } from '../../types';
 import { insertToMessages, readChatRoleFromDatabase, replaceDoubleSpaces } from '../../utils/helper';
 import { getTranslations } from '../../utils/translation';
 
@@ -86,11 +86,16 @@ export async function generateResponseFromImage(msgData: MessageData): Promise<s
 
   if (msgData.replyMessageText) {
     textRequest = msgData.replyMessageText;
-  } else if (msgData.replyMessageContent) {
-    textRequest = msgData.replyMessageContent;
+  } else if (msgData.messageText) {
+    textRequest = msgData.messageText;
   } else {
     textRequest = 'Analyze this image.';
   }
+  /*   console.log('generateResponseFromImage', {
+    textRequest,
+    replyMessageText: msgData.replyMessageText,
+    messageText: msgData.messageText,
+  }); */
   // const result = await genAImodel.generateContent([replyMessageContent, image]);
   const result = await genAImodelForRecap.generateContent([textRequest, image]);
 
