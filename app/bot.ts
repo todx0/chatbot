@@ -41,6 +41,7 @@ export default class TelegramBot {
   async sendMessage(obj: SendMessageParams): Promise<Api.TypeUpdates | undefined> {
     const sendMsg = new Api.messages.SendMessage(obj);
     const result = await this.client.invoke(sendMsg);
+
     return result;
   }
 
@@ -282,6 +283,7 @@ export default class TelegramBot {
       dcId: photo.dcId,
     };
     const buffer = await this.getFileWithRetry(msgData, fileInput, params);
+
     return buffer as Buffer;
   }
 
@@ -667,6 +669,7 @@ export default class TelegramBot {
     });
     let messages: string[] | string = this.stripUsernames(lastUserMessages);
     messages = messages.join(', ');
+
     return `${data.firstName}: ${messages}`;
   }
 
@@ -691,6 +694,7 @@ export default class TelegramBot {
     const basicMsgData = getDataFromEvent(event);
     if (!basicMsgData.groupId || !basicMsgData.message || !messageNotSeen(basicMsgData.message)) return null;
     const [user] = await this.getUsers([basicMsgData.userEntity]);
+
     return {
       ...basicMsgData,
       user,

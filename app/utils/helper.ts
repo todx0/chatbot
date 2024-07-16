@@ -13,6 +13,7 @@ export async function retry<T>(
   maxAttempts: number,
 ): Promise<T> {
   let attempt = 1;
+
   while (attempt <= maxAttempts) {
     try {
       const result: T = await fn();
@@ -28,6 +29,7 @@ export async function retry<T>(
 
 export async function downloadFile(url: string): Promise<Buffer> {
   const response = await axios.get(url, { responseType: 'arraybuffer' });
+
   return Buffer.from(response.data, 'binary');
 }
 
@@ -37,13 +39,16 @@ export async function convertToImage(buffer: Buffer, filepath = './images/image.
   }
   const file = Bun.file(filepath);
   if (!file.size) Bun.write(filepath, '');
+
   await Bun.write(file, buffer);
+
   return filepath;
 }
 
 export async function readAndParseJson(filePath: string): Promise<any> {
   const file = Bun.file(filePath, { type: 'application/json' });
   const contents = await file.json();
+
   return contents;
 }
 
@@ -55,6 +60,7 @@ export async function approximateTokenLength(messages: string[]): Promise<number
   const totalLength = messages
     .map((str) => str.length)
     .reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+
   return totalLength;
 }
 
@@ -73,11 +79,11 @@ export async function splitMessageInChunks(message: string, maxChunkSize: number
   return chunks;
 }
 
-export async function insertToMessages(object: Content, dbsqlite?: string): Promise<void> {
+export async function insertToMessages(content: Content, dbsqlite?: string): Promise<void> {
   const dbName = dbsqlite || Bun.env.DB_NAME;
   const db = new Database(dbName, { create: true, readwrite: true });
-  const { role, parts } = object;
-  db.run('INSERT INTO messages (role, parts) VALUES (?, ?)', [role, JSON.stringify(parts)]);
+
+  db.run('INSERT INTO messages (role, parts) VALUES (?, ?)', [content.role, JSON.stringify(content.parts)]);
 }
 
 export async function readChatRoleFromDatabase(options: DatabaseOptions = {}): Promise<Content[]> {
@@ -107,6 +113,7 @@ export async function readChatRoleFromDatabase(options: DatabaseOptions = {}): P
     }
   };
   const parsedRows: Content[] = rows.map(parseRow);
+
   return parsedRows;
 }
 
@@ -114,9 +121,11 @@ export async function clearMessagesTable(dbsqlite?: string): Promise<void | stri
   const dbName = dbsqlite || Bun.env.DB_NAME;
   try {
     const db = new Database(dbName, { create: true, readwrite: true });
+
     db.run('DELETE FROM messages');
   } catch (error: any) {
     console.error('Error deleting messages:', error);
+
     return ErrorHandler.handleError(error, true);
   }
 }
@@ -129,12 +138,14 @@ export async function trimMessagesTable(options: DatabaseOptions = {}): Promise<
 		DELETE FROM messages
 		WHERE id IN (SELECT id FROM messages ORDER BY id ASC LIMIT ${limit});
   	`;
+
   db.run(queryRemove);
 }
 
 export async function createMessagesTable(dbsqlite?: string): Promise<void> {
   const dbName = dbsqlite || Bun.env.DB_NAME;
   const db = new Database(dbName, { create: true, readwrite: true });
+
   db.run(`
 		CREATE TABLE IF NOT EXISTS messages (
 		  id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -151,6 +162,7 @@ export async function deleteDatabase(dbsqlite?: string): Promise<void | string> 
     console.log(`Deleted the database file '${dbName}'`);
   } catch (error: any) {
     console.error('Error deleting the database file:', error);
+
     return ErrorHandler.handleError(error, false);
   }
 }
