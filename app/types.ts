@@ -36,13 +36,7 @@ export interface MessageData {
   replyMessageContent?: string;
   dataFromGetMessages?: any;
 }
-export interface MessageObject {
-  replyMessageContent: string;
-  image?: boolean;
-  filepath?: string;
-  mediaContent?: string;
-  replyMessageText?: string;
-}
+
 export interface PollMessage {
   updates: { id: number }[];
 }
@@ -59,4 +53,12 @@ export interface QueryDataToGetUserMessages {
   userEntity: string;
   limit?: number;
   offsetDate?: number;
+}
+
+export interface CommandHandler {
+  (messageText?: string): Promise<void>;
+}
+
+export interface CommandMappings {
+  [command: string]: CommandHandler;
 }

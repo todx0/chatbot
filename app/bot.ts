@@ -9,8 +9,8 @@ import {
   returnCombinedAnswerFromMultipleResponses,
 } from './modules/google/api';
 import {
+  CommandMappings,
   MessageData,
-  MessageObject,
   PollMessage,
   PollResults,
   QueryDataToGetUserMessages,
@@ -590,11 +590,11 @@ export default class TelegramBot {
 
   async executeCommand(msgData: MessageData): Promise<boolean> {
     const { messageText } = msgData;
-    const commandMappings: any = {
-      '/recap': (messageText: string) => this.handleRecapCommand(msgData),
+    const commandMappings: CommandMappings = {
+      '/recap': (messageText?: string) => this.handleRecapCommand(msgData),
+      '/votekick': (messageText?: string) => this.processVoteKick(msgData),
       '/clear': () => this.handleClearCommand(msgData),
       '/scan': () => this.removeLurkers(msgData),
-      '/votekick': (messageText: string) => this.processVoteKick(msgData),
       '/users': () => this.printUserEntities(msgData),
     };
 

@@ -14,7 +14,7 @@ const bot = new TelegramBot(telegramClient);
 
 const botWorkflow = async (event: Api.TypeUpdate): Promise<void> => {
   const msgData = getDataFromEvent(event);
-  const { groupId, messageText, message, userEntity } = msgData;
+  const { groupId, message, userEntity } = msgData;
 
   if (!groupId || !message || !messageNotSeen(message)) return;
 
