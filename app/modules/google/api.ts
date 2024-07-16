@@ -75,6 +75,7 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
 export async function generateResponseFromImage(msgData: MessageData): Promise<string> {
   const { filepath } = msgData;
   if (!filepath) throw Error('Provide filepath.');
+
   const file = await Bun.file(filepath!).arrayBuffer();
   const image = {
     inlineData: {
@@ -82,8 +83,8 @@ export async function generateResponseFromImage(msgData: MessageData): Promise<s
       mimeType: 'image/jpeg',
     },
   };
-  let textRequest;
 
+  let textRequest;
   if (msgData.replyMessageText) {
     textRequest = msgData.replyMessageText;
   } else if (msgData.messageText) {
@@ -91,15 +92,11 @@ export async function generateResponseFromImage(msgData: MessageData): Promise<s
   } else {
     textRequest = 'Analyze this image.';
   }
-  /*   console.log('generateResponseFromImage', {
-    textRequest,
-    replyMessageText: msgData.replyMessageText,
-    messageText: msgData.messageText,
-  }); */
-  // const result = await genAImodel.generateContent([replyMessageContent, image]);
+
   const result = await genAImodelForRecap.generateContent([textRequest, image]);
 
   await unlink(filepath!);
+
   return result.response.text();
 }
 

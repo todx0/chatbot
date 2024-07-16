@@ -20,6 +20,7 @@ export interface MessageData {
 export interface ProcessEnv {
   [key: string]: string;
 }
+
 export interface SendMessageParams {
   peer: string;
   message: string;
@@ -27,14 +28,17 @@ export interface SendMessageParams {
   silent?: boolean;
   chatId?: any;
 }
+
 export interface MediaObject {
   document: {
     mimeType: string;
   };
 }
+
 export interface ChatCommands {
   [key: string]: boolean;
 }
+
 export interface DatabaseOptions {
   limit?: number;
   dbsqlite?: string;
@@ -43,6 +47,7 @@ export interface DatabaseOptions {
 export interface PollMessage {
   updates: { id: number }[];
 }
+
 export interface PollResults {
   updates: {
     results?: {
@@ -50,6 +55,7 @@ export interface PollResults {
     };
   }[];
 }
+
 export interface QueryDataToGetUserMessages {
   groupId: string;
   firstName: string;
