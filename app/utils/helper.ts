@@ -4,7 +4,7 @@ import { Database } from 'bun:sqlite';
 import * as fs from 'node:fs';
 import { unlink } from 'node:fs/promises';
 import { Api } from 'telegram';
-import { featureFlags, getSpecialTreatmentUsers, MAX_HISTORY_LENGTH, TELEGRAM_PREMIUM } from '../config';
+import { featureFlags, getWhitelistUsers, MAX_HISTORY_LENGTH, TELEGRAM_PREMIUM } from '../config';
 import { ErrorHandler } from '../errors/ErrorHandler';
 import { DatabaseOptions, MediaObject, MessageData } from '../types';
 
@@ -214,4 +214,4 @@ export const shouldTranscribeMedia = (message: any): boolean =>
 export const somebodyMentioned = (message: Api.Message): boolean => (message.mentioned ? message.mentioned : false);
 export const eligibleForSpecialTreatment = (
   username: string,
-): boolean => (featureFlags.randomReply && (getSpecialTreatmentUsers()).includes(username));
+): boolean => (featureFlags.randomReply && !((getWhitelistUsers()).includes(username)));

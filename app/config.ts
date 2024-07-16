@@ -36,7 +36,7 @@ export const BOT_USERNAME = config.BOT_USERNAME;
 export const MESSAGE_LIMIT = 1000;
 export const MAX_TOKEN_LENGTH = 4096;
 export const POLL_TIMEOUT_MS = 5 * 60 * 1000;
-export const RANDOM_REPLY_PERCENT = 4;
+export const RANDOM_REPLY_PERCENT = 1;
 
 const genAImodelName = 'gemini-1.5-flash-latest';
 export const safetySettings = [
@@ -99,8 +99,8 @@ export function loadConfig(): void {
   ];
   checkRequiredEnvVariables(requiredEnvVariables);
 }
-export function getSpecialTreatmentUsers(): string[] {
-  return config.SPECIAL_TREATMENT_USERS.split(',');
+export function getWhitelistUsers(): string[] {
+  return config.WHITELIST_USERS.split(',');
 }
 export function initConfig(): void {
   try {
