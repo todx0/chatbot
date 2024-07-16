@@ -3,8 +3,8 @@ import TelegramBot from './bot';
 import { initConfig, telegramClient } from './config';
 import {
   createMessagesTable,
-  eligibleForSpecialTreatment,
   getDataFromEvent,
+  isRandomReply,
   messageNotSeen,
   shouldTranscribeMedia,
   somebodyMentioned,
@@ -12,30 +12,27 @@ import {
 
 const bot = new TelegramBot(telegramClient);
 
-const botWorkflow = async (event: Api.TypeUpdate): Promise<void> => {
-  const msgData = getDataFromEvent(event);
-  const { groupId, message, userEntity } = msgData;
-
-  if (!groupId || !message || !messageNotSeen(message)) return;
+async function botWorkflow(event: Api.TypeUpdate): Promise<void> {
+  const msgData = await bot.prepareMsgData(event);
+  if (!msgData) return;
 
   if (await bot.executeCommand(msgData)) return;
 
-  if (somebodyMentioned(message)) {
+  if (somebodyMentioned(msgData)) {
     await bot.processMention(msgData);
     return;
   }
 
-  const [user] = await bot.getUsers([userEntity]);
-  if (eligibleForSpecialTreatment(user.username!)) {
-    await bot.processSpecialTreatment(user.firstName!, msgData);
+  if (isRandomReply(msgData)) {
+    await bot.processRandomReply(msgData);
     return;
   }
 
-  if (shouldTranscribeMedia(message)) {
-    await bot.transcribeMedia(groupId, message);
+  if (shouldTranscribeMedia(msgData)) {
+    await bot.transcribeMedia(msgData);
     return;
   }
-};
+}
 
 (async () => {
   initConfig();

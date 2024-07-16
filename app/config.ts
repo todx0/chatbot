@@ -4,6 +4,7 @@ import { StringSession } from 'telegram/sessions/index';
 import { ProcessEnv } from './types';
 
 export const config = {
+  GAPI: Bun.env.GAPI,
   API_ID: Bun.env.API_ID,
   BOT_ID: Bun.env.BOT_ID,
   DB_NAME: Bun.env.DB_NAME,
@@ -11,7 +12,6 @@ export const config = {
   API_HASH: Bun.env.API_HASH,
   LANGUAGE: Bun.env.LANGUAGE,
   BOT_USERNAME: Bun.env.BOT_USERNAME,
-  GAPI: Bun.env.GAPI,
   SECRET_OPTIONS: Bun.env.SECRET_OPTIONS,
   WHITELIST_USERS: Bun.env.WHITELIST_USERS,
 } as ProcessEnv;

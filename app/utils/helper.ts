@@ -205,13 +205,30 @@ export function replaceDoubleSpaces(str: string): string {
   return str.replace(regex, ' ');
 }
 
-export const messageNotSeen = (message: Api.Message): boolean => !message.reactions && !message.editDate;
-export const canTranscribeMedia = (
-  media: MediaObject,
-): boolean => (media?.document?.mimeType === 'audio/ogg' || media?.document?.mimeType === 'video/mp4');
-export const shouldTranscribeMedia = (message: any): boolean =>
-  TELEGRAM_PREMIUM && message.mediaUnread && canTranscribeMedia(message.media);
-export const somebodyMentioned = (message: Api.Message): boolean => (message.mentioned ? message.mentioned : false);
-export const eligibleForSpecialTreatment = (
-  username: string,
-): boolean => (featureFlags.randomReply && !((getWhitelistUsers()).includes(username)));
+export function messageNotSeen(msgData: MessageData): boolean {
+  return !msgData.message.reactions && !msgData.message.editDate;
+}
+
+export function canTranscribeMedia(media: MediaObject): boolean {
+  if (!media?.document?.mimeType) return false;
+
+  const transcribableMimeTypes = ['audio/ogg', 'video/mp4'];
+  return transcribableMimeTypes.includes(media.document.mimeType);
+}
+
+export function shouldTranscribeMedia(msgData: MessageData): boolean {
+  if (!TELEGRAM_PREMIUM || !msgData.message.mediaUnread) return false;
+
+  return canTranscribeMedia(msgData.message.media);
+}
+
+export function somebodyMentioned(msgData: MessageData): boolean {
+  return !!msgData.message.mentioned;
+}
+
+export function isRandomReply(msgData: MessageData): boolean {
+  if (!featureFlags.randomReply || !msgData.user.username) return false;
+
+  const whitelistUsers = getWhitelistUsers();
+  return !whitelistUsers.includes(msgData.user.username);
+}

@@ -1,4 +1,21 @@
+import { Api } from 'telegram';
 import { MessageIDLike } from 'telegram/define';
+
+export interface MessageData {
+  groupId: string;
+  messageId: number;
+  userEntity: string;
+  messageText: string;
+  user: Api.User;
+  replyToMsgId?: any;
+  message?: any;
+  image?: boolean;
+  filepath?: string;
+  mediaContent?: string;
+  replyMessageText?: string;
+  replyMessageContent?: string;
+  dataFromGetMessages?: any;
+}
 
 export interface ProcessEnv {
   [key: string]: string;
@@ -21,20 +38,6 @@ export interface ChatCommands {
 export interface DatabaseOptions {
   limit?: number;
   dbsqlite?: string;
-}
-export interface MessageData {
-  groupId: string;
-  messageId: number;
-  userEntity: string;
-  messageText: string;
-  replyToMsgId?: any;
-  message?: any;
-  image?: boolean;
-  filepath?: string;
-  mediaContent?: string;
-  replyMessageText?: string;
-  replyMessageContent?: string;
-  dataFromGetMessages?: any;
 }
 
 export interface PollMessage {
