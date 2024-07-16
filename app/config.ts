@@ -13,12 +13,12 @@ export const config = {
   BOT_USERNAME: Bun.env.BOT_USERNAME,
   GAPI: Bun.env.GAPI,
   SECRET_OPTIONS: Bun.env.SECRET_OPTIONS,
-  SPECIAL_TREATMENT_USERS: Bun.env.SPECIAL_TREATMENT_USERS,
+  WHITELIST_USERS: Bun.env.WHITELIST_USERS,
 } as ProcessEnv;
 
 export const featureFlags = {
-  humanize: true,
-  randomReply: true,
+  humanize: true, // Makes bot sound like an asshole.
+  randomReply: true, // Allows bot to randomly reply to any person in chat. RANDOM_REPLY_PERCENT is the chance. WHITELIST_USERS ignored.
 };
 
 export const telegramClient = new TelegramClient(
