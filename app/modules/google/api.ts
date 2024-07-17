@@ -16,16 +16,13 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
     `Generate a brief thought experiment related to the message's concept:`,
     `Offer an alternative perspective on the topic of the message:`,
   ];
-  const disclaimer =
-    `This message is for informational purposes only and does not promote violence, hate speech, or illegal activities.`;
+  const disclaimer = `This message is for informational purposes only and does not promote violence, hate speech, or illegal activities.`;
 
   async function fetchGenAIResponse(): Promise<string> {
     const userRoleContent: Content = { role: 'user', parts: [{ text: userRequest }] };
     const history: Content[] = await readChatRoleFromDatabase({ limit: MAX_HISTORY_LENGTH });
 
-    const chat = !recap
-      ? genAImodel.startChat({ history })
-      : genAImodelForRecap.startChat();
+    const chat = recap ? genAImodelForRecap.startChat() : genAImodel.startChat({ history });
 
     const request = retryCount === 0
       ? userRequest
@@ -45,57 +42,39 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
     try {
       return await fetchGenAIResponse();
     } catch (error: any) {
-      if (error.message.includes('Response was blocked due to OTHER')) {
-        if (retryCount < retryRequestDisclaimer.length) {
-          return retryHandler();
-        } else {
-          console.error('Maximum retries reached with disclaimer', error.message);
-          return translations['botHasNoIdea'];
-        }
+      if (retryCount < retryRequestDisclaimer.length) {
+        return retryHandler();
       } else {
-        if (retryCount < retryRequestDisclaimer.length) {
-          return retryHandler();
-        } else {
-          console.error('Maximum retries reached', error.message);
-          return translations['botHasNoIdea'];
-        }
+        console.error('Maximum retries reached', error.message);
+        return translations['botHasNoIdea'];
       }
     }
   }
 
   try {
     const responseText = await retryHandler();
-    const formatedText = replaceDoubleSpaces(responseText);
-    return formatedText;
+    return replaceDoubleSpaces(responseText);
   } catch (error: any) {
     return ErrorHandler.handleError(error);
   }
 }
 
 export async function generateResponseFromImage(msgData: MessageData): Promise<string> {
-  const { filepath } = msgData;
-  if (!filepath) throw Error('Provide filepath.');
+  const { filepath, replyMessageText, messageText } = msgData;
+  if (!filepath) throw new Error('Provide filepath.');
 
-  const file = await Bun.file(filepath!).arrayBuffer();
+  const fileBuffer = await Bun.file(filepath).arrayBuffer();
   const image = {
     inlineData: {
-      data: Buffer.from(file).toString('base64'),
+      data: Buffer.from(fileBuffer).toString('base64'),
       mimeType: 'image/jpeg',
     },
   };
 
-  let textRequest;
-  if (msgData.replyMessageText) {
-    textRequest = msgData.replyMessageText;
-  } else if (msgData.messageText) {
-    textRequest = msgData.messageText;
-  } else {
-    textRequest = 'Analyze this image.';
-  }
-
+  const textRequest = replyMessageText || messageText || 'Analyze this image.';
   const result = await genAImodelForRecap.generateContent([textRequest, image]);
 
-  await unlink(filepath!);
+  await unlink(filepath);
 
   return result.response.text();
 }
@@ -108,10 +87,8 @@ export async function generateMultipleResponses(userRequests: string[]): Promise
 
 export async function combineResponses(responses: string[]): Promise<string> {
   const combinedResponseArray = responses.join(' ^^^ ');
-  const combinedResponse = await generateGenAIResponse(
-    `Combine responses separated with ' ^^^ ' into one: ${combinedResponseArray}. \n Do not include separator in combined response. Do not duplicate topics. Message should be shorter than ${config.maxTokenLength} symbols.`,
-    true,
-  );
+  const prompt = `Combine responses separated with ' ^^^ ' into one: ${combinedResponseArray}. \n Do not include separator in combined response. Do not duplicate topics. Message should be shorter than ${config.maxTokenLength} symbols.`;
+  const combinedResponse = await generateGenAIResponse(prompt, true);
   return combinedResponse;
 }
 

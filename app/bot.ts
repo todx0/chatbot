@@ -88,7 +88,9 @@ export default class TelegramBot {
     const messages: string[] = [];
     for await (const message of this.client.iterMessages(`-${groupId}`, { limit })) {
       if (message._sender?.firstName) {
-        messages.push(`${message._sender.firstName}: ${message.message}`);
+        const sender = message._sender.firstName;
+        const messageText = message.message;
+        messages.push(`${sender}: ${messageText}`);
       }
     }
     return messages.reverse();
