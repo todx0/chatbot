@@ -668,7 +668,7 @@ export default class TelegramBot {
   async getUserRecentMessages(data: QueryDataToGetUserMessages) {
     const lastUserMessages = await this.getMessagesV2(data.groupId, {
       limit: data.limit || 10,
-      offsetDate: data.offsetDate || Date.now() - 3 * 60 * 1000,
+      offsetDate: data.offsetDate || Date.now() - 1 * 60 * 1000,
       fromUser: data.userEntity,
     });
     let messages: string[] | string = this.stripUsernames(lastUserMessages);
