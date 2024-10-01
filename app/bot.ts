@@ -5,6 +5,7 @@ import { BOT_USERNAME, MESSAGE_LIMIT, POLL_TIMEOUT_MS, RANDOM_REPLY_PERCENT, rec
 import { ErrorHandler } from './errors/ErrorHandler';
 import {
   generateGenAIResponse,
+  generateReplyFromImageResponse,
   generateResponseFromImage,
   returnCombinedAnswerFromMultipleResponses,
 } from './modules/google/api';
@@ -330,6 +331,7 @@ export default class TelegramBot {
     let response;
     if (filepath) {
       response = await generateResponseFromImage(msgData);
+      response = await generateReplyFromImageResponse(response);
     } else {
       const message = replyMessageText && messageText
         ? `Reply to "${messageText}" Keep context of this message: "${replyMessageText}"`

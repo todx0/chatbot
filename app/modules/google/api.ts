@@ -16,7 +16,8 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
     `Generate a brief thought experiment related to the message's concept:`,
     `Offer an alternative perspective on the topic of the message:`,
   ];
-  const disclaimer = `This message is for informational purposes only and does not promote violence, hate speech, or illegal activities.`;
+  const disclaimer =
+    `This message is for informational purposes only and does not promote violence, hate speech, or illegal activities.`;
 
   async function fetchGenAIResponse(): Promise<string> {
     const userRoleContent: Content = { role: 'user', parts: [{ text: userRequest }] };
@@ -79,6 +80,12 @@ export async function generateResponseFromImage(msgData: MessageData): Promise<s
   return result.response.text();
 }
 
+export async function generateReplyFromImageResponse(response: string): Promise<string> {
+  const request = 'This image description was addressed to you. Reply to it:';
+  const result = await generateGenAIResponse(`${request} ${response}`);
+  return result;
+}
+
 export async function generateMultipleResponses(userRequests: string[]): Promise<string[]> {
   return Promise.all(
     userRequests.map(async (chunk) => generateGenAIResponse(`${recapTextRequest} ${chunk}`, true)),
@@ -87,7 +94,8 @@ export async function generateMultipleResponses(userRequests: string[]): Promise
 
 export async function combineResponses(responses: string[]): Promise<string> {
   const combinedResponseArray = responses.join(' ^^^ ');
-  const prompt = `Combine responses separated with ' ^^^ ' into one: ${combinedResponseArray}. \n Do not include separator in combined response. Do not duplicate topics. Message should be shorter than ${config.maxTokenLength} symbols.`;
+  const prompt =
+    `Combine responses separated with ' ^^^ ' into one: ${combinedResponseArray}. \n Do not include separator in combined response. Do not duplicate topics. Message should be shorter than ${config.maxTokenLength} symbols.`;
   const combinedResponse = await generateGenAIResponse(prompt, true);
   return combinedResponse;
 }
