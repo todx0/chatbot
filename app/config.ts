@@ -83,6 +83,7 @@ const generativeModelOptionsForRawRequest: ModelParams = {
     * **Concise:** Direct and to the point.
     * **Engaging:** Interesting and easy to understand.
     * Use telegram markdown.
+    * Provide a response in plain text format, avoiding any bolding or italics.
     * Always reply in ${config.LANGUAGE}`,
   safetySettings,
 };
