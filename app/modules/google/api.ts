@@ -1,6 +1,13 @@
 import { Content } from '@google/generative-ai';
 import { unlink } from 'node:fs/promises';
-import { config, genAImodel, genAImodelForRecap, MAX_HISTORY_LENGTH, recapTextRequest } from '../../config';
+import {
+  config,
+  genAImodel,
+  genAImodelForRecap,
+  genAIWithoutOptions,
+  MAX_HISTORY_LENGTH,
+  recapTextRequest,
+} from '../../config';
 import { ErrorHandler } from '../../errors/ErrorHandler';
 import { MessageData } from '../../types';
 import { insertToMessages, readChatRoleFromDatabase, replaceDoubleSpaces } from '../../utils/helper';
@@ -58,6 +65,14 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
   } catch (error: any) {
     return ErrorHandler.handleError(error);
   }
+}
+
+export async function generateRawGenAIResponse(message: string): Promise<string> {
+  const translations = getTranslations();
+  const chat = genAIWithoutOptions.startChat();
+  const result = await chat.sendMessage(message);
+  const responseText = result?.response?.text() || translations['botHasNoIdea'];
+  return responseText;
 }
 
 export async function generateResponseFromImage(msgData: MessageData): Promise<string> {

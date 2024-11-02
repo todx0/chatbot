@@ -5,6 +5,7 @@ import { BOT_USERNAME, MESSAGE_LIMIT, POLL_TIMEOUT_MS, RANDOM_REPLY_PERCENT, rec
 import { ErrorHandler } from './errors/ErrorHandler';
 import {
   generateGenAIResponse,
+  generateRawGenAIResponse,
   generateReplyFromImageResponse,
   generateResponseFromImage,
   returnCombinedAnswerFromMultipleResponses,
@@ -589,11 +590,22 @@ export default class TelegramBot {
     }
   }
 
+  async processRawRequest(msgData: MessageData): Promise<void> {
+    const { messageText, groupId } = msgData;
+    try {
+      const response = await generateRawGenAIResponse(messageText);
+      await this.sendMessage({ peer: groupId, message: response });
+    } catch (error) {
+      await this.handleError(groupId, error);
+    }
+  }
+
   async executeCommand(msgData: MessageData): Promise<boolean> {
     const { messageText } = msgData;
     const commandMappings: CommandMappings = {
-      '/recap': (messageText?: string) => this.handleRecapCommand(msgData),
-      '/votekick': (messageText?: string) => this.processVoteKick(msgData),
+      '/q': () => this.processRawRequest(msgData),
+      '/recap': () => this.handleRecapCommand(msgData),
+      '/votekick': () => this.processVoteKick(msgData),
       '/clear': () => this.handleClearCommand(msgData),
       '/scan': () => this.removeLurkers(msgData),
       '/users': () => this.printUserEntities(msgData),
