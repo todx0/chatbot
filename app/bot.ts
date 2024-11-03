@@ -1,4 +1,5 @@
 import bigInt from 'big-integer';
+import { off } from 'node:process';
 import { Api, TelegramClient } from 'telegram';
 import { IterMessagesParams } from 'telegram/client/messages';
 import { BOT_USERNAME, MESSAGE_LIMIT, POLL_TIMEOUT_MS, RANDOM_REPLY_PERCENT, recapTextRequest } from './config';
@@ -100,8 +101,11 @@ export default class TelegramBot {
 
   async getMessagesV2(groupId: string, iterParams: Partial<IterMessagesParams> | undefined): Promise<string[]> {
     const messages: string[] = [];
+
+    const offsetDate = iterParams?.offsetDate || Date.now() - 1 * 60 * 1000;
     for await (const message of this.client.iterMessages(`-${groupId}`, iterParams)) {
-      if (message._sender?.firstName) {
+      const messageDateMS = message.date * 1000;
+      if (message._sender?.firstName && offsetDate < messageDateMS) {
         messages.push(`${message._sender.firstName}: ${message.message}`);
       }
     }
@@ -207,20 +211,17 @@ export default class TelegramBot {
     const message: any = await this.client.getMessages(msgData.groupId, { ids: msgData.replyToMsgId, limit: 1 });
     const [msg] = message;
     msgData.dataFromGetMessages = msg;
-    // console.log('getMessageContentById');
     await this.setFilepathIfMedia(msgData);
     msgData.replyMessageText = msg.message;
   }
 
   private async handleReplyToBotMessage(msgData: MessageData) {
-    // console.log('handleReplyToBotMessage');
     await this.setFilepathIfMedia(msgData);
     await this.processMessage(msgData);
   }
 
   async setFilepathIfMedia(msgData: any): Promise<void> {
     const msg = msgData.dataFromGetMessages || msgData.message;
-    // console.log('setFilepathIfMedia');
 
     if (msg.media?.document) {
       const stickerBuffer = await this.getStickerBuffer(msgData);
@@ -230,7 +231,6 @@ export default class TelegramBot {
       const imageBuffer = await this.getImageBuffer(msgData);
       msgData.filepath = await convertToImage(imageBuffer as Buffer, './images/image.jpeg');
     }
-    // console.log('setFilepathIfMedia', msgData.filepath);
   }
 
   async refreshFileReference(msgData: MessageData) {
@@ -238,7 +238,6 @@ export default class TelegramBot {
     if (!message || message.length === 0) {
       throw new Error('Message not found');
     }
-    // console.log('refreshFileReference', { message });
     let newFileInput;
     if (message[0].photo) {
       newFileInput = message[0].photo;
@@ -293,7 +292,6 @@ export default class TelegramBot {
 
   async getStickerBuffer(msgData: MessageData): Promise<Buffer> {
     const { document } = msgData?.dataFromGetMessages?.media || msgData?.message?.media;
-    // console.log('getStickerBuffer', { document });
     const buffer = await this.client.downloadFile(
       new Api.InputDocumentFileLocation({
         id: document.id,
@@ -309,10 +307,8 @@ export default class TelegramBot {
   }
 
   async checkReplyIdIsBotId(msgData: MessageData): Promise<boolean> {
-    // console.log('checkReplyIdIsBotId');
     if (!msgData.replyToMsgId || !msgData.groupId) return false;
     try {
-      // console.log('before client.getMessage', { replyToMsgId, groupId: groupId.toString() });
       const messages = await this.client.getMessages(msgData.groupId.toString(), { ids: msgData.replyToMsgId });
       if (String(messages[0]._senderId) === String(BOT_ID)) {
         return true;
@@ -327,7 +323,6 @@ export default class TelegramBot {
     if (msgData.messageText) msgData.messageText = this.stripBotNameFromMessage(msgData.messageText);
     if (msgData.replyMessageText) msgData.replyMessageText = this.stripBotNameFromMessage(msgData.replyMessageText);
     const { filepath, replyMessageText, messageText, messageId, groupId } = msgData;
-    // console.log('processMessage before:', { filepath, replyMessageText, messageText, messageId });
 
     let response;
     if (filepath) {
@@ -337,11 +332,9 @@ export default class TelegramBot {
       const message = replyMessageText && messageText
         ? `Reply to "${messageText}" Keep context of this message: "${replyMessageText}"`
         : replyMessageText || messageText;
-      // console.log('processMessage', { message });
       response = await generateGenAIResponse(message);
     }
     try {
-      // console.log('processMessage', { response });
       await this.client.sendMessage(`-${groupId}`, { message: response, replyTo: messageId });
     } catch (error: any) {
       return ErrorHandler.handleError(error, true);
@@ -600,9 +593,20 @@ export default class TelegramBot {
     }
   }
 
+  async debug(msgData: MessageData) {
+    if (!msgData.user.firstName) throw Error('No user.firstName in messageData');
+    console.log();
+    const request = await this.getUserRecentMessages({
+      groupId: msgData.groupId,
+      userEntity: msgData.userEntity,
+      firstName: msgData.user.firstName,
+    });
+    console.log({ request });
+  }
   async executeCommand(msgData: MessageData): Promise<boolean> {
     const { messageText } = msgData;
     const commandMappings: CommandMappings = {
+      '/debug': () => this.debug(msgData),
       '/q': () => this.processRawRequest(msgData),
       '/recap': () => this.handleRecapCommand(msgData),
       '/votekick': () => this.processVoteKick(msgData),
@@ -680,7 +684,7 @@ export default class TelegramBot {
   async getUserRecentMessages(data: QueryDataToGetUserMessages) {
     const lastUserMessages = await this.getMessagesV2(data.groupId, {
       limit: data.limit || 10,
-      offsetDate: data.offsetDate || Date.now() - 1 * 60 * 1000,
+      offsetDate: data.offsetDate,
       fromUser: data.userEntity,
     });
     let messages: string[] | string = this.stripUsernames(lastUserMessages);

@@ -102,6 +102,7 @@ function checkRequiredEnvVariables(requiredEnvVariables: string[]): void {
     }
   });
 }
+
 export function loadConfig(): void {
   const requiredEnvVariables = [
     'BOT_ID',
@@ -116,9 +117,11 @@ export function loadConfig(): void {
   ];
   checkRequiredEnvVariables(requiredEnvVariables);
 }
+
 export function getWhitelistUsers(): string[] {
   return config.WHITELIST_USERS.split(',');
 }
+
 export function initConfig(): void {
   try {
     loadConfig();
