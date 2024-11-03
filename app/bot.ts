@@ -593,20 +593,14 @@ export default class TelegramBot {
     }
   }
 
+  /*
   async debug(msgData: MessageData) {
-    if (!msgData.user.firstName) throw Error('No user.firstName in messageData');
-    console.log();
-    const request = await this.getUserRecentMessages({
-      groupId: msgData.groupId,
-      userEntity: msgData.userEntity,
-      firstName: msgData.user.firstName,
-    });
-    console.log({ request });
   }
+  */
   async executeCommand(msgData: MessageData): Promise<boolean> {
     const { messageText } = msgData;
     const commandMappings: CommandMappings = {
-      '/debug': () => this.debug(msgData),
+      // '/debug': () => this.debug(msgData),
       '/q': () => this.processRawRequest(msgData),
       '/recap': () => this.handleRecapCommand(msgData),
       '/votekick': () => this.processVoteKick(msgData),
