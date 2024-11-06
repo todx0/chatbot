@@ -8,11 +8,11 @@ import {
   MAX_HISTORY_LENGTH,
   recapTextRequest,
 } from '../../config';
-import { ErrorHandler } from '../../errors/ErrorHandler';
 import { MessageData } from '../../types';
-import { insertToMessages, readChatRoleFromDatabase, replaceDoubleSpaces } from '../../utils/helper';
+import { insertToMessages, readChatRoleFromDatabase } from '../../utils/helper';
 import { getTranslations } from '../../utils/translation';
-
+/*
+* delete if generateGenAIResponse is not failing
 export async function generateGenAIResponse(userRequest: string, recap = false): Promise<string> {
   const translations = getTranslations();
   let retryCount = 0;
@@ -46,12 +46,13 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
     return responseText;
   }
 
-  async function retryHandler(): Promise<string> {
+  async function retryHandler(timeout: number = 1000): Promise<string> {
     try {
       return await fetchGenAIResponse();
     } catch (error: any) {
       if (retryCount < retryRequestDisclaimer.length) {
-        return retryHandler();
+        await new Promise((resolve) => setTimeout(resolve, timeout));
+        return retryHandler(timeout);
       } else {
         console.error('Maximum retries reached', error.message);
         return translations['botHasNoIdea'];
@@ -61,11 +62,51 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
 
   try {
     const responseText = await retryHandler();
-    return replaceDoubleSpaces(responseText);
+    return replaceDoubleSpaces(responseText.replaceAll('*', ''));
   } catch (error: any) {
     return ErrorHandler.handleError(error);
   }
+} */
+export async function generateGenAIResponse(userRequest: string, recap = false): Promise<string> {
+  const translations = getTranslations();
+  let retryCount = 0;
+
+  const retryPrompts = [
+    ``,
+    `Provide a concise counterpoint to the message's viewpoint:`,
+    `Offer a surprising twist on the message's underlying theme:`,
+    `Generate a brief thought experiment related to the message's concept:`,
+    `Offer an alternative perspective on the topic of the message:`,
+  ];
+
+  const disclaimer =
+    `This message is for informational purposes only and does not promote violence, hate speech, or illegal activities.`;
+
+  async function fetchGenAIResponse(): Promise<string> {
+    const userRoleContent: Content = { role: 'user', parts: [{ text: userRequest }] };
+
+    const history: Content[] = await readChatRoleFromDatabase({ limit: MAX_HISTORY_LENGTH });
+
+    const chat = recap ? genAImodelForRecap.startChat() : genAImodel.startChat({ history });
+
+    const request = retryCount === 0
+      ? userRequest
+      : `${disclaimer} ${retryPrompts[retryCount]} ${userRequest}`;
+    retryCount += 1;
+
+    const result = await chat.sendMessage(request);
+    const responseText = result?.response?.text() || translations['botHasNoIdea'];
+
+    await insertToMessages(userRoleContent);
+    await insertToMessages({ role: 'model', parts: [{ text: responseText }] });
+
+    return responseText;
+  }
+
+  return await fetchGenAIResponse();
 }
+
+export async function interpretCommand(command: string) {}
 
 export async function generateRawGenAIResponse(message: string): Promise<string> {
   const translations = getTranslations();

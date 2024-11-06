@@ -125,9 +125,9 @@ export default class TelegramBot {
     try {
       const msgLimit = parseInt(messageText.split(' ')[1]);
 
-      await this.validateMsgLimit(msgLimit);
+      await this.validateMsgLimit(msgLimit, groupId);
       const messages = await this.retrieveAndFilterMessages(msgLimit, groupId);
-      const response = await this.generateRecapResponse(messages);
+      const response = await this.generateRecapResponse(recapTextRequest, messages);
 
       await this.sendMessage({ peer: groupId, message: response });
     } catch (error) {
@@ -135,14 +135,15 @@ export default class TelegramBot {
     }
   }
 
-  async validateMsgLimit(msgLimit: number): Promise<void> {
-    if (Number.isNaN(msgLimit)) {
-      throw new Error(translations['recapWarning']);
-    }
-
+  async validateMsgLimit(msgLimit: number, groupId: string): Promise<void> {
+    if (Number.isNaN(msgLimit)) await this.sendMessage({ peer: groupId, message: translations['recapWarning'] });
     if (msgLimit > MESSAGE_LIMIT) {
-      throw new Error(`${translations['recapLimit']} ${MESSAGE_LIMIT}: /recap ${MESSAGE_LIMIT}`);
+      await this.sendMessage({
+        peer: groupId,
+        message: `${translations['recapLimit']} ${MESSAGE_LIMIT}: /recap ${MESSAGE_LIMIT}`,
+      });
     }
+    return;
   }
 
   async retrieveAndFilterMessages(msgLimit: number, groupId: string): Promise<string[]> {
@@ -150,7 +151,7 @@ export default class TelegramBot {
     return filterMessages(messages);
   }
 
-  async generateRecapResponse(filteredMessages: string[]): Promise<string> {
+  async generateRecapResponse(recapTextRequest: string, filteredMessages: string[]): Promise<string> {
     const MAX_TOKEN_LENGTH = 4096;
     try {
       const messagesLength = await approximateTokenLength(filteredMessages);
@@ -601,6 +602,7 @@ export default class TelegramBot {
     const { messageText } = msgData;
     const commandMappings: CommandMappings = {
       // '/debug': () => this.debug(msgData),
+      '/custom': () => this.processCustomRequestWithChatHistory(msgData),
       '/q': () => this.processRawRequest(msgData),
       '/recap': () => this.handleRecapCommand(msgData),
       '/votekick': () => this.processVoteKick(msgData),
@@ -616,6 +618,24 @@ export default class TelegramBot {
       }
     }
     return false;
+  }
+
+  async processCustomRequestWithChatHistory(msgData: MessageData) {
+    const { messageText, groupId } = msgData;
+
+    try {
+      const [command, msgLimitStr, ...msgQuery] = messageText.split(' ');
+      const msgLimit = parseInt(msgLimitStr, 10);
+      const msgQueryText = msgQuery.join(' ');
+
+      await this.validateMsgLimit(msgLimit);
+      const messages = await this.retrieveAndFilterMessages(msgLimit, groupId);
+      const response = await this.generateRecapResponse(msgQueryText, messages);
+
+      await this.sendMessage({ peer: groupId, message: response });
+    } catch (error) {
+      await this.handleError(groupId, error);
+    }
   }
 
   async processMention(msgData: MessageData): Promise<void> {
