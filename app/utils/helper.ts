@@ -244,3 +244,8 @@ export function isRandomReply(msgData: MessageData): boolean {
   const whitelistUsers = getWhitelistUsers();
   return !whitelistUsers.includes(msgData.user.username);
 }
+
+export function extractNumber(message: string) {
+  const match = message.match(/\d+/);
+  return match ? parseInt(match[0], 10) : null;
+}

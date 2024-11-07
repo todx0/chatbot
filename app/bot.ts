@@ -1,5 +1,4 @@
 import bigInt from 'big-integer';
-import { off } from 'node:process';
 import { Api, TelegramClient } from 'telegram';
 import { IterMessagesParams } from 'telegram/client/messages';
 import { BOT_USERNAME, MESSAGE_LIMIT, POLL_TIMEOUT_MS, RANDOM_REPLY_PERCENT, recapTextRequest } from './config';
@@ -30,6 +29,7 @@ import {
   retry,
   splitMessageInChunks,
 } from './utils/helper';
+import { extractNumber } from './utils/helper';
 import translations from './utils/translation';
 
 const { BOT_ID } = Bun.env;
@@ -120,14 +120,15 @@ export default class TelegramBot {
     });
   }
 
-  async handleRecapCommand(msgData: MessageData): Promise<void> {
+  async handleRecapCommand(msgData: MessageData, originalMessageIsRequest: boolean = false): Promise<void> {
     const { messageText, groupId } = msgData;
     try {
-      const msgLimit = parseInt(messageText.split(' ')[1]);
+      const msgLimit = extractNumber(messageText) || parseInt(messageText.split(' ')[1]) || 100;
+      const request = originalMessageIsRequest ? messageText : recapTextRequest;
 
       await this.validateMsgLimit(msgLimit, groupId);
       const messages = await this.retrieveAndFilterMessages(msgLimit, groupId);
-      const response = await this.generateRecapResponse(recapTextRequest, messages);
+      const response = await this.generateRecapResponse(request, messages);
 
       await this.sendMessage({ peer: groupId, message: response });
     } catch (error) {
@@ -158,8 +159,10 @@ export default class TelegramBot {
       let response: string;
 
       if (messagesLength <= MAX_TOKEN_LENGTH) {
+        filteredMessages.pop();
         const messageString = filteredMessages.join(' ');
-        response = await generateGenAIResponse(`${recapTextRequest} ${messageString}`, true);
+        const userRequest = `${recapTextRequest} ${messageString}`;
+        response = await generateGenAIResponse(userRequest, true);
       } else {
         const messageString = filteredMessages.join(' ');
         const chunks = await splitMessageInChunks(messageString);
@@ -602,7 +605,6 @@ export default class TelegramBot {
     const { messageText } = msgData;
     const commandMappings: CommandMappings = {
       // '/debug': () => this.debug(msgData),
-      '/custom': () => this.processCustomRequestWithChatHistory(msgData),
       '/q': () => this.processRawRequest(msgData),
       '/recap': () => this.handleRecapCommand(msgData),
       '/votekick': () => this.processVoteKick(msgData),
@@ -618,24 +620,6 @@ export default class TelegramBot {
       }
     }
     return false;
-  }
-
-  async processCustomRequestWithChatHistory(msgData: MessageData) {
-    const { messageText, groupId } = msgData;
-
-    try {
-      const [command, msgLimitStr, ...msgQuery] = messageText.split(' ');
-      const msgLimit = parseInt(msgLimitStr, 10);
-      const msgQueryText = msgQuery.join(' ');
-
-      await this.validateMsgLimit(msgLimit);
-      const messages = await this.retrieveAndFilterMessages(msgLimit, groupId);
-      const response = await this.generateRecapResponse(msgQueryText, messages);
-
-      await this.sendMessage({ peer: groupId, message: response });
-    } catch (error) {
-      await this.handleError(groupId, error);
-    }
   }
 
   async processMention(msgData: MessageData): Promise<void> {
@@ -654,11 +638,26 @@ export default class TelegramBot {
     return msgData.messageText.includes(BOT_USERNAME);
   }
 
-  private async handleBotMention(msgData: MessageData) {
+  /*   private async handleBotMention(msgData: MessageData) {
+    const messageHasNumber = extractNumber(msgData.messageText);
+    if (messageHasNumber) {
+      await this.handleRecapCommand(msgData, true);
+      return;
+    }
     if (msgData.replyToMsgId || msgData.image) {
       await this.getMessageContentById(msgData);
     }
+
     await this.processMessage(msgData);
+  } */
+
+  private async handleBotMention(msgData: MessageData) {
+    if (msgData.replyToMsgId || msgData.image) {
+      await this.getMessageContentById(msgData);
+      await this.processMessage(msgData);
+    } else {
+      await this.handleRecapCommand(msgData, true);
+    }
   }
 
   async getUsers(users: string[]): Promise<Api.User[]> {

@@ -8,11 +8,11 @@ import {
   MAX_HISTORY_LENGTH,
   recapTextRequest,
 } from '../../config';
+import { ErrorHandler } from '../../errors/ErrorHandler';
 import { MessageData } from '../../types';
-import { insertToMessages, readChatRoleFromDatabase } from '../../utils/helper';
+import { insertToMessages, readChatRoleFromDatabase, replaceDoubleSpaces } from '../../utils/helper';
 import { getTranslations } from '../../utils/translation';
-/*
-* delete if generateGenAIResponse is not failing
+
 export async function generateGenAIResponse(userRequest: string, recap = false): Promise<string> {
   const translations = getTranslations();
   let retryCount = 0;
@@ -66,8 +66,9 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
   } catch (error: any) {
     return ErrorHandler.handleError(error);
   }
-} */
-export async function generateGenAIResponse(userRequest: string, recap = false): Promise<string> {
+}
+
+/* export async function generateGenAIResponse(userRequest: string, recap = false): Promise<string> {
   const translations = getTranslations();
   let retryCount = 0;
 
@@ -100,13 +101,11 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
     await insertToMessages(userRoleContent);
     await insertToMessages({ role: 'model', parts: [{ text: responseText }] });
 
-    return responseText;
+    return replaceDoubleSpaces(responseText.replaceAll('*', ''));
   }
 
   return await fetchGenAIResponse();
-}
-
-export async function interpretCommand(command: string) {}
+} */
 
 export async function generateRawGenAIResponse(message: string): Promise<string> {
   const translations = getTranslations();

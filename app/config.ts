@@ -92,6 +92,7 @@ export const genAI = new GoogleGenerativeAI(config.GAPI);
 export const genAImodel = genAI.getGenerativeModel(generativeModelOptions);
 export const genAImodelForRecap = genAI.getGenerativeModel(generativeModelOptionsForRecap);
 export const genAIWithoutOptions = genAI.getGenerativeModel(generativeModelOptionsForRawRequest);
+
 export const recapTextRequest =
   `Generate a short recap of the following conversation: \n. Total message length should exceed ${MAX_TOKEN_LENGTH} symbols.`;
 
