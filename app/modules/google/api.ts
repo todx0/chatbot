@@ -13,7 +13,7 @@ import { MessageData } from '../../types';
 import { insertToMessages, readChatRoleFromDatabase, replaceDoubleSpaces } from '../../utils/helper';
 import { getTranslations } from '../../utils/translation';
 
-export async function generateGenAIResponse(userRequest: string, recap = false): Promise<string> {
+export async function generateGenAIResponse(userRequest: string, useRecapModel = false): Promise<string> {
   const translations = getTranslations();
   let retryCount = 0;
   const retryRequestDisclaimer = [
@@ -30,7 +30,7 @@ export async function generateGenAIResponse(userRequest: string, recap = false):
     const userRoleContent: Content = { role: 'user', parts: [{ text: userRequest }] };
     const history: Content[] = await readChatRoleFromDatabase({ limit: MAX_HISTORY_LENGTH });
 
-    const chat = recap ? genAImodelForRecap.startChat() : genAImodel.startChat({ history });
+    const chat = useRecapModel ? genAImodelForRecap.startChat() : genAImodel.startChat({ history });
 
     const request = retryCount === 0
       ? userRequest

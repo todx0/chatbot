@@ -120,7 +120,11 @@ export default class TelegramBot {
     });
   }
 
-  async handleRecapCommand(msgData: MessageData, originalMessageIsRequest: boolean = false): Promise<void> {
+  async handleRecapCommand(
+    msgData: MessageData,
+    originalMessageIsRequest = false,
+    useRecapModel = true,
+  ): Promise<void> {
     const { messageText, groupId } = msgData;
     try {
       const msgLimit = extractNumber(messageText) || parseInt(messageText.split(' ')[1]) || 100;
@@ -128,7 +132,7 @@ export default class TelegramBot {
 
       await this.validateMsgLimit(msgLimit, groupId);
       const messages = await this.retrieveAndFilterMessages(msgLimit, groupId);
-      const response = await this.generateRecapResponse(request, messages);
+      const response = await this.generateRecapResponse(request, messages, useRecapModel);
 
       await this.sendMessage({ peer: groupId, message: response });
     } catch (error) {
@@ -152,7 +156,11 @@ export default class TelegramBot {
     return filterMessages(messages);
   }
 
-  async generateRecapResponse(recapTextRequest: string, filteredMessages: string[]): Promise<string> {
+  async generateRecapResponse(
+    recapTextRequest: string,
+    filteredMessages: string[],
+    useRecapModel = true,
+  ): Promise<string> {
     const MAX_TOKEN_LENGTH = 4096;
     try {
       const messagesLength = await approximateTokenLength(filteredMessages);
@@ -162,7 +170,7 @@ export default class TelegramBot {
         filteredMessages.pop();
         const messageString = filteredMessages.join(' ');
         const userRequest = `${recapTextRequest} ${messageString}`;
-        response = await generateGenAIResponse(userRequest, true);
+        response = await generateGenAIResponse(userRequest, useRecapModel);
       } else {
         const messageString = filteredMessages.join(' ');
         const chunks = await splitMessageInChunks(messageString);
@@ -656,7 +664,7 @@ export default class TelegramBot {
       await this.getMessageContentById(msgData);
       await this.processMessage(msgData);
     } else {
-      await this.handleRecapCommand(msgData, true);
+      await this.handleRecapCommand(msgData, true, false);
     }
   }
 
