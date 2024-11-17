@@ -47,9 +47,7 @@ export async function convertToImage(buffer: Buffer, filepath = './images/image.
 
 export async function readAndParseJson(filePath: string): Promise<any> {
   const file = Bun.file(filePath, { type: 'application/json' });
-  const contents = await file.json();
-
-  return contents;
+  return await file.json();
 }
 
 export async function filterMessages(messages: string[]): Promise<string[]> {
@@ -57,17 +55,15 @@ export async function filterMessages(messages: string[]): Promise<string[]> {
 }
 
 export async function approximateTokenLength(messages: string[]): Promise<number> {
-  const totalLength = messages
+  return messages
     .map((str) => str.length)
     .reduce((accumulator, currentValue) => accumulator + currentValue, 0);
-
-  return totalLength;
 }
 
 export async function splitMessageInChunks(message: string, maxChunkSize: number = 3000): Promise<string[]> {
   const messageLength = message.length;
   const chunkCount = Math.ceil(messageLength / maxChunkSize);
-  const chunks: string[] = [];
+  const chunks = [];
 
   for (let i = 0; i < chunkCount; i++) {
     const start = i * maxChunkSize;

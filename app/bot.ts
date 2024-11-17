@@ -1,4 +1,5 @@
 import bigInt from 'big-integer';
+import { it } from 'node:test';
 import { Api, TelegramClient } from 'telegram';
 import { IterMessagesParams } from 'telegram/client/messages';
 import { BOT_USERNAME, MESSAGE_LIMIT, POLL_TIMEOUT_MS, RANDOM_REPLY_PERCENT, recapTextRequest } from './config';
@@ -86,16 +87,31 @@ export default class TelegramBot {
     return message;
   }
 
-  async getMessagesV2(groupId: string, iterParams: Partial<IterMessagesParams> | undefined): Promise<string[]> {
+  /*   async getMessages(limit: number, groupId: string): Promise<string[]> {
     const messages: string[] = [];
+    for await (const message of this.client.iterMessages(`-${groupId}`, { limit })) {
+      if (message._sender?.firstName) {
+        const sender = message._sender.firstName;
+        const messageText = message.message;
+        messages.push(`${sender}: ${messageText}`);
+      }
+    }
+    return messages.reverse();
+  } */
 
-    const offsetDate = iterParams?.offsetDate || Date.now() - 1 * 60 * 1000;
+  async getMessagesV2(
+    groupId: string,
+    iterParams: Partial<IterMessagesParams> | undefined,
+  ): Promise<string[]> {
+    const messages: string[] = [];
 
     for await (const message of this.client.iterMessages(`-${groupId}`, iterParams)) {
       const messageDateMS = message.date * 1000;
 
-      if (message._sender?.firstName && offsetDate < messageDateMS) {
-        messages.push(`${message._sender.firstName}: ${message.message}`);
+      if (message._sender?.firstName) {
+        if (!iterParams?.offsetDate || iterParams.offsetDate < messageDateMS) {
+          messages.push(`${message._sender.firstName}: ${message.message}`);
+        }
       }
     }
     return messages.reverse();
@@ -117,10 +133,21 @@ export default class TelegramBot {
     const { messageText, groupId } = msgData;
     try {
       const msgLimit = extractNumber(messageText) || parseInt(messageText.split(' ')[1]) || 100;
+
+      const msgLimitMatch = await this.validateMsgLimit(msgLimit);
+      if (!msgLimitMatch) {
+        await this.sendMessage({
+          peer: groupId,
+          message: `${translations['recapLimit']} ${MESSAGE_LIMIT}: /recap ${MESSAGE_LIMIT}`,
+        });
+        return;
+      }
+
       const request = originalMessageIsRequest ? messageText : recapTextRequest;
 
-      await this.validateMsgLimit(msgLimit, groupId);
-      const messages = await this.retrieveAndFilterMessages(msgLimit, groupId);
+      let messages = await this.getMessagesV2(groupId, { limit: msgLimit });
+      messages = await filterMessages(messages);
+
       const response = await this.generateRecapResponse(request, messages, useRecapModel);
 
       await this.sendMessage({ peer: groupId, message: response });
@@ -129,20 +156,10 @@ export default class TelegramBot {
     }
   }
 
-  async validateMsgLimit(msgLimit: number, groupId: string): Promise<void> {
-    if (Number.isNaN(msgLimit)) await this.sendMessage({ peer: groupId, message: translations['recapWarning'] });
-    if (msgLimit > MESSAGE_LIMIT) {
-      await this.sendMessage({
-        peer: groupId,
-        message: `${translations['recapLimit']} ${MESSAGE_LIMIT}: /recap ${MESSAGE_LIMIT}`,
-      });
-    }
-    return;
-  }
-
-  async retrieveAndFilterMessages(msgLimit: number, groupId: string): Promise<string[]> {
-    const messages = await this.getMessagesV2(groupId, { limit: msgLimit });
-    return filterMessages(messages);
+  async validateMsgLimit(msgLimit: number, recapLimit = 500): Promise<boolean> {
+    if (Number.isNaN(msgLimit)) msgLimit = recapLimit;
+    if (msgLimit > MESSAGE_LIMIT) return false;
+    return true;
   }
 
   async generateRecapResponse(
@@ -667,13 +684,14 @@ export default class TelegramBot {
     }
   }
 
+  // !!! this.stripUsernames is commented
   async getUserRecentMessages(data: QueryDataToGetUserMessages) {
     const lastUserMessages = await this.getMessagesV2(data.groupId, {
       limit: data.limit || 10,
-      offsetDate: data.offsetDate,
+      offsetDate: data.offsetDate || Date.now() - 1 * 60 * 1000,
       fromUser: data.userEntity,
     });
-    let messages: string[] | string = this.stripUsernames(lastUserMessages);
+    let messages: string[] | string = lastUserMessages; // this.stripUsernames(lastUserMessages);
     messages = messages.join(', ');
 
     return `${data.firstName}: ${messages}`;
