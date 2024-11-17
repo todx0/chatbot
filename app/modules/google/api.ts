@@ -35,6 +35,7 @@ export async function generateGenAIResponse(userRequest: string, useRecapModel =
     const request = retryCount === 0
       ? userRequest
       : `${disclaimer} ${retryRequestDisclaimer[retryCount]} ${userRequest}`;
+
     retryCount += 1;
 
     const result = await chat.sendMessage(request);

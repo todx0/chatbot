@@ -87,18 +87,6 @@ export default class TelegramBot {
     return message;
   }
 
-  async getMessages(limit: number, groupId: string): Promise<string[]> {
-    const messages: string[] = [];
-    for await (const message of this.client.iterMessages(`-${groupId}`, { limit })) {
-      if (message._sender?.firstName) {
-        const sender = message._sender.firstName;
-        const messageText = message.message;
-        messages.push(`${sender}: ${messageText}`);
-      }
-    }
-    return messages.reverse();
-  }
-
   async getMessagesV2(groupId: string, iterParams: Partial<IterMessagesParams> | undefined): Promise<string[]> {
     const messages: string[] = [];
 
@@ -132,11 +120,12 @@ export default class TelegramBot {
 
       await this.validateMsgLimit(msgLimit, groupId);
       const messages = await this.retrieveAndFilterMessages(msgLimit, groupId);
-      const response = await this.generateRecapResponse(request, messages, useRecapModel);
+      // const response = await this.generateRecapResponse(request, messages, useRecapModel);
+      const response = await this.generateRecapResponseV2(request, messages, useRecapModel);
 
       await this.sendMessage({ peer: groupId, message: response });
     } catch (error) {
-      await this.handleError(groupId, error);
+      await this.handleError(groupId, error as Error);
     }
   }
 
@@ -152,7 +141,7 @@ export default class TelegramBot {
   }
 
   async retrieveAndFilterMessages(msgLimit: number, groupId: string): Promise<string[]> {
-    const messages = await this.getMessages(msgLimit, groupId);
+    const messages = await this.getMessagesV2(groupId, { limit: msgLimit });
     return filterMessages(messages);
   }
 
@@ -191,9 +180,26 @@ export default class TelegramBot {
     }
   }
 
-  async handleError(peer: string, error: any): Promise<void | string> {
+  async generateRecapResponseV2(
+    recapTextRequest: string,
+    filteredMessages: string[],
+    useRecapModel = true,
+  ): Promise<string> {
+    try {
+      const messageString = filteredMessages.join(' ');
+      const userRequest = `${recapTextRequest} ${messageString}`;
+      const response = await generateGenAIResponse(userRequest, useRecapModel);
+
+      return response;
+    } catch (error) {
+      console.error('Error generating recap response:', error);
+      throw error;
+    }
+  }
+
+  async handleError(peer: string, error: Error, throwError = true): Promise<void | string> {
     await this.sendMessage({ peer, message: String(error) });
-    return ErrorHandler.handleError(error, true);
+    return ErrorHandler.handleError(error, throwError);
   }
 
   async downloadAndSendImageFromUrl(url: string, groupId: string): Promise<void> {
@@ -225,11 +231,6 @@ export default class TelegramBot {
     msgData.dataFromGetMessages = msg;
     await this.setFilepathIfMedia(msgData);
     msgData.replyMessageText = msg.message;
-  }
-
-  private async handleReplyToBotMessage(msgData: MessageData) {
-    await this.setFilepathIfMedia(msgData);
-    await this.processMessage(msgData);
   }
 
   async setFilepathIfMedia(msgData: any): Promise<void> {
@@ -297,9 +298,9 @@ export default class TelegramBot {
     const params = {
       dcId: photo.dcId,
     };
-    const buffer = await this.getFileWithRetry(msgData, fileInput, params);
+    const buffer: Buffer = await this.getFileWithRetry(msgData, fileInput, params);
 
-    return buffer as Buffer;
+    return buffer;
   }
 
   async getStickerBuffer(msgData: MessageData): Promise<Buffer> {
@@ -481,7 +482,7 @@ export default class TelegramBot {
 
       await this.waitForPollResultsAndTakeAction(pollMessageId, userToKick, userIdToKick, groupId);
     } catch (error) {
-      await this.handleError(groupId, error);
+      await this.handleError(groupId, error as Error);
     }
   }
 
@@ -530,7 +531,7 @@ export default class TelegramBot {
           await getPollResults(pollId);
         }, POLL_TIMEOUT_MS);
       } catch (error) {
-        await this.handleError(groupId, error);
+        await this.handleError(groupId, error as Error);
       }
     };
 
@@ -601,7 +602,7 @@ export default class TelegramBot {
       const response = await generateRawGenAIResponse(messageText);
       await this.sendMessage({ peer: groupId, message: response });
     } catch (error) {
-      await this.handleError(groupId, error);
+      await this.handleError(groupId, error as Error);
     }
   }
 
@@ -609,6 +610,7 @@ export default class TelegramBot {
   async debug(msgData: MessageData) {
   }
   */
+
   async executeCommand(msgData: MessageData): Promise<boolean> {
     const { messageText } = msgData;
     const commandMappings: CommandMappings = {
@@ -632,39 +634,19 @@ export default class TelegramBot {
 
   async processMention(msgData: MessageData): Promise<void> {
     if (await this.checkReplyIdIsBotId(msgData)) {
-      await this.handleReplyToBotMessage(msgData);
-      return;
-    }
-
-    if (this.isBotMentioned(msgData)) {
-      await this.handleBotMention(msgData);
-      return;
-    }
-  }
-
-  private isBotMentioned(msgData: MessageData): boolean {
-    return msgData.messageText.includes(BOT_USERNAME);
-  }
-
-  /*   private async handleBotMention(msgData: MessageData) {
-    const messageHasNumber = extractNumber(msgData.messageText);
-    if (messageHasNumber) {
-      await this.handleRecapCommand(msgData, true);
-      return;
-    }
-    if (msgData.replyToMsgId || msgData.image) {
-      await this.getMessageContentById(msgData);
-    }
-
-    await this.processMessage(msgData);
-  } */
-
-  private async handleBotMention(msgData: MessageData) {
-    if (msgData.replyToMsgId || msgData.image) {
-      await this.getMessageContentById(msgData);
+      await this.setFilepathIfMedia(msgData);
       await this.processMessage(msgData);
-    } else {
-      await this.handleRecapCommand(msgData, true, false);
+      return;
+    }
+
+    if (msgData.messageText.includes(BOT_USERNAME)) {
+      if (msgData.replyToMsgId || msgData.image) {
+        await this.getMessageContentById(msgData);
+        await this.processMessage(msgData);
+      } else {
+        await this.handleRecapCommand(msgData, true, false);
+      }
+      return;
     }
   }
 
