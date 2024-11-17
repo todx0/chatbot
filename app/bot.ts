@@ -42,14 +42,11 @@ export default class TelegramBot {
     this.client = client;
   }
 
+  // To delete. Use client.sendMessage
   async sendMessage(obj: SendMessageParams): Promise<Api.TypeUpdates | undefined> {
     const sendMsg = new Api.messages.SendMessage(obj);
     const result = await this.client.invoke(sendMsg);
     return result;
-  }
-
-  async sendImage(imagePath: string, groupId: string): Promise<Api.Message> {
-    return this.client.sendMessage(groupId, { file: imagePath });
   }
 
   async sendPollToKick(user: string, groupId: string) {
@@ -119,10 +116,7 @@ export default class TelegramBot {
 
   async handleClearCommand(msgData: MessageData): Promise<void> {
     await clearMessagesTable();
-    await this.sendMessage({
-      peer: msgData.groupId,
-      message: translations['historyCleared'],
-    });
+    await this.client.sendMessage(`-${msgData.groupId}`, { message: translations['historyCleared'] });
   }
 
   async handleRecapCommand(
@@ -136,8 +130,7 @@ export default class TelegramBot {
 
       const msgLimitMatch = await this.validateMsgLimit(msgLimit);
       if (!msgLimitMatch) {
-        await this.sendMessage({
-          peer: groupId,
+        await this.client.sendMessage(`-${groupId}`, {
           message: `${translations['recapLimit']} ${MESSAGE_LIMIT}: /recap ${MESSAGE_LIMIT}`,
         });
         return;
@@ -150,7 +143,7 @@ export default class TelegramBot {
 
       const response = await this.generateRecapResponse(request, messages, useRecapModel);
 
-      await this.sendMessage({ peer: groupId, message: response });
+      await this.client.sendMessage(`-${groupId}`, { message: response });
     } catch (error) {
       await this.handleError(groupId, error as Error);
     }
@@ -198,14 +191,14 @@ export default class TelegramBot {
   }
 
   async handleError(peer: string, error: Error, throwError = true): Promise<void | string> {
-    await this.sendMessage({ peer, message: String(error) });
+    await this.client.sendMessage(`-${peer}`, { message: String(error) });
     return ErrorHandler.handleError(error, throwError);
   }
 
   async downloadAndSendImageFromUrl(url: string, groupId: string): Promise<void> {
     const buffer = await downloadFile(url);
     const imagePath = await convertToImage(buffer);
-    await this.sendImage(imagePath, groupId);
+    await this.client.sendMessage(groupId, { file: imagePath });
   }
 
   async transcribeAudioMessage(msgId: number, groupId: string): Promise<Api.messages.TranscribedAudio> {
@@ -426,15 +419,9 @@ export default class TelegramBot {
     const usersIdToDelete = [...intersection];
 
     if (!usersIdToDelete.length) {
-      await this.sendMessage({
-        peer: groupId,
-        message: translations['lurkersAllGood'],
-      });
+      await this.client.sendMessage(`-${groupId}`, { message: translations['lurkersAllGood'] });
     } else {
-      await this.sendMessage({
-        peer: groupId,
-        message: translations['lurkersBye'],
-      });
+      await this.client.sendMessage(`-${groupId}`, { message: translations['lurkersBye'] });
       await this.banUsers(usersIdToDelete, groupId);
     }
   }
@@ -444,35 +431,23 @@ export default class TelegramBot {
     try {
       const userToKick = this.extractUserToKick(msgData.messageText, groupId);
       if (!userToKick) {
-        await this.sendMessage({
-          peer: groupId,
-          message: translations['specifyUserToKick'],
-        });
+        await this.client.sendMessage(`-${groupId}`, { message: translations['specifyUserToKick'] });
         return;
       }
 
       if (userToKick === BOT_USERNAME) {
-        await this.sendMessage({
-          peer: groupId,
-          message: translations['cantKickThisBot'],
-        });
+        await this.client.sendMessage(`-${groupId}`, { message: translations['cantKickThisBot'] });
         return;
       }
 
       const { userIdToKick, isAdmin } = await this.getUserIdAndCheckAdmin(userToKick, groupId);
       if (!userIdToKick) {
-        await this.sendMessage({
-          peer: groupId,
-          message: translations['userNotFound'],
-        });
+        await this.client.sendMessage(`-${groupId}`, { message: translations['userNotFound'] });
         return;
       }
 
       if (isAdmin) {
-        await this.sendMessage({
-          peer: groupId,
-          message: translations['cantKickAdmin'],
-        });
+        await this.client.sendMessage(`-${groupId}`, { message: translations['cantKickAdmin'] });
         return;
       }
 
@@ -511,16 +486,12 @@ export default class TelegramBot {
           const noResults = results.updates[0].results.results[1]?.voters || 0;
 
           if (yesResults > noResults) {
-            await this.sendMessage({
-              peer: groupId,
-              message: `${translations['votekickPass']} ${userToKick}!`,
-            });
+            await this.client.sendMessage(`-${groupId}`, { message: `${translations['votekickPass']} ${userToKick}!` });
             await this.banUsers([userIdToKick], groupId);
             // Unexpected error: [GoogleGenerativeAI Error]: First content should be with role 'user', got model
             // await insertToMessages({ role: 'model', parts: [{ text: `User ${userToKick} kicked from the group.` }] });
           } else {
-            await this.sendMessage({
-              peer: groupId,
+            await this.client.sendMessage(`-${groupId}`, {
               message: `${userToKick} ${translations['votekickFailed']}`,
             });
           }
@@ -559,10 +530,7 @@ export default class TelegramBot {
       const userString = `${user.firstName}; ${user.username}; ${user.id}; ${user.premium}`;
       userEntities.push(userString);
     }
-    await this.sendMessage({
-      peer: groupId,
-      message: `${userEntities.join('\n')}`,
-    });
+    await this.client.sendMessage(`-${groupId}`, { message: `${userEntities.join('\n')}` });
   }
 
   async findUserIdBasedOnNickname(username: string, groupId: string, limit = 3000) {
@@ -600,7 +568,7 @@ export default class TelegramBot {
     const { messageText, groupId } = msgData;
     try {
       const response = await generateRawGenAIResponse(messageText);
-      await this.sendMessage({ peer: groupId, message: response });
+      await this.client.sendMessage(`-${groupId}`, { message: response });
     } catch (error) {
       await this.handleError(groupId, error as Error);
     }
