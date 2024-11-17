@@ -44,7 +44,6 @@ export default class TelegramBot {
   async sendMessage(obj: SendMessageParams): Promise<Api.TypeUpdates | undefined> {
     const sendMsg = new Api.messages.SendMessage(obj);
     const result = await this.client.invoke(sendMsg);
-
     return result;
   }
 
@@ -91,8 +90,10 @@ export default class TelegramBot {
     const messages: string[] = [];
 
     const offsetDate = iterParams?.offsetDate || Date.now() - 1 * 60 * 1000;
+
     for await (const message of this.client.iterMessages(`-${groupId}`, iterParams)) {
       const messageDateMS = message.date * 1000;
+
       if (message._sender?.firstName && offsetDate < messageDateMS) {
         messages.push(`${message._sender.firstName}: ${message.message}`);
       }
@@ -120,8 +121,7 @@ export default class TelegramBot {
 
       await this.validateMsgLimit(msgLimit, groupId);
       const messages = await this.retrieveAndFilterMessages(msgLimit, groupId);
-      // const response = await this.generateRecapResponse(request, messages, useRecapModel);
-      const response = await this.generateRecapResponseV2(request, messages, useRecapModel);
+      const response = await this.generateRecapResponse(request, messages, useRecapModel);
 
       await this.sendMessage({ peer: groupId, message: response });
     } catch (error) {
@@ -169,26 +169,9 @@ export default class TelegramBot {
       if (response.length > MAX_TOKEN_LENGTH) {
         response = await generateGenAIResponse(
           `Edit this message to be less than or equal to ${MAX_TOKEN_LENGTH} characters: ${response}`,
-          true,
+          useRecapModel,
         );
       }
-
-      return response;
-    } catch (error) {
-      console.error('Error generating recap response:', error);
-      throw error;
-    }
-  }
-
-  async generateRecapResponseV2(
-    recapTextRequest: string,
-    filteredMessages: string[],
-    useRecapModel = true,
-  ): Promise<string> {
-    try {
-      const messageString = filteredMessages.join(' ');
-      const userRequest = `${recapTextRequest} ${messageString}`;
-      const response = await generateGenAIResponse(userRequest, useRecapModel);
 
       return response;
     } catch (error) {

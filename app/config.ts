@@ -67,7 +67,7 @@ Please ensure your responses are:
 * **Engaging:** Interesting and easy to understand.
 
 * Use telegram markdown.
-* Make sure reply is shorter than 4096 Symbols.
+* Make sure your reply is shorter than 4096 Symbols.
 * Provide a response in plain text format, avoiding any bolding or italics.
 * Always reply in ${config.LANGUAGE}
 * ${config.SECRET_OPTIONS}
