@@ -652,14 +652,13 @@ export default class TelegramBot {
     }
   }
 
-  // !!! this.stripUsernames is commented
-  async getUserRecentMessages(data: QueryDataToGetUserMessages) {
+  async getUserRecentMessages(data: QueryDataToGetUserMessages): Promise<string> {
     const lastUserMessages = await this.getMessagesV2(data.groupId, {
       limit: data.limit || 10,
       offsetDate: data.offsetDate || Date.now() - 1 * 60 * 1000,
       fromUser: data.userEntity,
     });
-    let messages: string[] | string = lastUserMessages; // this.stripUsernames(lastUserMessages);
+    let messages: string[] | string = this.stripUsernames(lastUserMessages);
     messages = messages.join(', ');
 
     return `${data.firstName}: ${messages}`;
