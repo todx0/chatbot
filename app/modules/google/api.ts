@@ -137,7 +137,7 @@ export async function generateResponseFromImage(msgData: MessageData): Promise<s
 }
 
 export async function generateReplyFromImageResponse(response: string): Promise<string> {
-  const request = 'This image description was addressed to you. Reply to it:';
+  const request = 'This image description was addressed to you. Reply to it but avoid asking questions:';
   const result = await generateGenAIResponse(`${request} ${response}`);
   return result;
 }
