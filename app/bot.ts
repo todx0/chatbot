@@ -2,6 +2,7 @@ import bigInt from 'big-integer';
 import { it } from 'node:test';
 import { Api, TelegramClient } from 'telegram';
 import { IterMessagesParams } from 'telegram/client/messages';
+import { escapeLeadingUnderscores } from 'typescript';
 import { BOT_USERNAME, MESSAGE_LIMIT, POLL_TIMEOUT_MS, RANDOM_REPLY_PERCENT, recapTextRequest } from './config';
 import { ErrorHandler } from './errors/ErrorHandler';
 import {
@@ -140,7 +141,6 @@ export default class TelegramBot {
 
       let messages = await this.getMessagesV2(groupId, { limit: msgLimit });
       messages = await filterMessages(messages);
-
       const response = await this.generateRecapResponse(request, messages, useRecapModel);
 
       await this.client.sendMessage(`-${groupId}`, { message: response });
@@ -168,7 +168,13 @@ export default class TelegramBot {
       if (messagesLength <= MAX_TOKEN_LENGTH) {
         filteredMessages.pop();
         const messageString = filteredMessages.join(' ');
-        const userRequest = `${recapTextRequest} ${messageString}`;
+        const userRequest = `
+        **Task:**
+        ${recapTextRequest}
+        
+        **Context:**
+        ${messageString}
+        `;
         response = await generateGenAIResponse(userRequest, useRecapModel);
       } else {
         const messageString = filteredMessages.join(' ');
