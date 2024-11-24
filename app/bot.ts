@@ -177,7 +177,7 @@ export default class TelegramBot {
         `;
         response = await generateGenAIResponse(userRequest, useRecapModel);
       } else {
-        const messageString = filteredMessages.join(' ');
+        const messageString = filteredMessages.join('; ');
         const chunks = await splitMessageInChunks(messageString);
         response = await returnCombinedAnswerFromMultipleResponses(chunks);
       }
