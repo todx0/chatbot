@@ -1,7 +1,6 @@
 import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory, ModelParams } from '@google/generative-ai';
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions/index';
-import { ProcessEnv } from './types';
 
 export const config = {
   GAPI: Bun.env.GAPI,

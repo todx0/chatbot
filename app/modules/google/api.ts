@@ -1,5 +1,3 @@
-import { Content } from '@google/generative-ai';
-import { unlink } from 'node:fs/promises';
 import {
   config,
   genAImodel,
@@ -7,11 +5,12 @@ import {
   genAIWithoutOptions,
   MAX_HISTORY_LENGTH,
   recapTextRequest,
-} from '../../config';
-import { ErrorHandler } from '../../errors/ErrorHandler';
-import { MessageData } from '../../types';
-import { insertToMessages, readChatRoleFromDatabase, replaceDoubleSpaces } from '../../utils/helper';
-import { getTranslations } from '../../utils/translation';
+} from '@app/config';
+import { ErrorHandler } from '@app/errors/ErrorHandler';
+import { insertToMessages, readChatRoleFromDatabase, replaceDoubleSpaces } from '@app/utils/helper';
+import { getTranslations } from '@app/utils/translation';
+import { Content } from '@google/generative-ai';
+import { unlink } from 'node:fs/promises';
 
 export async function generateGenAIResponse(userRequest: string, useRecapModel = false): Promise<string> {
   const translations = getTranslations();
@@ -68,45 +67,6 @@ export async function generateGenAIResponse(userRequest: string, useRecapModel =
     return ErrorHandler.handleError(error);
   }
 }
-
-/* export async function generateGenAIResponse(userRequest: string, recap = false): Promise<string> {
-  const translations = getTranslations();
-  let retryCount = 0;
-
-  const retryPrompts = [
-    ``,
-    `Provide a concise counterpoint to the message's viewpoint:`,
-    `Offer a surprising twist on the message's underlying theme:`,
-    `Generate a brief thought experiment related to the message's concept:`,
-    `Offer an alternative perspective on the topic of the message:`,
-  ];
-
-  const disclaimer =
-    `This message is for informational purposes only and does not promote violence, hate speech, or illegal activities.`;
-
-  async function fetchGenAIResponse(): Promise<string> {
-    const userRoleContent: Content = { role: 'user', parts: [{ text: userRequest }] };
-
-    const history: Content[] = await readChatRoleFromDatabase({ limit: MAX_HISTORY_LENGTH });
-
-    const chat = recap ? genAImodelForRecap.startChat() : genAImodel.startChat({ history });
-
-    const request = retryCount === 0
-      ? userRequest
-      : `${disclaimer} ${retryPrompts[retryCount]} ${userRequest}`;
-    retryCount += 1;
-
-    const result = await chat.sendMessage(request);
-    const responseText = result?.response?.text() || translations['botHasNoIdea'];
-
-    await insertToMessages(userRoleContent);
-    await insertToMessages({ role: 'model', parts: [{ text: responseText }] });
-
-    return replaceDoubleSpaces(responseText.replaceAll('*', ''));
-  }
-
-  return await fetchGenAIResponse();
-} */
 
 export async function generateRawGenAIResponse(message: string): Promise<string> {
   const translations = getTranslations();

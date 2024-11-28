@@ -6,6 +6,10 @@
     "lib": [
       "esnext"
     ],
+    "baseUrl": ".",
+    "paths": {
+      "@app/*": ["app/*"]
+    },
     "module": "esnext",
     "target": "esnext",
     "moduleResolution": "bundler",

@@ -1,9 +1,9 @@
-import { config } from '../config';
-import { readAndParseJson } from './helper';
+import { config } from '@app/config';
+import { readAndParseJson } from '@app/utils/helper';
 
 export type Translations = Record<string, string>;
 
-let translationsCache: Translations | undefined;
+let translationsCache: Translations;
 
 export async function initializeTranslations(lang: string): Promise<void> {
   if (!translationsCache) {

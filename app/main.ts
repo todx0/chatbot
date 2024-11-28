@@ -1,7 +1,7 @@
+import TelegramBot from '@app/bot';
+import { initConfig, telegramClient } from '@app/config';
+import { createMessagesTable, isRandomReply, shouldTranscribeMedia, somebodyMentioned } from '@app/utils/helper';
 import { Api } from 'telegram';
-import TelegramBot from './bot';
-import { initConfig, telegramClient } from './config';
-import { createMessagesTable, isRandomReply, shouldTranscribeMedia, somebodyMentioned } from './utils/helper';
 
 const bot = new TelegramBot(telegramClient);
 

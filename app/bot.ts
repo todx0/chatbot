@@ -1,25 +1,12 @@
-import bigInt from 'big-integer';
-import { it } from 'node:test';
-import { Api, TelegramClient } from 'telegram';
-import { IterMessagesParams } from 'telegram/client/messages';
-import { escapeLeadingUnderscores } from 'typescript';
-import { BOT_USERNAME, MESSAGE_LIMIT, POLL_TIMEOUT_MS, RANDOM_REPLY_PERCENT, recapTextRequest } from './config';
-import { ErrorHandler } from './errors/ErrorHandler';
+import { BOT_USERNAME, MESSAGE_LIMIT, POLL_TIMEOUT_MS, RANDOM_REPLY_PERCENT, recapTextRequest } from '@app/config';
+import { ErrorHandler } from '@app/errors/ErrorHandler';
 import {
   generateGenAIResponse,
   generateRawGenAIResponse,
   generateReplyFromImageResponse,
   generateResponseFromImage,
   returnCombinedAnswerFromMultipleResponses,
-} from './modules/google/api';
-import {
-  CommandMappings,
-  MessageData,
-  PollMessage,
-  PollResults,
-  QueryDataToGetUserMessages,
-  SendMessageParams,
-} from './types';
+} from '@app/modules/google/api';
 import {
   approximateTokenLength,
   clearMessagesTable,
@@ -30,9 +17,12 @@ import {
   messageNotSeen,
   retry,
   splitMessageInChunks,
-} from './utils/helper';
-import { extractNumber } from './utils/helper';
-import translations from './utils/translation';
+} from '@app/utils/helper';
+import { extractNumber } from '@app/utils/helper';
+import translations from '@app/utils/translation';
+import bigInt from 'big-integer';
+import { Api, TelegramClient } from 'telegram';
+import { IterMessagesParams } from 'telegram/client/messages';
 
 const { BOT_ID } = Bun.env;
 
