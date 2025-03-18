@@ -21,8 +21,10 @@ import {
 import { extractNumber } from '@app/utils/helper';
 import translations from '@app/utils/translation';
 import bigInt from 'big-integer';
-import { Api, TelegramClient } from 'telegram';
-import { IterMessagesParams } from 'telegram/client/messages';
+import  { Api,  } from 'telegram';
+import type {  TelegramClient } from 'telegram';
+
+import type  { IterMessagesParams } from 'telegram/client/messages';
 
 const { BOT_ID } = Bun.env;
 
@@ -43,15 +45,15 @@ export default class TelegramBot {
   async sendPollToKick(user: string, groupId: string) {
     const poll = new Api.InputMediaPoll({
       poll: new Api.Poll({
-        id: bigInt(Math.floor(Math.random() * 0xFFFFFFFFFFFFFFF)),
-        question: `${translations['kick']} ${user}?`,
+        id: bigInt(Math.floor(Math.random() * Math.random())),
+        question: `${translations.kick} ${user}?`,
         answers: [
           new Api.PollAnswer({
-            text: translations['yes'],
+            text: translations.yes,
             option: Buffer.from('1'),
           }),
           new Api.PollAnswer({
-            text: translations['no'],
+            text: translations.no,
             option: Buffer.from('2'),
           }),
         ],
@@ -69,23 +71,11 @@ export default class TelegramBot {
         peer: groupId,
         media: poll,
         message: '',
-        randomId: bigInt(Math.floor(Math.random() * 0xFFFFFFFFFFFFFFF)),
+        randomId: bigInt(Math.floor(Math.random() * Math.random())),
       }),
     );
     return message;
   }
-
-  /*   async getMessages(limit: number, groupId: string): Promise<string[]> {
-    const messages: string[] = [];
-    for await (const message of this.client.iterMessages(`-${groupId}`, { limit })) {
-      if (message._sender?.firstName) {
-        const sender = message._sender.firstName;
-        const messageText = message.message;
-        messages.push(`${sender}: ${messageText}`);
-      }
-    }
-    return messages.reverse();
-  } */
 
   async getMessagesV2(
     groupId: string,
@@ -107,7 +97,7 @@ export default class TelegramBot {
 
   async handleClearCommand(msgData: MessageData): Promise<void> {
     await clearMessagesTable();
-    await this.client.sendMessage(`-${msgData.groupId}`, { message: translations['historyCleared'] });
+    await this.client.sendMessage(`-${msgData.groupId}`, { message: translations.historyCleared });
   }
 
   async handleRecapCommand(
@@ -117,12 +107,12 @@ export default class TelegramBot {
   ): Promise<void> {
     const { messageText, groupId } = msgData;
     try {
-      const msgLimit = extractNumber(messageText) || parseInt(messageText.split(' ')[1]) || 100;
+      const msgLimit = extractNumber(messageText) || Number.parseInt(messageText.split(' ')[1]) || 100;
 
       const msgLimitMatch = await this.validateMsgLimit(msgLimit);
       if (!msgLimitMatch) {
         await this.client.sendMessage(`-${groupId}`, {
-          message: `${translations['recapLimit']} ${MESSAGE_LIMIT}: /recap ${MESSAGE_LIMIT}`,
+          message: `${translations.recapLimit} ${MESSAGE_LIMIT}: /recap ${MESSAGE_LIMIT}`,
         });
         return;
       }
@@ -140,8 +130,8 @@ export default class TelegramBot {
   }
 
   async validateMsgLimit(msgLimit: number, recapLimit = 500): Promise<boolean> {
-    if (Number.isNaN(msgLimit)) msgLimit = recapLimit;
-    if (msgLimit > MESSAGE_LIMIT) return false;
+		const limit = Number.isNaN(msgLimit) ? recapLimit : msgLimit
+    if (limit > MESSAGE_LIMIT) return false;
     return true;
   }
 
@@ -208,14 +198,14 @@ export default class TelegramBot {
 
   async waitForTranscription(messageId: number, groupId: string): Promise<string> {
     const response = await retry(() => this.transcribeAudioMessage(messageId, groupId), 3);
-    if (response.text !== translations['transcriptionError']) {
+    if (response.text !== translations.transcriptionError) {
       return response.text;
     }
     return '';
   }
 
   private async getMessageContentById(msgData: MessageData): Promise<void> {
-    const message: any = await this.client.getMessages(msgData.groupId, { ids: msgData.replyToMsgId, limit: 1 });
+    const message = await this.client.getMessages(msgData.groupId, { ids: msgData.replyToMsgId, limit: 1 });
     const [msg] = message;
     msgData.dataFromGetMessages = msg;
     await this.setFilepathIfMedia(msgData);
@@ -415,9 +405,9 @@ export default class TelegramBot {
     const usersIdToDelete = [...intersection];
 
     if (!usersIdToDelete.length) {
-      await this.client.sendMessage(`-${groupId}`, { message: translations['lurkersAllGood'] });
+      await this.client.sendMessage(`-${groupId}`, { message: translations.lurkersAllGood });
     } else {
-      await this.client.sendMessage(`-${groupId}`, { message: translations['lurkersBye'] });
+      await this.client.sendMessage(`-${groupId}`, { message: translations.lurkersBye });
       await this.banUsers(usersIdToDelete, groupId);
     }
   }
@@ -427,23 +417,23 @@ export default class TelegramBot {
     try {
       const userToKick = this.extractUserToKick(msgData.messageText, groupId);
       if (!userToKick) {
-        await this.client.sendMessage(`-${groupId}`, { message: translations['specifyUserToKick'] });
+        await this.client.sendMessage(`-${groupId}`, { message: translations.specifyUserToKick });
         return;
       }
 
       if (userToKick === BOT_USERNAME) {
-        await this.client.sendMessage(`-${groupId}`, { message: translations['cantKickThisBot'] });
+        await this.client.sendMessage(`-${groupId}`, { message: translations.cantKickThisBot });
         return;
       }
 
       const { userIdToKick, isAdmin } = await this.getUserIdAndCheckAdmin(userToKick, groupId);
       if (!userIdToKick) {
-        await this.client.sendMessage(`-${groupId}`, { message: translations['userNotFound'] });
+        await this.client.sendMessage(`-${groupId}`, { message: translations.userNotFound });
         return;
       }
 
       if (isAdmin) {
-        await this.client.sendMessage(`-${groupId}`, { message: translations['cantKickAdmin'] });
+        await this.client.sendMessage(`-${groupId}`, { message: translations.cantKickAdmin });
         return;
       }
 
@@ -482,13 +472,13 @@ export default class TelegramBot {
           const noResults = results.updates[0].results.results[1]?.voters || 0;
 
           if (yesResults > noResults) {
-            await this.client.sendMessage(`-${groupId}`, { message: `${translations['votekickPass']} ${userToKick}!` });
+            await this.client.sendMessage(`-${groupId}`, { message: `${translations.votekickPass} ${userToKick}!` });
             await this.banUsers([userIdToKick], groupId);
             // Unexpected error: [GoogleGenerativeAI Error]: First content should be with role 'user', got model
             // await insertToMessages({ role: 'model', parts: [{ text: `User ${userToKick} kicked from the group.` }] });
           } else {
             await this.client.sendMessage(`-${groupId}`, {
-              message: `${userToKick} ${translations['votekickFailed']}`,
+              message: `${userToKick} ${translations.votekickFailed}`,
             });
           }
           return;
@@ -625,8 +615,8 @@ export default class TelegramBot {
         user.className === 'User' && 'firstName' in user
       );
       return filteredUsers;
-    } catch (error: any) {
-      throw new Error('Failed to get users: ' + error.message);
+    } catch (error) {
+      throw Error(`Failed to get users: ${(error as Error).message}`);
     }
   }
 
@@ -642,8 +632,8 @@ export default class TelegramBot {
       const botResponse = await generateGenAIResponse(request);
       try {
         await this.client.sendMessage(`-${msgData.groupId}`, { message: botResponse, replyTo: msgData.messageId });
-      } catch (error: any) {
-        throw Error(error);
+      } catch (error) {
+        throw Error(`Failed to process random reply: ${(error as Error).message}`);
       }
     }
   }
