@@ -1,5 +1,6 @@
 import type { ModelParams } from '@google/generative-ai';
 import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
+import { TelegramBot } from '@app/bot/telegram-bot';
 
 import { TelegramClient } from 'telegram';
 import { StringSession } from 'telegram/sessions/index';
@@ -25,6 +26,8 @@ export const featureFlags = {
 export const telegramClient = new TelegramClient(new StringSession(config.SESSION), +config.API_ID, config.API_HASH, {
 	connectionRetries: 5,
 });
+
+export const telegramBot = new TelegramBot(telegramClient);
 
 export const MAX_HISTORY_LENGTH = 20;
 export const TELEGRAM_PREMIUM = false;
